@@ -623,9 +623,11 @@ async function loadAll() {
 
 function setLoading(v) {
   isLoading = v;
-  document.getElementById('tableBody').innerHTML = v
-    ? '<tr><td colspan="8" style="text-align:center;padding:48px;color:var(--text3);">⏳ กำลังโหลดข้อมูล...</td></tr>'
-    : '';
+  if (v) {
+    document.getElementById('tableBody').innerHTML =
+      '<tr><td colspan="8" style="text-align:center;padding:48px;color:var(--text3);">⏳ กำลังโหลดข้อมูล...</td></tr>';
+  }
+  // ไม่ล้างตารางตอน setLoading(false) เพราะ render() จะจัดการเอง
 }
 
 // populate dropdown options จาก Config Sheet
