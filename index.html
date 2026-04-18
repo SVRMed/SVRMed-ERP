@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SVRMed ERP · Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F0F4F8;
+  --surface: #FFFFFF;
+  --surface2: #F7F9FC;
+  --border: #E2E8F0;
+  --navy: #0F2B4E;
+  --navy2: #1A3F6F;
+  --accent: #2563EB;
+  --green: #059669;
+  --green-bg: #D1FAE5;
+  --amber: #D97706;
+  --amber-bg: #FEF3C7;
+  --red: #DC2626;
+  --red-bg: #FEE2E2;
+  --text: #0F172A;
+  --text2: #475569;
+  --text3: #94A3B8;
+  --mono: 'JetBrains Mono', monospace;
+  --font: 'Noto Sans Thai', sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;}
+
+.topbar{
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);
+  height:56px;padding:0 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 2px 8px rgba(0,0,0,0.2);
+  position:sticky;top:0;z-index:100;
+}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand-icon{width:32px;height:32px;background:linear-gradient(135deg,#3B82F6,#1D4ED8);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.brand-name{color:#fff;font-size:15px;font-weight:700;letter-spacing:-0.01em;}
+.brand-sub{color:rgba(255,255,255,0.45);font-size:10px;font-family:var(--mono);}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.topbar-date{color:rgba(255,255,255,0.55);font-size:11px;font-family:var(--mono);}
+.topbar-user{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.7);font-size:12px;}
+.avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.15);
+  display:flex;align-items:center;justify-content:center;font-size:12px;}
+
+.layout{display:flex;min-height:calc(100vh - 56px);}
+
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);padding:16px 0;flex-shrink:0;}
+.nav-section{margin-bottom:4px;}
+.nav-label{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;
+  letter-spacing:0.08em;padding:0 16px 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;font-size:13px;
+  color:var(--text2);cursor:pointer;transition:all .15s;border-left:2px solid transparent;
+  text-decoration:none;}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:#EFF6FF;color:var(--accent);border-left-color:var(--accent);font-weight:600;}
+.nav-item.disabled{opacity:0.4;cursor:not-allowed;pointer-events:none;}
+.nav-item .icon{font-size:15px;width:18px;text-align:center;}
+.nav-badge{margin-left:auto;font-size:9px;padding:1px 6px;border-radius:8px;
+  background:var(--amber-bg);color:var(--amber);font-weight:700;}
+
+.main{flex:1;padding:24px;overflow:auto;}
+.welcome{margin-bottom:24px;}
+.welcome h1{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-0.02em;}
+.welcome p{font-size:13px;color:var(--text3);margin-top:4px;}
+
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:18px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.stat-card.blue::before{background:var(--accent);}
+.stat-card.green::before{background:var(--green);}
+.stat-card.amber::before{background:var(--amber);}
+.stat-card.red::before{background:var(--red);}
+.stat-icon{font-size:24px;margin-bottom:10px;}
+.stat-val{font-size:28px;font-weight:700;font-family:var(--mono);color:var(--text);line-height:1;}
+.stat-lbl{font-size:12px;color:var(--text3);margin-top:4px;}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:6px;}
+
+.section-title{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;
+  letter-spacing:0.06em;margin-bottom:12px;}
+.module-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+.module-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:20px;box-shadow:var(--shadow);cursor:pointer;transition:all .2s;text-decoration:none;
+  display:flex;flex-direction:column;gap:10px;position:relative;}
+.module-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--accent);}
+.module-card.disabled{opacity:0.5;cursor:not-allowed;pointer-events:none;}
+.module-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;
+  justify-content:center;font-size:22px;}
+.module-icon.blue{background:#EFF6FF;}
+.module-icon.green{background:#D1FAE5;}
+.module-icon.purple{background:#F3E8FF;}
+.module-icon.amber{background:#FEF3C7;}
+.module-icon.red{background:#FEE2E2;}
+.module-icon.teal{background:#CCFBF1;}
+.module-title{font-size:14px;font-weight:700;color:var(--text);}
+.module-desc{font-size:12px;color:var(--text3);line-height:1.5;}
+.module-status{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;
+  display:inline-flex;align-items:center;gap:4px;width:fit-content;}
+.module-status.ready{background:var(--green-bg);color:var(--green);}
+.module-status.dev{background:var(--amber-bg);color:var(--amber);}
+.module-status.pending{background:#F1F5F9;color:var(--text3);}
+.module-arrow{position:absolute;top:20px;right:16px;font-size:16px;color:var(--text3);}
+
+.activity-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  overflow:hidden;box-shadow:var(--shadow);}
+.activity-hdr{padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface2);}
+.activity-hdr h3{font-size:13px;font-weight:700;}
+.activity-item{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border);}
+.activity-item:last-child{border-bottom:none;}
+.activity-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.activity-dot.blue{background:var(--accent);}
+.activity-dot.green{background:var(--green);}
+.activity-dot.amber{background:var(--amber);}
+.activity-text{flex:1;font-size:13px;color:var(--text2);}
+.activity-time{font-size:11px;color:var(--text3);font-family:var(--mono);}
+
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .module-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-icon">🏥</div>
+    <div>
+      <div class="brand-name">SVRMed ERP</div>
+      <div class="brand-sub">v1.0.0 · Internal System</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="topbar-date" id="topbarDate"></div>
+    <div class="topbar-user">
+      <div class="avatar">👤</div>
+      <span>Admin</span>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="nav-section">
+      <div class="nav-label">หน้าหลัก</div>
+      <a class="nav-item active" href="index.html"><span class="icon">🏠</span>Dashboard</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Master Data</div>
+      <a class="nav-item" href="vendors.html"><span class="icon">🏢</span>ผู้จำหน่าย (Vendor)</a>
+      <a class="nav-item disabled"><span class="icon">📦</span>สินค้า (Product)<span class="nav-badge">Soon</span></a>
+      <a class="nav-item disabled"><span class="icon">👥</span>ลูกค้า (Customer)<span class="nav-badge">Soon</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">การขาย</div>
+      <a class="nav-item disabled"><span class="icon">📋</span>ใบเสนอราคา<span class="nav-badge">Soon</span></a>
+      <a class="nav-item disabled"><span class="icon">🛒</span>ออเดอร์<span class="nav-badge">Soon</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">คลังสินค้า</div>
+      <a class="nav-item disabled"><span class="icon">📊</span>สต็อก<span class="nav-badge">Soon</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">การเงิน</div>
+      <a class="nav-item disabled"><span class="icon">💰</span>ใบแจ้งหนี้<span class="nav-badge">Soon</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">รายงาน</div>
+      <a class="nav-item disabled"><span class="icon">📈</span>รายงานยอดขาย<span class="nav-badge">Soon</span></a>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="welcome">
+      <h1>ยินดีต้อนรับ, Admin 👋</h1>
+      <p id="welcomeDate"></p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card blue">
+        <div class="stat-icon">🏢</div>
+        <div class="stat-val" id="stat-vendors">—</div>
+        <div class="stat-lbl">ผู้จำหน่ายทั้งหมด</div>
+        <div class="stat-sub">🟢 Active ทั้งหมด</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-icon">📦</div>
+        <div class="stat-val">—</div>
+        <div class="stat-lbl">สินค้าทั้งหมด</div>
+        <div class="stat-sub">⏳ กำลังพัฒนา</div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-icon">👥</div>
+        <div class="stat-val">—</div>
+        <div class="stat-lbl">ลูกค้าทั้งหมด</div>
+        <div class="stat-sub">⏳ กำลังพัฒนา</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-icon">📋</div>
+        <div class="stat-val">—</div>
+        <div class="stat-lbl">ใบเสนอราคาเดือนนี้</div>
+        <div class="stat-sub">⏳ กำลังพัฒนา</div>
+      </div>
+    </div>
+
+    <div class="section-title">📦 โมดูลทั้งหมด</div>
+    <div class="module-grid">
+
+      <a class="module-card" href="vendors.html">
+        <div class="module-arrow">→</div>
+        <div class="module-icon blue">🏢</div>
+        <div>
+          <div class="module-title">ผู้จำหน่าย</div>
+          <div class="module-desc">จัดการข้อมูล Vendor ครบวงจร ทั้งข้อมูลติดต่อ เงื่อนไขการค้า และผู้ติดต่อ</div>
+        </div>
+        <div class="module-status ready">✓ พร้อมใช้งาน</div>
+      </a>
+
+      <div class="module-card disabled">
+        <div class="module-icon green">📦</div>
+        <div>
+          <div class="module-title">สินค้า</div>
+          <div class="module-desc">จัดการข้อมูลสินค้า ราคา กลุ่มสินค้า และผู้จำหน่ายที่เกี่ยวข้อง</div>
+        </div>
+        <div class="module-status dev">🔄 กำลังพัฒนา</div>
+      </div>
+
+      <div class="module-card disabled">
+        <div class="module-icon purple">👥</div>
+        <div>
+          <div class="module-title">ลูกค้า</div>
+          <div class="module-desc">จัดการข้อมูลลูกค้า โรงพยาบาล คลินิก และหน่วยงานต่างๆ</div>
+        </div>
+        <div class="module-status dev">🔄 กำลังพัฒนา</div>
+      </div>
+
+      <div class="module-card disabled">
+        <div class="module-icon amber">📋</div>
+        <div>
+          <div class="module-title">ใบเสนอราคา</div>
+          <div class="module-desc">สร้างและจัดการใบเสนอราคา ติดตามสถานะ และ export PDF</div>
+        </div>
+        <div class="module-status pending">⏳ รอพัฒนา</div>
+      </div>
+
+      <div class="module-card disabled">
+        <div class="module-icon teal">🛒</div>
+        <div>
+          <div class="module-title">ออเดอร์</div>
+          <div class="module-desc">รับและจัดการออเดอร์จากลูกค้า ติดตามสถานะการจัดส่ง</div>
+        </div>
+        <div class="module-status pending">⏳ รอพัฒนา</div>
+      </div>
+
+      <div class="module-card disabled">
+        <div class="module-icon green">📊</div>
+        <div>
+          <div class="module-title">สต็อกสินค้า</div>
+          <div class="module-desc">ติดตามสต็อก รับเข้า เบิกจ่าย และแจ้งเตือนสินค้าใกล้หมด</div>
+        </div>
+        <div class="module-status pending">⏳ รอพัฒนา</div>
+      </div>
+
+      <div class="module-card disabled">
+        <div class="module-icon red">💰</div>
+        <div>
+          <div class="module-title">ใบแจ้งหนี้</div>
+          <div class="module-desc">ออกใบแจ้งหนี้ ติดตามการชำระเงิน และรายงานการเงิน</div>
+        </div>
+        <div class="module-status pending">⏳ รอพัฒนา</div>
+      </div>
+
+      <div class="module-card disabled">
+        <div class="module-icon amber">📈</div>
+        <div>
+          <div class="module-title">รายงาน</div>
+          <div class="module-desc">รายงานยอดขาย สต็อก และการเงิน พร้อม export PDF</div>
+        </div>
+        <div class="module-status pending">⏳ รอพัฒนา</div>
+      </div>
+
+    </div>
+
+    <div class="section-title">🕐 กิจกรรมล่าสุด</div>
+    <div class="activity-card">
+      <div class="activity-hdr"><h3>กิจกรรมล่าสุด</h3></div>
+      <div class="activity-item">
+        <div class="activity-dot blue"></div>
+        <div class="activity-text">ระบบ Vendor Management พร้อมใช้งานแล้ว</div>
+        <div class="activity-time">วันนี้</div>
+      </div>
+      <div class="activity-item">
+        <div class="activity-dot green"></div>
+        <div class="activity-text">เชื่อมต่อ Google Sheets SVRMed ERP สำเร็จ</div>
+        <div class="activity-time">วันนี้</div>
+      </div>
+      <div class="activity-item">
+        <div class="activity-dot amber"></div>
+        <div class="activity-text">เริ่มพัฒนาระบบ SVRMed ERP</div>
+        <div class="activity-time">วันนี้</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2D5_31NsX8GJZW0PORXfhSNScmq1gRZKfXXi--UmqQwpLMyjZqJ2hHXn3qmzE5z0IXQ/exec';
+
+function initDate() {
+  const now = new Date();
+  document.getElementById('welcomeDate').textContent = now.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('topbarDate').textContent = now.toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'});
+}
+
+async function loadStats() {
+  try {
+    const res = await fetch(SCRIPT_URL + '?action=get&sheet=Venders');
+    const rows = await res.json();
+    if (Array.isArray(rows) && rows.length > 1) {
+      document.getElementById('stat-vendors').textContent = (rows.length - 1).toLocaleString();
+    }
+  } catch(e) {}
+}
+
+initDate();
+loadStats();
+</script>
+</body>
+</html>
