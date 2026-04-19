@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Management · SVRMed ERP</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F0F4F8;
+  --surface: #FFFFFF;
+  --surface2: #F7F9FC;
+  --border: #E2E8F0;
+  --border2: #CBD5E1;
+  --navy: #0F2B4E;
+  --navy2: #1A3F6F;
+  --accent: #2563EB;
+  --accent2: #1D4ED8;
+  --green: #059669;
+  --green-bg: #D1FAE5;
+  --red: #DC2626;
+  --red-bg: #FEE2E2;
+  --amber: #D97706;
+  --amber-bg: #FEF3C7;
+  --text: #0F172A;
+  --text2: #475569;
+  --text3: #94A3B8;
+  --mono: 'JetBrains Mono', monospace;
+  --font: 'Noto Sans Thai', sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;}
+
+.topbar{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);height:56px;padding:0 24px;
+  display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,0.2);
+  position:sticky;top:0;z-index:100;}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand-icon{width:32px;height:32px;background:linear-gradient(135deg,#3B82F6,#1D4ED8);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;font-size:16px;}
+.brand-name{color:#fff;font-size:15px;font-weight:700;letter-spacing:-0.01em;}
+.brand-sub{color:rgba(255,255,255,0.45);font-size:10px;font-family:var(--mono);}
+.topbar-user{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.7);font-size:12px;}
+.avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.15);
+  display:flex;align-items:center;justify-content:center;font-size:12px;}
+
+.layout{display:flex;min-height:calc(100vh - 56px);}
+
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);padding:16px 0;flex-shrink:0;}
+.nav-section{margin-bottom:4px;}
+.nav-label{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;
+  letter-spacing:0.08em;padding:0 16px 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;font-size:13px;
+  color:var(--text2);cursor:pointer;transition:all .15s;border-left:2px solid transparent;text-decoration:none;}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:#EFF6FF;color:var(--accent);border-left-color:var(--accent);font-weight:600;}
+.nav-item.disabled{opacity:0.4;cursor:not-allowed;pointer-events:none;}
+.nav-item .icon{font-size:15px;width:18px;text-align:center;}
+.nav-badge{margin-left:auto;font-size:9px;padding:1px 6px;border-radius:8px;
+  background:var(--amber-bg);color:var(--amber);font-weight:700;}
+
+.main{flex:1;padding:24px;overflow:auto;}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+.page-title h1{font-size:20px;font-weight:700;color:var(--text);letter-spacing:-0.02em;}
+.page-title p{font-size:12px;color:var(--text3);font-family:var(--mono);margin-top:2px;}
+.header-actions{display:flex;gap:8px;}
+
+.btn{padding:8px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;
+  font-family:var(--font);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(37,99,235,0.3);}
+.btn-outline{background:transparent;border:1.5px solid var(--border2);color:var(--text2);}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid #FCA5A5;}
+.btn-danger:hover{background:var(--red);color:#fff;}
+.btn-sm{padding:5px 10px;font-size:11px;border-radius:6px;}
+.btn-icon{width:32px;height:32px;padding:0;border-radius:8px;justify-content:center;}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow);}
+.stat-val{font-size:24px;font-weight:700;font-family:var(--mono);color:var(--text);margin-bottom:2px;}
+.stat-lbl{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;}
+
+.toolbar{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:12px 16px;margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;box-shadow:var(--shadow);}
+.search-wrap{flex:1;min-width:200px;position:relative;}
+.search-wrap input{width:100%;padding:7px 12px 7px 34px;border:1.5px solid var(--border);
+  border-radius:8px;font-size:13px;font-family:var(--font);color:var(--text);background:var(--surface2);outline:none;transition:border-color .15s;}
+.search-wrap input:focus{border-color:var(--accent);background:#fff;}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;}
+.filter-select{height:34px;padding:0 10px;border:1.5px solid var(--border);border-radius:8px;
+  font-size:12px;font-family:var(--font);color:var(--text2);background:var(--surface2);outline:none;cursor:pointer;}
+.filter-select:focus{border-color:var(--accent);}
+
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);}
+.table-header{padding:12px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;background:var(--surface2);}
+.table-header h3{font-size:13px;font-weight:700;color:var(--text);}
+.record-count{font-size:11px;color:var(--text3);font-family:var(--mono);}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:var(--surface2);border-bottom:2px solid var(--border);}
+th{padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);
+  text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;}
+td{padding:11px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#F8FAFF;}
+.tbl-scroll{overflow-x:auto;}
+
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;
+  font-size:11px;font-weight:600;white-space:nowrap;}
+.badge-active{background:var(--green-bg);color:var(--green);}
+.badge-inactive{background:#F1F5F9;color:var(--text3);}
+.code-badge{background:#EFF6FF;color:var(--accent);font-family:var(--mono);font-size:11px;
+  padding:2px 8px;border-radius:6px;font-weight:600;letter-spacing:0.05em;}
+.group-badge{padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;font-family:var(--mono);}
+.group-RAP{background:#DBEAFE;color:#1D4ED8;}
+.group-CON{background:#D1FAE5;color:#065F46;}
+.group-STA{background:#FEF3C7;color:#92400E;}
+.group-POCT{background:#F3E8FF;color:#6B21A8;}
+.group-SUP{background:#FFE4E6;color:#9F1239;}
+.group-EQP{background:#CCFBF1;color:#0F766E;}
+.group-BED{background:#FEE2E2;color:#991B1B;}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(15,27,58,0.5);
+  backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--surface);border-radius:16px;width:min(680px,95vw);
+  max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);
+  transform:translateY(16px);transition:transform .2s;}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-hdr{padding:20px 24px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;
+  background:var(--surface);z-index:1;}
+.modal-hdr h2{font-size:16px;font-weight:700;color:var(--text);}
+.modal-hdr p{font-size:11px;color:var(--text3);margin-top:2px;}
+.modal-close{width:30px;height:30px;border:none;background:var(--surface2);border-radius:6px;
+  cursor:pointer;font-size:16px;color:var(--text2);display:flex;align-items:center;justify-content:center;}
+.modal-close:hover{background:var(--red-bg);color:var(--red);}
+.modal-body{padding:20px 24px;}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);
+  display:flex;justify-content:flex-end;gap:8px;background:var(--surface2);}
+
+.form-section{margin-bottom:20px;}
+.form-section-title{font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;
+  letter-spacing:0.07em;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-grid.cols3{grid-template-columns:1fr 1fr 1fr;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group.full{grid-column:1/-1;}
+.form-group label{font-size:11px;font-weight:600;color:var(--text2);}
+.form-group label .req{color:var(--red);}
+.form-group input,.form-group select,.form-group textarea{
+  width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;
+  font-size:13px;font-family:var(--font);color:var(--text);background:var(--surface2);outline:none;transition:border-color .15s;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{
+  border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,0.08);}
+.form-group input:disabled{opacity:0.6;cursor:not-allowed;}
+.form-group textarea{resize:vertical;min-height:70px;}
+.error-msg{font-size:11px;color:var(--red);display:none;}
+.error-msg.show{display:block;}
+.code-preview{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent);
+  padding:8px 12px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:8px;letter-spacing:0.05em;}
+
+.confirm-modal{max-width:400px;}
+.confirm-icon{font-size:40px;text-align:center;margin-bottom:12px;}
+.confirm-modal h3{font-size:16px;font-weight:700;margin-bottom:6px;}
+.confirm-modal p{font-size:13px;color:var(--text2);line-height:1.6;}
+.confirm-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:10px 14px;margin:12px 0;font-size:13px;}
+
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.detail-item{padding:10px 14px;border-bottom:1px solid var(--border);}
+.detail-item:nth-child(odd){border-right:1px solid var(--border);}
+.detail-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;}
+.detail-val{font-size:13px;color:var(--text);}
+.detail-val.mono{font-family:var(--mono);font-size:12px;}
+
+.empty{text-align:center;padding:48px 24px;color:var(--text3);}
+.empty-icon{font-size:40px;margin-bottom:12px;}
+.empty p{font-size:14px;}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);
+  background:var(--navy);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;
+  font-weight:600;z-index:999;opacity:0;transition:all .25s;pointer-events:none;
+  display:flex;align-items:center;gap:8px;box-shadow:var(--shadow-md);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.ok{background:var(--green);}
+.toast.err{background:var(--red);}
+
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .stats{grid-template-columns:1fr 1fr;}
+  .form-grid{grid-template-columns:1fr;}
+  .form-grid.cols3{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-icon">🏥</div>
+    <div>
+      <div class="brand-name">SVRMed ERP</div>
+      <div class="brand-sub">v1.0.0 · Internal System</div>
+    </div>
+  </div>
+  <div class="topbar-user">
+    <div class="avatar">👤</div>
+    <span>Admin</span>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="nav-section">
+      <div class="nav-label">หน้าหลัก</div>
+      <a class="nav-item" href="index.html"><span class="icon">🏠</span>Dashboard</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Master Data</div>
+      <a class="nav-item" href="vendors.html"><span class="icon">🏢</span>ผู้จำหน่าย (Vendor)</a>
+      <a class="nav-item active" href="products.html"><span class="icon">📦</span>สินค้า (Product)</a>
+      <a class="nav-item disabled"><span class="icon">👥</span>ลูกค้า (Customer)<span class="nav-badge">Soon</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">การขาย</div>
+      <a class="nav-item disabled"><span class="icon">📋</span>ใบเสนอราคา<span class="nav-badge">Soon</span></a>
+      <a class="nav-item disabled"><span class="icon">🛒</span>ออเดอร์<span class="nav-badge">Soon</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">คลังสินค้า</div>
+      <a class="nav-item disabled"><span class="icon">📊</span>สต็อก<span class="nav-badge">Soon</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">การเงิน</div>
+      <a class="nav-item disabled"><span class="icon">💰</span>ใบแจ้งหนี้<span class="nav-badge">Soon</span></a>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="page-header">
+      <div class="page-title">
+        <h1>สินค้า (Product)</h1>
+        <p>master-data · products</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-outline" onclick="exportCSV()">⬇ Export</button>
+        <button class="btn btn-primary" onclick="openAddModal()">＋ เพิ่มสินค้า</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-val" id="stat-total">—</div>
+        <div class="stat-lbl">สินค้าทั้งหมด</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="stat-active" style="color:var(--green)">—</div>
+        <div class="stat-lbl">Active</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="stat-inactive" style="color:var(--text3)">—</div>
+        <div class="stat-lbl">Inactive</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="stat-new" style="color:var(--accent)">—</div>
+        <div class="stat-lbl">เพิ่มใหม่วันนี้</div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="ค้นหารหัส หรือ ชื่อสินค้า..." oninput="filterTable()">
+      </div>
+      <select class="filter-select" id="groupFilter" onchange="filterTable()">
+        <option value="">ทุกกลุ่ม</option>
+      </select>
+      <select class="filter-select" id="vendorFilter" onchange="filterTable()">
+        <option value="">ทุกผู้จำหน่าย</option>
+      </select>
+      <select class="filter-select" id="statusFilter" onchange="filterTable()">
+        <option value="">ทุกสถานะ</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-header">
+        <h3>รายการสินค้า</h3>
+        <span class="record-count" id="recordCount">0 รายการ</span>
+      </div>
+      <div class="tbl-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>รหัสสินค้า</th>
+              <th>ชื่อสินค้า</th>
+              <th>กลุ่ม</th>
+              <th>ผู้จำหน่าย</th>
+              <th>หน่วย</th>
+              <th>ราคาต้นทุน</th>
+              <th>ราคาขาย</th>
+              <th>สถานะ</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="formModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div>
+        <h2 id="modalTitle">เพิ่มสินค้าใหม่</h2>
+        <p id="modalSubtitle">กรอกข้อมูลสินค้าให้ครบถ้วน</p>
+      </div>
+      <button class="modal-close" onclick="closeModal('formModal')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-section">
+        <div class="form-section-title">📦 ข้อมูลหลัก</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>ผู้จำหน่าย <span class="req">*</span></label>
+            <select id="f-vendor" onchange="updateCodePreview()">
+              <option value="">-- เลือกผู้จำหน่าย --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>กลุ่มสินค้า <span class="req">*</span></label>
+            <select id="f-group" onchange="updateCodePreview()">
+              <option value="">-- เลือกกลุ่ม --</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>รหัสสินค้า (Gen อัตโนมัติ)</label>
+            <div class="code-preview" id="codePreview">— เลือกผู้จำหน่ายและกลุ่มก่อน —</div>
+          </div>
+          <div class="form-group full">
+            <label>ชื่อสินค้า <span class="req">*</span></label>
+            <input type="text" id="f-name" placeholder="ชื่อสินค้าเต็ม">
+          </div>
+          <div class="form-group full">
+            <label>ชื่อย่อ / ชื่อที่ใช้เรียก</label>
+            <input type="text" id="f-shortname" placeholder="ชื่อย่อที่ใช้ภายใน">
+          </div>
+          <div class="form-group">
+            <label>หน่วย <span class="req">*</span></label>
+            <select id="f-unit">
+              <option value="">-- เลือกหน่วย --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>ประเทศผู้ผลิต</label>
+            <input type="text" id="f-country" placeholder="เช่น Thailand, China, USA">
+          </div>
+          <div class="form-group">
+            <label>รหัสสินค้าผู้จำหน่าย</label>
+            <input type="text" id="f-vendorcode" placeholder="รหัสที่ Vendor ใช้">
+          </div>
+          <div class="form-group">
+            <label>อัตราภาษี VAT</label>
+            <select id="f-vat">
+              <option value="7">7%</option>
+              <option value="0">0% (ยกเว้น VAT)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>สถานะ</label>
+            <select id="f-status">
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">💰 ราคา</div>
+        <div class="form-grid cols3">
+          <div class="form-group">
+            <label>ราคาต้นทุน (บาท)</label>
+            <input type="number" id="f-cost" placeholder="0.00" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>ราคาขาย (บาท)</label>
+            <input type="number" id="f-price" placeholder="0.00" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>ราคา/หน่วย (บาท)</label>
+            <input type="number" id="f-unitprice" placeholder="0.00" min="0" step="0.01">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">📝 หมายเหตุ</div>
+        <div class="form-group">
+          <textarea id="f-note" placeholder="บันทึกเพิ่มเติม..." rows="2"></textarea>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('formModal')">ยกเลิก</button>
+      <button class="btn btn-primary" id="btnSave" onclick="saveProduct()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE MODAL -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal confirm-modal" style="max-width:400px;">
+    <div class="modal-body" style="text-align:center;padding:28px 24px;">
+      <div class="confirm-icon">🗑️</div>
+      <h3>ยืนยันการลบ</h3>
+      <p>คุณต้องการลบสินค้านี้ออกจากระบบใช่ไหม?<br>ไม่สามารถกู้คืนได้</p>
+      <div class="confirm-item" id="deletePreview"></div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:4px;">
+        <button class="btn btn-outline" onclick="closeModal('confirmModal')">ยกเลิก</button>
+        <button class="btn btn-danger" id="btnConfirmDel" onclick="deleteConfirmed()">🗑️ ลบเลย</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div>
+        <h2 id="detailTitle">ข้อมูลสินค้า</h2>
+        <p id="detailCode" style="font-family:var(--mono);color:var(--accent);font-size:12px;"></p>
+      </div>
+      <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('detailModal')">ปิด</button>
+      <button class="btn btn-primary" id="btnDetailEdit">✏️ แก้ไข</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2D5_31NsX8GJZW0PORXfhSNScmq1gRZKfXXi--UmqQwpLMyjZqJ2hHXn3qmzE5z0IXQ/exec';
+
+let products = [];
+let vendors = [];
+let config = {};
+let editingCode = null;
+let deleteCode = null;
+let filteredProducts = [];
+let generatedCode = '';
+
+// ── API ───────────────────────────────────────────────
+async function callGS(params) {
+  const url = SCRIPT_URL + '?' + new URLSearchParams(params).toString();
+  const res = await fetch(url);
+  return await res.json();
+}
+
+// ── LOAD ──────────────────────────────────────────────
+async function loadAll() {
+  setLoading(true);
+  try {
+    const [configRes, productRes, vendorRes] = await Promise.all([
+      callGS({action:'getConfig'}).catch(()=>({})),
+      callGS({action:'get', sheet:'Products'}).catch(()=>[]),
+      callGS({action:'get', sheet:'Venders'}).catch(()=>[]),
+    ]);
+
+    config = configRes || {};
+    populateDropdowns();
+
+    // parse vendors
+    if (Array.isArray(vendorRes) && vendorRes.length > 1) {
+      const hdrs = vendorRes[0];
+      vendors = vendorRes.slice(1).map(row => {
+        const obj = {};
+        hdrs.forEach((h,i) => obj[h] = row[i]||'');
+        return { code: obj['รหัสผู้จำหน่าย'], name: obj['ชื่อบริษัท'] };
+      }).filter(v => v.code);
+    }
+
+    // parse products — รองรับ header ทั้งเดิมและใหม่
+    if (Array.isArray(productRes) && productRes.length > 1) {
+      const hdrs = productRes[0];
+      products = productRes.slice(1).map(row => {
+        const obj = {};
+        hdrs.forEach((h,i) => obj[h] = row[i]||'');
+        return {
+          code:      obj['รหัสสินค้า'],
+          name:      obj['ชื่อสินค้า']      || obj['สินค้า'],
+          vendor:    obj['รหัสผู้จำหน่าย'],
+          group:     obj['กลุ่มสินค้า']     || obj['รหัสกลุ่มสินค้า'],
+          unit:      obj['หน่วย'],
+          cost:      obj['ราคาต้นทุน']      || obj['ราคา/ต้นทุน'],
+          price:     obj['ราคาขาย']         || obj['ราคา(ขาย)'],
+          unitprice: obj['ราคา/หน่วย'],
+          status:    (obj['สถานะ']||'Active').toLowerCase()==='active'?'active':'inactive',
+          note:      obj['หมายเหตุ'],
+          shortname: obj['ชื่อย่อ'],
+          country:   obj['ประเทศผู้ผลิต'],
+          vendorcode:obj['รหัสสินค้าผู้จำหน่าย'],
+          vat:       obj['อัตราภาษี VAT'] || '7',
+          createdAt: obj['วันที่เพิ่ม'],
+          oldCode:   obj['รหัสสินค้าเก่า'] || obj['รหัสผู้จำหน่ายเก่า'],
+        };
+      }).filter(p => p.code);
+    } else {
+      products = [];
+    }
+
+    // populate vendor filter
+    populateVendorFilter();
+    products.sort((a,b) => (a.code||'').localeCompare(b.code||''));
+    render();
+  } catch(e) {
+    toast('❌ เชื่อมต่อ Google Sheet ไม่ได้', 'err');
+  }
+  setLoading(false);
+}
+
+function setLoading(v) {
+  if (v) document.getElementById('tableBody').innerHTML =
+    '<tr><td colspan="9" style="text-align:center;padding:48px;color:var(--text3);">⏳ กำลังโหลดข้อมูล...</td></tr>';
+}
+
+function populateDropdowns() {
+  // group filter + form
+  const groups = config['กลุ่มสินค้า'] || [];
+  const groupFilter = document.getElementById('groupFilter');
+  const fGroup = document.getElementById('f-group');
+  [groupFilter, fGroup].forEach(sel => {
+    const first = sel.options[0];
+    sel.innerHTML = '';
+    sel.appendChild(first);
+    groups.forEach(g => {
+      const o = document.createElement('option');
+      o.value = g; o.textContent = g;
+      sel.appendChild(o);
+    });
+  });
+
+  // unit
+  const units = config['หน่วย'] || ['Box','Set','Bottle','Piece','Pack','Roll','Case','Kit'];
+  const fUnit = document.getElementById('f-unit');
+  fUnit.innerHTML = '<option value="">-- เลือกหน่วย --</option>';
+  units.forEach(u => {
+    const o = document.createElement('option');
+    o.value = u; o.textContent = u;
+    fUnit.appendChild(o);
+  });
+}
+
+function populateVendorFilter() {
+  const sel = document.getElementById('vendorFilter');
+  const first = sel.options[0];
+  sel.innerHTML = '';
+  sel.appendChild(first);
+  vendors.forEach(v => {
+    const o = document.createElement('option');
+    o.value = v.code;
+    o.textContent = v.code + ' · ' + v.name;
+    sel.appendChild(o);
+  });
+
+  // form vendor dropdown
+  const fVendor = document.getElementById('f-vendor');
+  fVendor.innerHTML = '<option value="">-- เลือกผู้จำหน่าย --</option>';
+  vendors.forEach(v => {
+    const o = document.createElement('option');
+    o.value = v.code;
+    o.textContent = v.code + ' · ' + v.name;
+    fVendor.appendChild(o);
+  });
+}
+
+// ── GENERATE CODE ─────────────────────────────────────
+async function updateCodePreview() {
+  const vendor = document.getElementById('f-vendor').value;
+  const group  = document.getElementById('f-group').value;
+  if (!vendor || !group) {
+    document.getElementById('codePreview').textContent = '— เลือกผู้จำหน่ายและกลุ่มก่อน —';
+    generatedCode = '';
+    return;
+  }
+  if (editingCode) {
+    document.getElementById('codePreview').textContent = editingCode;
+    generatedCode = editingCode;
+    return;
+  }
+  // หาเลขลำดับสูงสุดของ prefix นี้
+  const prefix = vendor + '-' + group + '-';
+  const existing = products.filter(p => (p.code||'').startsWith(prefix));
+  let maxNum = 0;
+  existing.forEach(p => {
+    const num = parseInt((p.code||'').replace(prefix,''));
+    if (!isNaN(num) && num > maxNum) maxNum = num;
+  });
+  const nextNum = String(maxNum + 1).padStart(3, '0');
+  generatedCode = prefix + nextNum;
+  document.getElementById('codePreview').textContent = generatedCode;
+}
+
+// ── RENDER ────────────────────────────────────────────
+function render() {
+  updateStats();
+  renderTable();
+}
+
+function updateStats() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('stat-total').textContent = products.length;
+  document.getElementById('stat-active').textContent = products.filter(p=>p.status==='active').length;
+  document.getElementById('stat-inactive').textContent = products.filter(p=>p.status==='inactive').length;
+  document.getElementById('stat-new').textContent = products.filter(p=>p.createdAt===today).length;
+}
+
+function renderTable() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const group  = document.getElementById('groupFilter').value;
+  const vendor = document.getElementById('vendorFilter').value;
+  const status = document.getElementById('statusFilter').value;
+
+  filteredProducts = products.filter(p => {
+    const matchQ = !q || (p.code||'').toLowerCase().includes(q) || (p.name||'').toLowerCase().includes(q);
+    const matchG = !group  || p.group  === group;
+    const matchV = !vendor || p.vendor === vendor;
+    const matchS = !status || p.status === status;
+    return matchQ && matchG && matchV && matchS;
+  });
+
+  document.getElementById('recordCount').textContent = filteredProducts.length + ' รายการ';
+  const tbody = document.getElementById('tableBody');
+
+  if (filteredProducts.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty"><div class="empty-icon">🔍</div><p>ไม่พบรายการที่ค้นหา</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filteredProducts.map(p => `
+    <tr>
+      <td><span class="code-badge">${p.code}</span></td>
+      <td><div style="font-weight:600;font-size:13px;max-width:300px;">${p.name}</div></td>
+      <td><span class="group-badge group-${p.group}">${p.group||'—'}</span></td>
+      <td><span style="font-size:12px;font-family:var(--mono);">${p.vendor||'—'}</span></td>
+      <td style="font-size:12px;">${p.unit||'—'}</td>
+      <td style="font-size:12px;font-family:var(--mono);">${p.cost?Number(p.cost).toLocaleString():'—'}</td>
+      <td style="font-size:12px;font-family:var(--mono);">${p.price?Number(p.price).toLocaleString():'—'}</td>
+      <td><span class="badge badge-${p.status}">${p.status==='active'?'✓ Active':'Inactive'}</span></td>
+      <td>
+        <div style="display:flex;gap:4px;">
+          <button class="btn btn-outline btn-sm btn-icon" onclick="viewDetail('${p.code}')" title="ดูรายละเอียด">👁</button>
+          <button class="btn btn-outline btn-sm btn-icon" onclick="openEditModal('${p.code}')" title="แก้ไข">✏️</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="confirmDelete('${p.code}')" title="ลบ">🗑</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterTable() { renderTable(); }
+
+// ── ADD/EDIT MODAL ────────────────────────────────────
+function openAddModal() {
+  editingCode = null;
+  clearForm();
+  document.getElementById('modalTitle').textContent = 'เพิ่มสินค้าใหม่';
+  document.getElementById('modalSubtitle').textContent = 'กรอกข้อมูลสินค้าให้ครบถ้วน';
+  document.getElementById('formModal').classList.add('open');
+}
+
+function openEditModal(code) {
+  editingCode = code;
+  const p = products.find(p=>p.code===code);
+  if (!p) return;
+  document.getElementById('modalTitle').textContent = 'แก้ไขสินค้า';
+  document.getElementById('modalSubtitle').textContent = `รหัส: ${code}`;
+  document.getElementById('f-vendor').value   = p.vendor||'';
+  document.getElementById('f-group').value    = p.group||'';
+  document.getElementById('f-name').value     = p.name||'';
+  document.getElementById('f-unit').value     = p.unit||'';
+  document.getElementById('f-status').value   = p.status==='active'?'Active':'Inactive';
+  document.getElementById('f-cost').value     = p.cost||'';
+  document.getElementById('f-price').value    = p.price||'';
+  document.getElementById('f-unitprice').value= p.unitprice||'';
+  document.getElementById('f-note').value      = p.note||'';
+  document.getElementById('f-shortname').value = p.shortname||'';
+  document.getElementById('f-country').value   = p.country||'';
+  document.getElementById('f-vendorcode').value= p.vendorcode||'';
+  document.getElementById('f-vat').value       = p.vat||'7';
+  document.getElementById('codePreview').textContent = code;
+  generatedCode = code;
+  document.getElementById('formModal').classList.add('open');
+  closeModal('detailModal');
+}
+
+function clearForm() {
+  ['f-name','f-shortname','f-country','f-vendorcode','f-cost','f-price','f-unitprice','f-note'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('f-vendor').value = '';
+  document.getElementById('f-group').value  = '';
+  document.getElementById('f-unit').value   = '';
+  document.getElementById('f-status').value = 'Active';
+  document.getElementById('codePreview').textContent = '— เลือกผู้จำหน่ายและกลุ่มก่อน —';
+  generatedCode = '';
+}
+
+async function saveProduct() {
+  const vendor = document.getElementById('f-vendor').value;
+  const group  = document.getElementById('f-group').value;
+  const name   = document.getElementById('f-name').value.trim();
+  const unit   = document.getElementById('f-unit').value;
+
+  if (!vendor) { toast('กรุณาเลือกผู้จำหน่าย', 'err'); return; }
+  if (!group)  { toast('กรุณาเลือกกลุ่มสินค้า', 'err'); return; }
+  if (!name)   { toast('กรุณากรอกชื่อสินค้า', 'err'); return; }
+  if (!unit)   { toast('กรุณาเลือกหน่วย', 'err'); return; }
+
+  // gen code ถ้ายังไม่มี
+  if (!generatedCode) await updateCodePreview();
+  if (!generatedCode) { toast('ไม่สามารถสร้างรหัสสินค้าได้', 'err'); return; }
+
+  const btn = document.getElementById('btnSave');
+  btn.disabled = true;
+  btn.textContent = '⏳ กำลังบันทึก...';
+
+  const today = new Date().toISOString().split('T')[0];
+  const data = {
+    'รหัสสินค้า':         generatedCode,
+    'สินค้า':             name,
+    'ชื่อสินค้า':         name,
+    'รหัสผู้จำหน่าย':     vendor,
+    'รหัสกลุ่มสินค้า':    group,
+    'กลุ่มสินค้า':        group,
+    'หน่วย':              unit,
+    'ราคา/ต้นทุน':        document.getElementById('f-cost').value,
+    'ราคาต้นทุน':         document.getElementById('f-cost').value,
+    'ราคา(ขาย)':          document.getElementById('f-price').value,
+    'ราคาขาย':            document.getElementById('f-price').value,
+    'ราคา/หน่วย':         document.getElementById('f-unitprice').value,
+    'สถานะ':              document.getElementById('f-status').value,
+    'หมายเหตุ':           document.getElementById('f-note').value.trim(),
+    'วันที่เพิ่ม':        editingCode ? (products.find(p=>p.code===editingCode)?.createdAt||today) : today,
+    'รหัสผู้จำหน่ายเก่า': editingCode ? (products.find(p=>p.code===editingCode)?.oldCode||'') : '',
+    'รหัสสินค้าเก่า':     editingCode ? (products.find(p=>p.code===editingCode)?.oldCode||'') : '',
+    'ชื่อย่อ':            document.getElementById('f-shortname').value.trim(),
+    'ประเทศผู้ผลิต':      document.getElementById('f-country').value.trim(),
+    'รหัสสินค้าผู้จำหน่าย': document.getElementById('f-vendorcode').value.trim(),
+    'อัตราภาษี VAT':      document.getElementById('f-vat').value,
+  };
+
+  try {
+    if (editingCode) {
+      await callGS({action:'update', sheet:'Products', keyCol:'รหัสสินค้า', keyVal:editingCode, data:JSON.stringify(data)});
+      toast('✅ บันทึกการแก้ไขแล้ว', 'ok');
+    } else {
+      await callGS({action:'add', sheet:'Products', data:JSON.stringify(data)});
+      toast('✅ เพิ่มสินค้าใหม่แล้ว', 'ok');
+    }
+    closeModal('formModal');
+    await loadAll();
+  } catch(e) {
+    toast('❌ บันทึกไม่สำเร็จ: ' + e.message, 'err');
+  }
+
+  btn.disabled = false;
+  btn.textContent = '💾 บันทึก';
+}
+
+// ── DELETE ────────────────────────────────────────────
+function confirmDelete(code) {
+  deleteCode = code;
+  const p = products.find(p=>p.code===code);
+  document.getElementById('deletePreview').innerHTML = `<strong>${p.code}</strong> · ${p.name}`;
+  document.getElementById('confirmModal').classList.add('open');
+}
+
+async function deleteConfirmed() {
+  const btn = document.getElementById('btnConfirmDel');
+  btn.disabled = true; btn.textContent = '⏳ กำลังลบ...';
+  try {
+    await callGS({action:'delete', sheet:'Products', keyCol:'รหัสสินค้า', keyVal:deleteCode});
+    closeModal('confirmModal');
+    toast('🗑️ ลบรายการแล้ว', 'ok');
+    await loadAll();
+  } catch(e) {
+    toast('❌ ลบไม่สำเร็จ', 'err');
+  }
+  btn.disabled = false; btn.textContent = '🗑️ ลบเลย';
+}
+
+// ── DETAIL ────────────────────────────────────────────
+function viewDetail(code) {
+  const p = products.find(p=>p.code===code);
+  if (!p) return;
+  const v = vendors.find(v=>v.code===p.vendor);
+  document.getElementById('detailTitle').textContent = p.name;
+  document.getElementById('detailCode').textContent = p.code;
+  document.getElementById('btnDetailEdit').onclick = () => openEditModal(code);
+
+  const field = (label, val, mono=false) => `
+    <div class="detail-item">
+      <div class="detail-label">${label}</div>
+      <div class="detail-val${mono?' mono':''}">${val||'—'}</div>
+    </div>`;
+
+  document.getElementById('detailBody').innerHTML = `
+    <div style="margin-bottom:16px;">
+      <div style="font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;">📦 ข้อมูลหลัก</div>
+      <div class="detail-grid">
+        ${field('รหัสสินค้า','<span class="code-badge">'+p.code+'</span>')}
+        ${field('สถานะ','<span class="badge badge-'+p.status+'">'+(p.status==='active'?'✓ Active':'Inactive')+'</span>')}
+        ${field('ชื่อสินค้า',p.name)}
+        ${field('กลุ่มสินค้า','<span class="group-badge group-'+p.group+'">'+p.group+'</span>')}
+        ${field('ผู้จำหน่าย',(v?v.code+' · '+v.name:p.vendor),true)}
+        ${field('ชื่อย่อ',p.shortname)}
+        ${field('หน่วย',p.unit)}
+        ${field('ประเทศผู้ผลิต',p.country)}
+        ${field('รหัสสินค้าผู้จำหน่าย',p.vendorcode,true)}
+        ${field('อัตราภาษี VAT',p.vat?p.vat+'%':'')}
+      </div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <div style="font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;">💰 ราคา</div>
+      <div class="detail-grid">
+        ${field('ราคาต้นทุน',p.cost?Number(p.cost).toLocaleString()+' บาท':'',true)}
+        ${field('ราคาขาย',p.price?Number(p.price).toLocaleString()+' บาท':'',true)}
+        ${field('ราคา/หน่วย',p.unitprice?Number(p.unitprice).toLocaleString()+' บาท':'',true)}
+        ${field('หมายเหตุ',p.note)}
+      </div>
+    </div>
+  `;
+  document.getElementById('detailModal').classList.add('open');
+}
+
+// ── MODAL ─────────────────────────────────────────────
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); });
+});
+
+// ── EXPORT ────────────────────────────────────────────
+function exportCSV() {
+  const headers = ['รหัสสินค้า','ชื่อสินค้า','ผู้จำหน่าย','กลุ่ม','หน่วย','ราคาต้นทุน','ราคาขาย','ราคา/หน่วย','สถานะ','หมายเหตุ'];
+  const rows = products.map(p=>[p.code,p.name,p.vendor,p.group,p.unit,p.cost,p.price,p.unitprice,p.status,p.note]);
+  const csv = [headers,...rows].map(r=>r.map(c=>`"${(c||'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `products_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  toast('⬇ Export สำเร็จ', 'ok');
+}
+
+// ── TOAST ─────────────────────────────────────────────
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + type + ' show';
+  setTimeout(()=>el.classList.remove('show'), 2800);
+}
+
+loadAll();
+</script>
+</body>
+</html>
