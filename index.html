@@ -159,7 +159,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <div class="nav-label">Master Data</div>
       <a class="nav-item" href="vendors.html"><span class="icon">🏢</span>ผู้จำหน่าย (Vendor)</a>
       <a class="nav-item" href="products.html"><span class="icon">📦</span>สินค้า (Product)</a>
-      <a class="nav-item disabled"><span class="icon">👥</span>ลูกค้า (Customer)<span class="nav-badge">Soon</span></a>
+      <a class="nav-item" href="customers.html"><span class="icon">👥</span>ลูกค้า (Customer)</a>
     </div>
     <div class="nav-section">
       <div class="nav-label">การจัดซื้อ</div>
@@ -192,7 +192,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     </div>
 
     <div class="stats-grid">
-      <div class="stat-card blue">
+      <div class="stat-card blue" style="cursor:pointer;" onclick="location.href='vendors.html'">
         <div class="stat-icon">🏢</div>
         <div class="stat-val" id="stat-vendors">—</div>
         <div class="stat-lbl">ผู้จำหน่ายทั้งหมด</div>
@@ -204,11 +204,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
         <div class="stat-lbl">สินค้าทั้งหมด</div>
         <div class="stat-sub">⏳ กำลังพัฒนา</div>
       </div>
-      <div class="stat-card amber">
+      <div class="stat-card amber" style="cursor:pointer;" onclick="location.href='customers.html'">
         <div class="stat-icon">👥</div>
-        <div class="stat-val">—</div>
+        <div class="stat-val" id="stat-customers">—</div>
         <div class="stat-lbl">ลูกค้าทั้งหมด</div>
-        <div class="stat-sub">⏳ กำลังพัฒนา</div>
+        <div class="stat-sub" id="stat-customers-sub">กำลังโหลด...</div>
       </div>
       <div class="stat-card red">
         <div class="stat-icon">📋</div>
@@ -250,14 +250,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
         <div class="module-status new">✦ กำลังวางแผน</div>
       </div>
 
-      <div class="module-card disabled">
+      <a class="module-card" href="customers.html">
+        <div class="module-arrow">→</div>
         <div class="module-icon purple">👥</div>
         <div>
           <div class="module-title">ลูกค้า</div>
           <div class="module-desc">จัดการข้อมูลลูกค้า โรงพยาบาล คลินิก และหน่วยงานต่างๆ</div>
         </div>
-        <div class="module-status dev">🔄 กำลังพัฒนา</div>
-      </div>
+        <div class="module-status ready">✓ พร้อมใช้งาน</div>
+      </a>
 
       <div class="module-card disabled">
         <div class="module-icon amber">📋</div>
@@ -349,10 +350,32 @@ function initDate() {
 
 async function loadStats() {
   try {
-    const res = await fetch(SCRIPT_URL + '?action=get&sheet=Venders');
-    const rows = await res.json();
-    if (Array.isArray(rows) && rows.length > 1) {
-      document.getElementById('stat-vendors').textContent = (rows.length - 1).toLocaleString();
+    const [vendorRes, customerRes] = await Promise.all([
+      fetch(SCRIPT_URL + '?action=get&sheet=Venders').then(r=>r.json()).catch(()=>[]),
+      fetch(SCRIPT_URL + '?action=get&sheet=Customers').then(r=>r.json()).catch(()=>[]),
+    ]);
+
+    if (Array.isArray(vendorRes) && vendorRes.length > 1) {
+      const total = vendorRes.length - 1;
+      const hdrs = vendorRes[0];
+      const statusIdx = hdrs.indexOf('สถานะ');
+      const active = statusIdx >= 0
+        ? vendorRes.slice(1).filter(r => (r[statusIdx]||'').toLowerCase() === 'active').length
+        : total;
+      document.getElementById('stat-vendors').textContent = total.toLocaleString();
+      document.getElementById('stat-vendors').closest('.stat-card').querySelector('.stat-sub').textContent =
+        `🟢 Active ${active} รายการ`;
+    }
+
+    if (Array.isArray(customerRes) && customerRes.length > 1) {
+      const total = customerRes.length - 1;
+      const hdrs = customerRes[0];
+      const statusIdx = hdrs.indexOf('สถานะ');
+      const active = statusIdx >= 0
+        ? customerRes.slice(1).filter(r => (r[statusIdx]||'').toLowerCase() === 'active').length
+        : total;
+      document.getElementById('stat-customers').textContent = total.toLocaleString();
+      document.getElementById('stat-customers-sub').textContent = `🟢 Active ${active} รายการ`;
     }
   } catch(e) {}
 }
