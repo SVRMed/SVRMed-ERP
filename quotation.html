@@ -396,7 +396,7 @@ tbody tr:hover td{background:#FAFCFF;}
             <th>เลขที่ QT</th>
             <th>ลูกค้า</th>
             <th>วันที่</th>
-            <th>กำหนดราคา</th>
+            <th>กำหนดยืนราคาภายใน</th>
             <th style="text-align:right;">ยอดรวม (฿)</th>
             <th>สถานะ</th>
             <th style="width:46px;text-align:center;">📸</th>
@@ -471,7 +471,7 @@ tbody tr:hover td{background:#FAFCFF;}
       <div class="form-grid-3">
         <div class="form-group"><label class="form-label">เลขที่ใบเสนอราคา <span class="req">*</span></label><input class="fi" id="f-qtno" placeholder="เช่น QT6903001"></div>
         <div class="form-group"><label class="form-label">วันที่ออกเอกสาร <span class="req">*</span></label><input class="fi" type="date" id="f-qtdate"></div>
-        <div class="form-group"><label class="form-label">กำหนดราคา (วัน)</label><input class="fi" type="number" id="f-qtvalid" value="90" min="1"></div>
+        <div class="form-group"><label class="form-label">กำหนดยืนราคาภายใน (วัน)</label><input class="fi" type="number" id="f-qtvalid" value="90" min="1"></div>
         <div class="form-group"><label class="form-label">กำหนดส่งสินค้า (วัน)</label><input class="fi" type="number" id="f-qtdeliver" value="30" min="1"></div>
         <div class="form-group"><label class="form-label">ผู้เสนอราคา</label><input class="fi" id="f-issuer" placeholder="เช่น นางสาววิลัยพร พอนิคม"></div>
         <div class="form-group"><label class="form-label">ภาษีมูลค่าเพิ่ม</label>
@@ -789,7 +789,7 @@ async function loadAll() {
         id:            col(h,row,'ID'),
         qtNo,
         qtDate:        col(h,row,'วันที่'),
-        qtValid:       col(h,row,'กำหนดราคา (วัน)'),
+        qtValid:       col(h,row,'กำหนดยืนราคาภายใน (วัน)'),
         qtDeliver:     col(h,row,'กำหนดส่ง (วัน)'),
         issuer:        col(h,row,'ผู้เสนอราคา'),
         vatRate:       parseFloat(col(h,row,'VAT%'))||7,
@@ -1269,7 +1269,7 @@ async function doSave(status) {
       'ID':                 d.id,
       'เลขที่ QT':          d.qtNo,
       'วันที่':             d.qtDate,
-      'กำหนดราคา (วัน)':   d.qtValid,
+      'กำหนดยืนราคาภายใน (วัน)':   d.qtValid,
       'กำหนดส่ง (วัน)':    d.qtDeliver,
       'ผู้เสนอราคา':        d.issuer,
       'VAT%':              d.vatRate,
@@ -1721,7 +1721,7 @@ function buildQT(d){
       <div class="doc-ref">
         <div><span class="lbl">เลขที่ &nbsp;</span><strong>${d.qtNo||''}</strong></div>
         <div><span class="lbl">วันที่ &nbsp;</span>${thaiDateShort(d.qtDate)}</div>
-        ${d.qtValid?`<div><span class="lbl">กำหนดราคา &nbsp;</span>${d.qtValid} วัน</div>`:''}
+        ${d.qtValid?`<div><span class="lbl">กำหนดยืนราคาภายใน &nbsp;</span>${d.qtValid} วัน</div>`:''}
         ${d.qtDeliver?`<div><span class="lbl">กำหนดส่งสินค้า &nbsp;</span>${d.qtDeliver} วัน</div>`:''}
       </div>
     </div>
@@ -1744,7 +1744,7 @@ function buildQT(d){
       </div>
     </div>
     <div class="doc-terms">
-      กำหนดราคา ${d.qtValid||90} วัน &nbsp;|&nbsp; กำหนดส่งสินค้า ${d.qtDeliver||30} วัน${d.remark?' | หมายเหตุ: '+d.remark:''}<br>
+      กำหนดยืนราคาภายใน ${d.qtValid||90} วัน &nbsp;|&nbsp; กำหนดส่งสินค้า ${d.qtDeliver||30} วัน${d.remark?' | หมายเหตุ: '+d.remark:''}<br>
       จึงเรียนมาเพื่อพิจารณา หวังเป็นอย่างยิ่งว่าคงได้รับการพิจารณาจากท่าน และขอขอบคุณล่วงหน้า ณ ที่นี้
     </div>
     <div class="doc-sigs">
