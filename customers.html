@@ -782,36 +782,30 @@ async function autoGenerateCode() {
   codeInput.classList.remove('error');
 }
 
-// fallback: สร้าง province filter จากรหัสลูกค้าที่มีอยู่จริง
-// ใช้เมื่อ Config ไม่มีข้อมูลจังหวัด (provinceMap ว่าง)
+// buildProvinceFilterFromCustomers — ใช้เฉพาะกรณี Config ไม่มีข้อมูลจังหวัดเลย
+// ถ้า provinceMap มีข้อมูลแล้ว (จาก Config) ข้ามทันที ไม่เพิ่ม option ใดๆ
 function buildProvinceFilterFromCustomers() {
+  if (Object.keys(provinceMap).length > 0) return;
+
+  // fallback เฉพาะกรณี Config ว่างจริงๆ
   const filterProvSel = document.getElementById('provinceFilter');
-  // เก็บ options ที่มีอยู่แล้ว (จาก Config) ใน set เพื่อไม่ duplicate
   const existingCodes = new Set(
     [...filterProvSel.options].map(o => o.value).filter(Boolean)
   );
-
-  // รวบรวม prefix ที่ยังไม่มีใน dropdown
   const seen = new Set();
   customers.forEach(c => {
     if (!c.code) return;
     const prefix = String(c.code || '').slice(0, 3).toUpperCase();
-    if (!prefix || existingCodes.has(prefix) || seen.has(prefix)) return;
+    // ต้องเป็นตัวเลขล้วน 3 หลัก (รหัสจังหวัด) เท่านั้น
+    if (!prefix || !/^\d{3}$/.test(prefix)) return;
+    if (existingCodes.has(prefix) || seen.has(prefix)) return;
     seen.add(prefix);
-
-    // ถ้า provinceMap มีชื่อ ใช้ชื่อ ถ้าไม่มีใช้ prefix แทน
-    const label = provinceMap[prefix] || prefix;
+    provinceMap[prefix] = prefix;
     const o = document.createElement('option');
     o.value = prefix;
-    o.textContent = `📍 ${label}`;
+    o.textContent = `📍 ${prefix}`;
     filterProvSel.appendChild(o);
   });
-
-  // ถ้า provinceMap ว่างอยู่ (Config ไม่มีข้อมูลจังหวัด) ให้ map prefix → prefix ไว้
-  // เพื่อให้ search box หาได้
-  if (Object.keys(provinceMap).length === 0) {
-    seen.forEach(prefix => { provinceMap[prefix] = prefix; });
-  }
 }
 
 // ── RENDER ───────────────────────────────────────────
@@ -1047,26 +1041,26 @@ async function saveCustomer() {
 
   const today = new Date().toISOString().split('T')[0];
   const data = {
-    'รหัสลูกค้า':    code,
-    'ชื่อลูกค้า':    name,
-    'ประเภทลูกค้า':  document.getElementById('f-custtype').value,
-    'สำนักงาน':      document.getElementById('f-office').value,
-    'ที่อยู่':        document.getElementById('f-address').value.trim(),
-    'เบอร์ติดต่อ1':  asText(document.getElementById('f-phone1').value),
-    'เบอร์ติดต่อ2':  asText(document.getElementById('f-phone2').value),
-    'แฟกซ์':         asText(document.getElementById('f-fax').value),
-    'ผู้ติดต่อ':     document.getElementById('f-contact-name').value.trim(),
-    'ตำแหน่ง':       document.getElementById('f-contact-title').value.trim(),
-    'เบอร์มือถือ':   asText(document.getElementById('f-contact-phone').value),
-    'Line ID':        document.getElementById('f-contact-line').value.trim(),
-    'อีเมล':         document.getElementById('f-contact-email').value.trim(),
-    'เลขผู้เสียภาษี': asText(document.getElementById('f-taxid').value),
-    'เครดิต':        document.getElementById('f-credit').value,
-    'วิธีชำระเงิน':  document.getElementById('f-payment').value,
-    'วงเงินเครดิต':  document.getElementById('f-credit-limit').value,
-    'สถานะ':         document.getElementById('f-status').value,
-    'หมายเหตุ':      document.getElementById('f-note').value.trim(),
-    'วันที่เพิ่ม':   editingCode ? (customers.find(c=>c.code===editingCode)?.createdAt||today) : today,
+    'รหัสลูกค้า':      String(code),           // string เสมอ ป้องกันศูนย์นำหน้าหาย
+    'ชื่อลูกค้า':      name,
+    'ประเภทลูกค้า':    document.getElementById('f-custtype').value,
+    'สำนักงาน':        document.getElementById('f-office').value,
+    'ที่อยู่':          document.getElementById('f-address').value.trim(),
+    'เบอร์ติดต่อ1':    asText(document.getElementById('f-phone1').value),
+    'เบอร์ติดต่อ2':    asText(document.getElementById('f-phone2').value),
+    'แฟกซ์':           asText(document.getElementById('f-fax').value),
+    'ผู้ติดต่อ':       document.getElementById('f-contact-name').value.trim(),
+    'ตำแหน่ง':         document.getElementById('f-contact-title').value.trim(),
+    'เบอร์มือถือ':     asText(document.getElementById('f-contact-phone').value),
+    'Line ID':          document.getElementById('f-contact-line').value.trim(),
+    'อีเมล':           document.getElementById('f-contact-email').value.trim(),
+    'เลขผู้เสียภาษี':  asText(document.getElementById('f-taxid').value),
+    'เครดิต':          document.getElementById('f-credit').value,
+    'วิธีชำระเงิน':    document.getElementById('f-payment').value,
+    'วงเงินเครดิต':    document.getElementById('f-credit-limit').value,
+    'สถานะ':           document.getElementById('f-status').value,
+    'หมายเหตุ':        document.getElementById('f-note').value.trim(),
+    'วันที่เพิ่ม':     editingCode ? (customers.find(c=>c.code===editingCode)?.createdAt||today) : today,
   };
 
   try {
