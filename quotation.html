@@ -667,6 +667,7 @@ tbody tr:hover td{background:#FAFCFF;}
 // CONFIG
 // ═══════════════════════════════════════
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2D5_31NsX8GJZW0PORXfhSNScmq1gRZKfXXi--UmqQwpLMyjZqJ2hHXn3qmzE5z0IXQ/exec';
+let _sheetsInited = false;   // flag: สร้าง Sheet แค่ครั้งเดียว
 const SH_QT    = 'Quotations';
 const SH_ITEMS = 'QuotationItems';
 const SH_CUST  = 'Customers';
@@ -710,6 +711,11 @@ async function gs(params) {
 // ═══════════════════════════════════════
 async function loadAll() {
   setGS('loading');
+  // สร้าง Sheet Quotations/QuotationItems/Invoices/InvoiceItems ครั้งแรกอัตโนมัติ
+  if (!_sheetsInited) {
+    try { await gs({action:'initQTSheets'}); } catch(e) {}
+    _sheetsInited = true;
+  }
   try {
     const [qtR, itemR, custR, prodR] = await Promise.all([
       gs({action:'get', sheet:SH_QT}).catch(()=>[]),
