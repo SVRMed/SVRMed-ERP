@@ -309,13 +309,9 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
 .lightbox-info{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.85);font-size:12px;font-family:var(--mono);background:rgba(0,0,0,0.55);padding:6px 16px;border-radius:20px;white-space:nowrap;}
 
 @media print{
-  body,html{background:#fff;}
-  .topbar,.sidebar,.main>.page-header,.stats,.toolbar,.card,.modal-header,.modal-footer{display:none!important;}
-  .modal-overlay{position:static;background:none;display:block!important;backdrop-filter:none;}
-  .modal{width:100%;max-width:100%;box-shadow:none;border-radius:0;max-height:none;}
-  .ppane{display:block!important;}
-  .ptabs{display:none!important;}
-  .doc{border:none;width:100%;padding:0;}
+  /* ซ่อนทุกอย่างนอกจาก #print-area */
+  body > *:not(#print-area){ display:none!important; }
+  #print-area{ display:block!important; }
 }
 </style>
 </head>
@@ -605,7 +601,7 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeM('m-preview')">← กลับแก้ไข</button>
-      <button class="btn btn-primary" onclick="window.print()">🖨️ พิมพ์</button>
+      <button class="btn btn-primary" onclick="printDoc()">🖨️ พิมพ์</button>
     </div>
   </div>
 </div>
@@ -779,13 +775,26 @@ async function loadAll() {
     const cust = parse(custR);
 
     // Customers for dropdown
+    // ── helper: pad ศูนย์นำหน้า + format เบอร์โทร ──
+    // มือถือ: 0xx-xxx-xxxx (10 หลัก)  สำนักงาน: 0x-xxx-xxxx (9 หลัก)
+    const formatPhone = v => {
+      let s = String(v||'').trim().replace(/[-\s]/g,''); // ถอด dash/space เดิมออกก่อน
+      if (!s) return '';
+      if (/^\d+$/.test(s)) {
+        if (s.length === 9)  s = '0' + s;           // Sheets ตัดศูนย์ → pad กลับ
+        if (s.length === 10) return s.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3'); // มือถือ
+        if (s.length === 9)  return s.replace(/^(\d{2})(\d{3})(\d{4})$/, '$1-$2-$3'); // สำนักงาน
+      }
+      return s; // รูปแบบอื่น คืนตามเดิม
+    };
+    const padTax = v => { const s=String(v||'').trim(); return s&&/^\d+$/.test(s)&&s.length===12 ? '0'+s : s; };
     customers = cust.rows.map(row=>({
       code:     col(cust.h,row,'รหัสลูกค้า'),
       name:     col(cust.h,row,'ชื่อลูกค้า'),
       address:  col(cust.h,row,'ที่อยู่'),
       contact:  col(cust.h,row,'ผู้ติดต่อ'),
-      phone:    String(col(cust.h,row,'เบอร์มือถือ')||col(cust.h,row,'เบอร์ติดต่อ1')||''),
-      tax:      String(col(cust.h,row,'เลขผู้เสียภาษี')||''),
+      phone:    formatPhone(col(cust.h,row,'เบอร์มือถือ')||col(cust.h,row,'เบอร์ติดต่อ1')),
+      tax:      padTax(col(cust.h,row,'เลขผู้เสียภาษี')),
       custType: col(cust.h,row,'ประเภทลูกค้า')||'',
       office:   col(cust.h,row,'สำนักงาน')||'สำนักงานใหญ่',
     })).filter(c=>c.name);
@@ -856,7 +865,7 @@ async function loadAll() {
         custName:      col(h,row,'ชื่อลูกค้า'),
         custAddr:      col(h,row,'ที่อยู่ลูกค้า'),
         custContact:   col(h,row,'ผู้ติดต่อ'),
-        custTel:       col(h,row,'เบอร์ลูกค้า'),
+        custTel:       formatPhoneGlobal(col(h,row,'เบอร์ลูกค้า')),
         custTax:       col(h,row,'เลขภาษีลูกค้า'),
         custOffice:    col(h,row,'สำนักงาน'),
         custType:      col(h,row,'ประเภทลูกค้า')||'',
@@ -978,7 +987,7 @@ function selectCust(code) {
   document.getElementById('f-cname').value   = c.name||'';
   document.getElementById('f-caddr').value   = c.address||'';
   document.getElementById('f-ccont').value   = c.contact||'';
-  document.getElementById('f-ctel').value    = String(c.phone||'');   // เก็บเลขศูนย์นำหน้า
+  document.getElementById('f-ctel').value    = formatPhoneGlobal(c.phone||'');  // format xxx-xxx-xxxx
   document.getElementById('f-ctax').value    = String(c.tax||'');     // เก็บเลขศูนย์นำหน้า
   document.getElementById('f-coffice').value = String(c.office||'');
 }
@@ -1580,7 +1589,7 @@ function openEdit(id) {
   set('f-saddr',qt.sellerAddr); set('f-stel',qt.sellerTel); set('f-stax',qt.sellerTax);
   set('f-cname',qt.custName); set('f-caddr',qt.custAddr);
   set('f-ccont',qt.custContact);
-  set('f-ctel', String(qt.custTel||''));
+  set('f-ctel', formatPhoneGlobal(String(qt.custTel||'')));
   set('f-ctax', String(qt.custTax||''));
   set('f-coffice', qt.custOffice||'');
   // Restore customer search + custType (cMatch ต้องประกาศก่อนใช้)
@@ -1766,7 +1775,7 @@ function buildQT(d){
       <div class="doc-cust">
         <div><span class="lbl">นามลูกค้า</span>${d.custName||''}</div>
         <div><span class="lbl">ที่อยู่</span>${(d.custAddr||'').replace(/\n/g,'<br>')}</div>
-        ${d.custContact?`<div><span class="lbl">ผู้ติดต่อ: คุณ${d.custContact}</span>${d.custTel?' &nbsp;เบอร์โทร: '+d.custTel:''}</div>`:''}
+        ${d.custContact?`<div><span class="lbl">ผู้ติดต่อ: คุณ${d.custContact}</span>${d.custTel?' &nbsp;เบอร์โทร: '+formatPhoneGlobal(d.custTel):''}</div>`:''}
         <div><span class="lbl">เลขประจำตัวฯ</span>${d.custTax||''}&nbsp;
           <span style="border:1px solid #999;padding:1px 8px;font-size:9.5px;">X</span>&nbsp;${d.custOffice||'สำนักงานใหญ่'}
         </div>
@@ -1919,6 +1928,17 @@ function setBusy(on){
   }
 }
 function todayStr(){return new Date().toISOString().split('T')[0];}
+// format เบอร์โทร: มือถือ 081-234-5678 / สำนักงาน 02-123-4567
+function formatPhoneGlobal(v){
+  let s=String(v||'').trim().replace(/[-\s]/g,'');
+  if(!s)return'';
+  if(/^\d+$/.test(s)){
+    if(s.length===9) s='0'+s;                                            // pad ศูนย์
+    if(s.length===10) return s.replace(/^(\d{3})(\d{3})(\d{4})$/,'$1-$2-$3'); // มือถือ
+    if(s.length===9)  return s.replace(/^(\d{2})(\d{3})(\d{4})$/,'$1-$2-$3'); // สำนักงาน
+  }
+  return s;
+}
 function genQtNo(){
   const d=new Date();
   const seq=String(quotations.length+1).padStart(3,'0');
@@ -1935,6 +1955,29 @@ function bahtText(amount){
   function ra(n){if(n===0)return'ศูนย์';const m=Math.floor(n/1000000),th=Math.floor((n%1000000)/1000),rem=n%1000;return(m?rg(m)+'ล้าน':'')+(th?rg(th)+'พัน':'')+rg(rem);}
   const tot=Math.round(amount*100);return ra(Math.floor(tot/100))+'บาท'+(tot%100?rg(tot%100)+'สตางค์':'ถ้วน');
 }
+function printDoc() {
+  const docEl = document.getElementById('preview-doc');
+  if (!docEl || !docEl.innerHTML.trim()) {
+    toast('กรุณาดูตัวอย่างก่อนพิมพ์','err'); return;
+  }
+  // ดึง CSS ทั้งหมดจากหน้าปัจจุบัน
+  const styles = [...document.querySelectorAll('style,link[rel="stylesheet"]')]
+    .map(el => el.outerHTML).join('\n');
+  const html = `<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+    ${styles}
+    <style>
+      @page{ margin:12mm; }
+      body{ background:#fff!important; margin:0; }
+      .doc{ border:none!important; width:100%!important; padding:0!important; margin:0 auto; }
+    </style>
+  </head><body>${docEl.innerHTML}</body></html>`;
+  const w = window.open('','_blank','width=900,height=700');
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(()=>{ w.print(); w.close(); }, 600);
+}
+
 function toast(msg,type='info'){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast ${type} show`;setTimeout(()=>el.classList.remove('show'),3400);}
 
 document.addEventListener('DOMContentLoaded',()=>{
