@@ -143,8 +143,8 @@ tbody tr:hover td{background:#FAFCFF;}
 .tdi{height:32px;border:1.5px solid var(--border);border-radius:6px;padding:0 7px;font-size:12px;font-family:var(--font);color:var(--text);width:100%;background:var(--surface);outline:none;}
 .tdi:focus{border-color:var(--accent);}
 .tdi.num{text-align:right;font-family:var(--mono);}
-.btn-add-row{display:flex;align-items:center;gap:5px;background:var(--surface2);color:var(--text2);border:1px dashed var(--border2);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font);transition:all .15s;margin-top:7px;}
-.btn-add-row:hover{border-color:var(--accent);color:var(--accent);}
+.btn-add-row{display:flex;align-items:center;gap:5px;background:#D1FAE5;color:#065F46;border:1px dashed #6EE7B7;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font);transition:all .15s;margin-top:7px;}
+.btn-add-row:hover{background:#A7F3D0;border-color:#059669;color:#065F46;}
 .btn-del-row{background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:2px 4px;border-radius:4px;}
 .btn-del-row:hover{background:var(--red-bg);color:var(--red);}
 
@@ -211,7 +211,13 @@ tbody tr:hover td{background:#FAFCFF;}
 .toast.err{background:#DC2626;color:#fff;}
 .toast.info{background:var(--navy);color:#fff;}
 
-/* ── PRODUCT SEARCH IN ROW ── */
+/* ── READONLY FIELD ── */
+.fi-readonly{background:#F1F5F9!important;color:var(--text2)!important;cursor:default!important;border-color:var(--border)!important;}
+.fi-readonly:focus{border-color:var(--border)!important;box-shadow:none!important;}
+.fta-readonly{background:#F1F5F9!important;color:var(--text2)!important;cursor:default!important;border-color:var(--border)!important;resize:none!important;}
+.fta-readonly:focus{border-color:var(--border)!important;box-shadow:none!important;}
+select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!important;appearance:none!important;background-image:none!important;}
+.ref-badge{font-size:9px;font-weight:600;color:#64748B;background:#E2E8F0;border:1px solid #CBD5E1;border-radius:4px;padding:1px 6px;margin-left:6px;font-family:var(--mono);text-transform:none;letter-spacing:0;vertical-align:middle;}
 .prod-wrap{position:relative;width:100%;}
 .prod-input{width:100%;padding:4px 8px;border:1.5px solid var(--border2);border-radius:6px;
   font-size:12px;font-family:var(--mono);color:var(--text);background:#fff;outline:none;transition:border-color .15s;}
@@ -420,16 +426,14 @@ tbody tr:hover td{background:#FAFCFF;}
     </div>
     <div class="modal-body">
 
-      <!-- ข้อมูลผู้ขาย -->
-      <div class="section-title">🏢 ข้อมูลผู้เสนอราคา</div>
-      <div class="form-grid">
-        <div class="form-group"><label class="form-label">ชื่อบริษัท (ไทย)</label><input class="fi" id="f-sth" value="บริษัท เอสวีอาร์ เมด จำกัด"></div>
-        <div class="form-group"><label class="form-label">ชื่อบริษัท (EN)</label><input class="fi" id="f-sen" value="SVR MED CO.,LTD."></div>
-        <div class="form-group form-full"><label class="form-label">ที่อยู่</label><input class="fi" id="f-saddr" value="253/1064 ซอย เคทะร์มเกล้า 64 แขวงคลองสองต้นนุ่น เขตลาดกระบัง กรุงเทพมหานคร 10520"></div>
-        <div class="form-group"><label class="form-label">โทรศัพท์</label><input class="fi" id="f-stel" value="082-619-0540 , 085-326-3039"></div>
-        <div class="form-group"><label class="form-label">เลขประจำตัวผู้เสียภาษี</label><input class="fi" id="f-stax" value="0105567242700"></div>
+      <!-- ข้อมูลผู้ขาย (ซ่อน — ค่าคงที่ฝังไว้ใช้งานเบื้องหลัง) -->
+      <div style="display:none;">
+        <input id="f-sth" value="บริษัท เอสวีอาร์ เมด จำกัด">
+        <input id="f-sen" value="SVR MED CO.,LTD.">
+        <input id="f-saddr" value="253/1064 ซอย เคทะร์มเกล้า 64 แขวงคลองสองต้นนุ่น เขตลาดกระบัง กรุงเทพมหานคร 10520">
+        <input id="f-stel" value="082-619-0540 , 085-326-3039">
+        <input id="f-stax" value="0105567242700">
       </div>
-      <hr class="divider">
 
       <!-- ข้อมูลลูกค้า -->
       <div class="section-title">👥 ข้อมูลลูกค้า <span class="stag">ค้นหาจากรหัส / ชื่อ หรือกรอกเอง</span></div>
@@ -456,13 +460,38 @@ tbody tr:hover td{background:#FAFCFF;}
       </div>
 
       <div class="form-grid">
-        <div class="form-group form-full"><label class="form-label">ชื่อลูกค้า / บริษัท <span class="req">*</span></label><input class="fi" id="f-cname" placeholder="เช่น บริษัท ศิริ เมดิคอล แล็บ จำกัด"></div>
-        <div class="form-group form-full"><label class="form-label">ที่อยู่</label><textarea class="fta" id="f-caddr" rows="2" placeholder="ที่อยู่ลูกค้า"></textarea></div>
-        <div class="form-group"><label class="form-label">ผู้ติดต่อ</label><input class="fi" id="f-ccont" placeholder="เช่น คุณนุ๊ก"></div>
-        <div class="form-group"><label class="form-label">เบอร์โทร</label><input class="fi" id="f-ctel" placeholder="094-195-9556"></div>
-        <div class="form-group"><label class="form-label">เลขประจำตัวผู้เสียภาษี</label><input class="fi" id="f-ctax" placeholder="เลขภาษีลูกค้า"></div>
-        <div class="form-group"><label class="form-label">สำนักงาน</label>
-          <select class="fs" id="f-coffice"><option>สำนักงานใหญ่</option><option>สาขา</option></select></div>
+        <div class="form-group form-full">
+          <label class="form-label">ชื่อลูกค้า / บริษัท <span class="req">*</span>
+            <span class="ref-badge">Ref. Customers · ชื่อลูกค้า</span></label>
+          <input class="fi fi-readonly" id="f-cname" placeholder="เลือกลูกค้าจากช่องค้นหาด้านบน" readonly>
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">ที่อยู่
+            <span class="ref-badge">Ref. Customers · ที่อยู่</span></label>
+          <textarea class="fta fta-readonly" id="f-caddr" rows="2" placeholder="ดึงมาจากชีต Customers" readonly></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ผู้ติดต่อ
+            <span class="ref-badge">Ref. Customers · ผู้ติดต่อ</span></label>
+          <input class="fi fi-readonly" id="f-ccont" placeholder="ดึงมาจากชีต Customers" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">เบอร์โทร
+            <span class="ref-badge">Ref. Customers · เบอร์ติดต่อ1</span></label>
+          <input class="fi fi-readonly" id="f-ctel" placeholder="ดึงมาจากชีต Customers" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">เลขประจำตัวผู้เสียภาษี
+            <span class="ref-badge">Ref. Customers · เลขผู้เสียภาษี</span></label>
+          <input class="fi fi-readonly" id="f-ctax" placeholder="ดึงมาจากชีต Customers" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">สำนักงาน
+            <span class="ref-badge">Ref. Customers · สำนักงาน</span></label>
+          <select class="fs fi-readonly" id="f-coffice" disabled>
+            <option value="">— เลือกลูกค้าก่อน —</option>
+          </select>
+        </div>
       </div>
       <hr class="divider">
 
@@ -754,8 +783,8 @@ async function loadAll() {
       name:     col(cust.h,row,'ชื่อลูกค้า'),
       address:  col(cust.h,row,'ที่อยู่'),
       contact:  col(cust.h,row,'ผู้ติดต่อ'),
-      phone:    col(cust.h,row,'เบอร์มือถือ')||col(cust.h,row,'เบอร์ติดต่อ1'),
-      tax:      col(cust.h,row,'เลขผู้เสียภาษี'),
+      phone:    String(col(cust.h,row,'เบอร์มือถือ')||col(cust.h,row,'เบอร์ติดต่อ1')||''),
+      tax:      String(col(cust.h,row,'เลขผู้เสียภาษี')||''),
       custType: col(cust.h,row,'ประเภทลูกค้า')||'',
       office:   col(cust.h,row,'สำนักงาน')||'สำนักงานใหญ่',
     })).filter(c=>c.name);
@@ -944,13 +973,27 @@ function selectCust(code) {
   }
   // Show channel tag near items section
   updateChannelTag();
-  // Fill fields
+  // Fill fields — ใช้ String() เพื่อรักษาเลขศูนย์นำหน้า
   document.getElementById('f-cname').value   = c.name||'';
   document.getElementById('f-caddr').value   = c.address||'';
   document.getElementById('f-ccont').value   = c.contact||'';
-  document.getElementById('f-ctel').value    = c.phone||'';
-  document.getElementById('f-ctax').value    = c.tax||'';
-  document.getElementById('f-coffice').value = c.office||'สำนักงานใหญ่';
+  document.getElementById('f-ctel').value    = String(c.phone||'');   // เก็บเลขศูนย์นำหน้า
+  document.getElementById('f-ctax').value    = String(c.tax||'');     // เก็บเลขศูนย์นำหน้า
+  // Populate office dropdown จากข้อมูลลูกค้า
+  const offSel = document.getElementById('f-coffice');
+  offSel.innerHTML = '';
+  offSel.disabled = false;
+  offSel.classList.remove('fi-readonly');
+  const officeVal = String(c.office||'สำนักงานใหญ่');
+  // สร้าง option จาก value ที่มีในชีต
+  const officeOptions = [officeVal];
+  if (!officeOptions.includes('สำนักงานใหญ่')) officeOptions.unshift('สำนักงานใหญ่');
+  officeOptions.forEach(opt=>{
+    const o = document.createElement('option');
+    o.value = opt; o.textContent = opt;
+    if (opt === officeVal) o.selected = true;
+    offSel.appendChild(o);
+  });
 }
 
 function closeCustDrop() {
@@ -965,6 +1008,15 @@ function clearCustSearch() {
   const ct = document.getElementById('price-channel-tag');
   if (ct) ct.style.display = 'none';
   closeCustDrop();
+  // Reset readonly fields
+  ['f-cname','f-caddr','f-ccont','f-ctel','f-ctax'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+  // Reset office dropdown
+  const offSel = document.getElementById('f-coffice');
+  offSel.innerHTML = '<option value="">— เลือกลูกค้าก่อน —</option>';
+  offSel.disabled = true;
+  offSel.classList.add('fi-readonly');
 }
 
 document.addEventListener('click', e => {
@@ -1527,7 +1579,10 @@ function openNew() {
   document.getElementById('f-qtdeliver').value  = '30';
   document.getElementById('f-discount').value   = '0';
   document.getElementById('f-special-disc').value = '0';
-  document.getElementById('f-coffice').value    = 'สำนักงานใหญ่';
+  const offSelNew = document.getElementById('f-coffice');
+  offSelNew.innerHTML = '<option value="">— เลือกลูกค้าก่อน —</option>';
+  offSelNew.disabled = true;
+  offSelNew.classList.add('fi-readonly');
   document.getElementById('f-vat').value        = '7';
   // Reset photo
   resetPhotoState();
@@ -1547,6 +1602,26 @@ function openEdit(id) {
   set('f-cname',qt.custName); set('f-caddr',qt.custAddr);
   set('f-ccont',qt.custContact); set('f-ctel',qt.custTel); set('f-ctax',qt.custTax);
   document.getElementById('f-coffice').value = qt.custOffice||'สำนักงานใหญ่';
+  // ถ้าตรงกับ customer ในระบบ ให้ populate office dropdown
+  const offSelEdit = document.getElementById('f-coffice');
+  if (cMatch && cMatch.office) {
+    offSelEdit.innerHTML = '';
+    offSelEdit.disabled = false;
+    offSelEdit.classList.remove('fi-readonly');
+    const offVal = qt.custOffice || cMatch.office || 'สำนักงานใหญ่';
+    const opts = [offVal];
+    if (!opts.includes('สำนักงานใหญ่')) opts.unshift('สำนักงานใหญ่');
+    opts.forEach(opt=>{
+      const o = document.createElement('option');
+      o.value=opt; o.textContent=opt;
+      if(opt===offVal) o.selected=true;
+      offSelEdit.appendChild(o);
+    });
+  } else {
+    offSelEdit.innerHTML = `<option value="${qt.custOffice||''}">${qt.custOffice||'สำนักงานใหญ่'}</option>`;
+    offSelEdit.disabled = false;
+    offSelEdit.classList.remove('fi-readonly');
+  }
   // Restore customer search + custType
   currentCustType = qt.custType || '';
   const cMatch = customers.find(c=>c.name===qt.custName);
