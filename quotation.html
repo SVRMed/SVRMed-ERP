@@ -1989,13 +1989,18 @@ function printDoc() {
     <script>
       window.addEventListener('load', function(){
         const outer = document.querySelector('.doc-outer');
-        const avail = window.innerWidth;
+        const toolbar = document.querySelector('.print-toolbar');
+        const availH = window.innerHeight - toolbar.offsetHeight - 24;
+        const availW = window.innerWidth - 40;
         const docW = outer.offsetWidth;
-        const scale = Math.min(1, (avail - 40) / docW);
-        if(scale < 1){
-          outer.style.transform = 'scale('+scale+')';
-          outer.style.marginBottom = '-'+(outer.offsetHeight*(1-scale))+'px';
-        }
+        const docH = outer.offsetHeight;
+        const scaleW = availW / docW;
+        const scaleH = availH / docH;
+        const scale = Math.min(1, scaleW, scaleH);
+        outer.style.transformOrigin = 'top center';
+        outer.style.transform = 'scale('+scale+')';
+        outer.style.marginBottom = '-'+(docH*(1-scale))+'px';
+        document.body.style.overflow = 'hidden';
       });
     <\/script>
   </head><body>
