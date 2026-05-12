@@ -1816,7 +1816,7 @@ function buildQT(d){
         <div style="height:38px;"></div>
         <div class="doc-sigline" style="width:90%;margin:0 auto 4px;"></div>
         <div class="doc-siglbl">ผู้อนุมัติสั่งซื้อ</div>
-        <div class="doc-sigdate">วันที่ &nbsp;....../......./.......</div>
+        <div class="doc-sigdate">วันที่ &nbsp;................................</div>
       </div>
       <div class="doc-sig">
         <div style="font-size:10px;font-weight:700;color:#0F2B4E;margin-bottom:4px;">&nbsp;</div>
@@ -1824,7 +1824,7 @@ function buildQT(d){
         <div class="doc-sigline" style="width:90%;margin:0 auto 4px;"></div>
         <div class="doc-siglbl">ผู้จัดทำ</div>
         <div style="font-size:10px;color:#555;">(${d.issuer||'ผู้เสนอราคา'})</div>
-        <div class="doc-sigdate">วันที่ &nbsp;....../......./.......</div>
+        <div class="doc-sigdate">วันที่ &nbsp;................................</div>
       </div>
       <div class="doc-sig" style="padding-top:14px;">
         <div style="font-size:10px;font-weight:700;color:#0F2B4E;margin-bottom:4px;">บริษัท เอสวีอาร์ เมด จำกัด</div>
@@ -1832,7 +1832,7 @@ function buildQT(d){
         <div class="doc-sigline" style="width:90%;margin:0 auto 4px;"></div>
         <div class="doc-siglbl">ผู้มีอำนาจลงนาม</div>
         <div style="font-size:10px;color:#555;">(นางสาวสมถวิล รัตนประทุม)</div>
-        <div class="doc-sigdate">วันที่ &nbsp;....../......./.......</div>
+        <div class="doc-sigdate">วันที่ &nbsp;................................</div>
       </div>
     </div>
   </div>`;
@@ -1948,8 +1948,9 @@ function formatPhoneGlobal(v){
 }
 function genQtNo(){
   const d=new Date();
+  const buddhistYear = d.getFullYear() + 543;
   const seq=String(quotations.length+1).padStart(3,'0');
-  return `QT${String(d.getFullYear()).slice(-2)}${String(d.getMonth()+1).padStart(2,'0')}${seq}`;
+  return `QT${String(buddhistYear).slice(-2)}${String(d.getMonth()+1).padStart(2,'0')}${seq}`;
 }
 function thaiDateShort(d){
   if(!d)return'—';const dt=new Date(d);if(isNaN(dt))return d;
