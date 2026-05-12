@@ -174,7 +174,7 @@ tbody tr:hover td{background:#FAFCFF;}
 .doc-cname-th{font-size:14px;font-weight:700;color:#0F2B4E;}
 .doc-cname-en{font-size:13px;font-weight:600;color:#0F2B4E;margin-bottom:4px;}
 .doc-caddr{font-size:10px;color:#555;line-height:1.8;}
-.doc-tbox{text-align:center;font-size:20px;font-weight:700;color:#0F2B4E;margin:10px 0 6px;letter-spacing:-0.01em;}
+.doc-tbox{text-align:center;font-size:20px;font-weight:700;color:#0F2B4E;margin:4px 0 2px;letter-spacing:-0.01em;line-height:1.2;}
 .doc-meta{display:flex;gap:16px;margin-bottom:14px;align-items:stretch;}
 .doc-cust{flex:1;font-size:12px;line-height:1.9;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:10px;padding:12px 16px;}
 .doc-cust .lbl{font-weight:700;min-width:150px;display:inline-block;color:#1e3a5f;}
@@ -591,13 +591,13 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
 
 <!-- ████ MODAL: PREVIEW ████ -->
 <div class="modal-overlay hidden" id="m-preview">
-  <div class="modal" style="width:840px;">
+  <div class="modal" style="width:900px;max-height:96vh;">
     <div class="modal-header">
-      <div class="modal-title">👁 ตัวอย่างใบเสนอราคา</div>
+      <div class="modal-title">👁 ตัวอย่างใบเสนอราคา (A4)</div>
       <button class="modal-close" onclick="closeM('m-preview')">✕</button>
     </div>
-    <div class="modal-body">
-      <div id="preview-doc"></div>
+    <div class="modal-body" style="background:#e8e8e8;padding:20px;overflow-y:auto;display:flex;justify-content:center;">
+      <div id="preview-doc" style="width:794px;min-height:1123px;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,0.15);"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeM('m-preview')">← กลับแก้ไข</button>
@@ -845,7 +845,7 @@ async function loadAll() {
         id:            col(h,row,'ID'),
         qtNo,
         qtDate:        col(h,row,'วันที่'),
-        qtValid:       col(h,row,'กำหนดยืนราคาภายใน (วัน)'),
+        qtValid:       col(h,row,'กำหนดราคา (วัน)'),
         qtDeliver:     col(h,row,'กำหนดส่ง (วัน)'),
         issuer:        col(h,row,'ผู้เสนอราคา'),
         vatRate:       parseFloat(col(h,row,'VAT%'))||7,
@@ -1329,7 +1329,7 @@ async function doSave(status) {
       'ID':                 d.id,
       'เลขที่ QT':          d.qtNo,
       'วันที่':             d.qtDate,
-      'กำหนดยืนราคาภายใน (วัน)':   d.qtValid,
+      'กำหนดราคา (วัน)':   d.qtValid,
       'กำหนดส่ง (วัน)':    d.qtDeliver,
       'ผู้เสนอราคา':        d.issuer,
       'VAT%':              d.vatRate,
@@ -1773,16 +1773,16 @@ function buildQT(d){
     <div class="doc-tbox">ใบเสนอราคา<br><span style="font-size:12px;font-weight:400;">Quotation</span></div>
     <div class="doc-meta">
       <div class="doc-cust">
-        <div><span class="lbl">นามลูกค้า &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;${d.custName||''}</div>
+        <div><span class="lbl">นามลูกค้า &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;<strong style="color:#0F2B4E;">${d.custName||''}</strong></div>
         <div style="display:flex;"><span class="lbl" style="flex-shrink:0;">ที่อยู่ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;<span>${(d.custAddr||'').replace(/\n/g,'<br>')}</span></div>
         ${d.custContact?`<div><span class="lbl">ผู้ติดต่อ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;คุณ${d.custContact}${d.custTel?' &emsp;เบอร์โทร '+formatPhoneGlobal(d.custTel):''}</div>`:''}
-        <div><span class="lbl">เลขประจำตัวผู้เสียภาษี :</span>&nbsp;${d.custTax||''} &nbsp;${d.custOffice||'สำนักงานใหญ่'}</div>
+        <div><span class="lbl">เลขประจำตัวผู้เสียภาษี :</span>&nbsp;${d.custTax||''}${d.custOffice?'&emsp;('+d.custOffice+')':''}</div>
       </div>
       <div class="doc-ref">
         <div><span class="lbl">เลขที่</span>&nbsp;:<strong>&nbsp;${d.qtNo||''}</strong></div>
         <div><span class="lbl">วันที่</span>&nbsp;:&nbsp;${thaiDateShort(d.qtDate)}</div>
-        ${d.qtValid?`<div><span class="lbl">ยืนราคานี้ภายใน</span>&nbsp;:&nbsp;${d.qtValid} วัน</div>`:''}
-        ${d.qtDeliver?`<div><span class="lbl">กำหนดส่งสินค้าภายใน</span>&nbsp;:&nbsp;${d.qtDeliver} วัน</div>`:''}
+        <div><span class="lbl">ยืนราคานี้ภายใน</span>&nbsp;:&nbsp;${d.qtValid||90} วัน</div>
+        <div><span class="lbl">กำหนดส่งสินค้าภายใน</span>&nbsp;:&nbsp;${d.qtDeliver||30} วัน</div>
       </div>
     </div>
     <table class="doc-t">
@@ -1804,8 +1804,7 @@ function buildQT(d){
       </div>
     </div>
     <div class="doc-terms">
-      กำหนดยืนราคาภายใน ${d.qtValid||90} วัน &nbsp;|&nbsp; กำหนดส่งสินค้า ${d.qtDeliver||30} วัน${d.remark?' | หมายเหตุ: '+d.remark:''}<br>
-      จึงเรียนมาเพื่อพิจารณา หวังเป็นอย่างยิ่งว่าคงได้รับการพิจารณาจากท่าน และขอขอบคุณล่วงหน้า ณ ที่นี้
+      ${d.remark?'หมายเหตุ: '+d.remark+'<br>':''}หากต้องการข้อมูลเพิ่มเติม กรุณาติดต่อกลับได้ทุกเมื่อ &nbsp; ทางบริษัทหวังเป็นอย่างยิ่งว่าจะได้มีโอกาสให้บริการท่าน &nbsp; ขอขอบพระคุณเป็นอย่างสูง
     </div>
     <div class="doc-sigs">
       <div class="doc-sig">
@@ -1819,7 +1818,7 @@ function buildQT(d){
         </div>
       </div>
       <div class="doc-sig">
-        <div class="doc-stamp-wrap"><div class="doc-stamp">บริษัท<br>เอสวีอาร์<br>เมด จำกัด</div></div>
+        <div style="height:66px;"></div>
         <div class="doc-sigline"></div>
         <div class="doc-siglbl">ผู้เสนอราคา</div>
         <div style="font-size:10px;color:#555;">${d.issuer||'ผู้เสนอราคา'}</div>
