@@ -164,7 +164,7 @@ tbody tr:hover td{background:#FAFCFF;}
 /* PRINT DOC — Quotation style matching sample image */
 .doc{background:#fff;width:760px;margin:0 auto;font-family:'Noto Sans Thai',sans-serif;font-size:11.5px;color:#111;padding:28px 32px;border:1px solid #ddd;}
 .doc-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:20px;}
-.doc-logo-img{width:84px;height:auto;object-fit:contain;display:block;flex-shrink:0;}
+.doc-logo-img{width:120px;height:auto;object-fit:contain;display:block;flex-shrink:0;}
 .doc-header-left{display:flex;align-items:center;gap:12px;}
 .doc-seller-block{display:flex;flex-direction:column;justify-content:center;}
 .doc-seller-name-th{font-size:12.5px;font-weight:700;color:#0F2B4E;line-height:1.3;}
@@ -174,12 +174,12 @@ tbody tr:hover td{background:#FAFCFF;}
 .doc-cname-th{font-size:14px;font-weight:700;color:#0F2B4E;}
 .doc-cname-en{font-size:13px;font-weight:600;color:#0F2B4E;margin-bottom:4px;}
 .doc-caddr{font-size:10px;color:#555;line-height:1.8;}
-.doc-tbox{border:2px solid #0F2B4E;text-align:center;padding:7px 28px;font-size:15px;font-weight:700;color:#0F2B4E;display:block;width:fit-content;margin:8px auto 14px;}
-.doc-meta{display:flex;gap:24px;margin-bottom:12px;}
-.doc-cust{flex:1;font-size:10.5px;line-height:2;}
-.doc-cust .lbl{font-weight:700;width:120px;display:inline-block;color:#333;}
-.doc-ref{text-align:right;font-size:10.5px;line-height:2;}
-.doc-ref .lbl{font-weight:700;color:#333;}
+.doc-tbox{text-align:center;font-size:20px;font-weight:700;color:#0F2B4E;margin:10px 0 6px;letter-spacing:-0.01em;}
+.doc-meta{display:flex;gap:16px;margin-bottom:14px;align-items:stretch;}
+.doc-cust{flex:1;font-size:12px;line-height:1.9;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:10px;padding:12px 16px;}
+.doc-cust .lbl{font-weight:700;min-width:150px;display:inline-block;color:#1e3a5f;}
+.doc-ref{min-width:200px;text-align:left;font-size:12px;line-height:1.9;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:10px;padding:12px 16px;}
+.doc-ref .lbl{font-weight:700;min-width:120px;display:inline-block;color:#1e3a5f;}
 .doc-t{width:100%;border-collapse:collapse;font-size:10.5px;margin-bottom:8px;}
 .doc-t th{background:#C8D6E8;border:1px solid #9DB5CC;padding:5px 7px;font-weight:700;text-align:center;}
 .doc-t td{border:1px solid #B8CADC;padding:4px 7px;vertical-align:top;}
@@ -1770,21 +1770,19 @@ function buildQT(d){
         </div>
       </div>
     </div>
-    <div class="doc-tbox">ใบเสนอราคา<br><span style="font-size:11px;font-weight:400;">Quotation</span></div>
+    <div class="doc-tbox">ใบเสนอราคา<br><span style="font-size:12px;font-weight:400;">Quotation</span></div>
     <div class="doc-meta">
       <div class="doc-cust">
-        <div><span class="lbl">นามลูกค้า</span>${d.custName||''}</div>
-        <div><span class="lbl">ที่อยู่</span>${(d.custAddr||'').replace(/\n/g,'<br>')}</div>
-        ${d.custContact?`<div><span class="lbl">ผู้ติดต่อ: คุณ${d.custContact}</span>${d.custTel?' &nbsp;เบอร์โทร: '+formatPhoneGlobal(d.custTel):''}</div>`:''}
-        <div><span class="lbl">เลขประจำตัวฯ</span>${d.custTax||''}&nbsp;
-          <span style="border:1px solid #999;padding:1px 8px;font-size:9.5px;">X</span>&nbsp;${d.custOffice||'สำนักงานใหญ่'}
-        </div>
+        <div><span class="lbl">นามลูกค้า &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;${d.custName||''}</div>
+        <div style="display:flex;"><span class="lbl" style="flex-shrink:0;">ที่อยู่ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;<span>${(d.custAddr||'').replace(/\n/g,'<br>')}</span></div>
+        ${d.custContact?`<div><span class="lbl">ผู้ติดต่อ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;คุณ${d.custContact}${d.custTel?' &emsp;เบอร์โทร '+formatPhoneGlobal(d.custTel):''}</div>`:''}
+        <div><span class="lbl">เลขประจำตัวผู้เสียภาษี :</span>&nbsp;${d.custTax||''} &nbsp;${d.custOffice||'สำนักงานใหญ่'}</div>
       </div>
       <div class="doc-ref">
-        <div><span class="lbl">เลขที่ &nbsp;</span><strong>${d.qtNo||''}</strong></div>
-        <div><span class="lbl">วันที่ &nbsp;</span>${thaiDateShort(d.qtDate)}</div>
-        ${d.qtValid?`<div><span class="lbl">กำหนดยืนราคาภายใน &nbsp;</span>${d.qtValid} วัน</div>`:''}
-        ${d.qtDeliver?`<div><span class="lbl">กำหนดส่งสินค้า &nbsp;</span>${d.qtDeliver} วัน</div>`:''}
+        <div><span class="lbl">เลขที่</span>&nbsp;:<strong>&nbsp;${d.qtNo||''}</strong></div>
+        <div><span class="lbl">วันที่</span>&nbsp;:&nbsp;${thaiDateShort(d.qtDate)}</div>
+        ${d.qtValid?`<div><span class="lbl">ยืนราคานี้ภายใน</span>&nbsp;:&nbsp;${d.qtValid} วัน</div>`:''}
+        ${d.qtDeliver?`<div><span class="lbl">กำหนดส่งสินค้าภายใน</span>&nbsp;:&nbsp;${d.qtDeliver} วัน</div>`:''}
       </div>
     </div>
     <table class="doc-t">
