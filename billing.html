@@ -318,7 +318,7 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
     </div>
     <div class="nav-section">
       <div class="nav-label">การขาย</div>
-      <a class="nav-item" href="quotation.html"><span class="icon">📋</span>ใบแจ้งหนี้ (QT)</a>
+      <a class="nav-item" href="quotation.html"><span class="icon">📋</span>ใบเสนอราคา (QT)</a>
       <a class="nav-item active"><span class="icon">📄</span>ใบแจ้งหนี้ (IV)</a>
       <a class="nav-item disabled"><span class="icon">🧾</span>ใบกำกับภาษี (TX)<span class="nav-badge">Soon</span></a>
       <a class="nav-item disabled"><span class="icon">💵</span>ใบเสร็จรับเงิน (RC)<span class="nav-badge">Soon</span></a>
@@ -337,7 +337,7 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
   <div class="main">
     <div style="background:linear-gradient(135deg,#EEF2FF,#F5F3FF);border:1px solid #C7D2FE;border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
       <span style="font-size:11px;font-weight:700;color:var(--text2);">Sales Flow:</span>
-      <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:var(--green-bg);color:var(--green);">✅ QT ใบแจ้งหนี้</span>
+      <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:var(--green-bg);color:var(--green);">✅ QT ใบเสนอราคา</span>
       <span style="color:var(--text3);font-size:14px;">→</span>
       <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:#E0E7FF;color:#4338CA;outline:2px solid #4338CA;">📄 IV ใบแจ้งหนี้</span>
       <span style="color:var(--text3);font-size:14px;">→</span>
@@ -359,14 +359,14 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
     <!-- STATS -->
     <div class="stats">
       <div class="stat" style="border-top:3px solid var(--teal);"><div class="stat-v" id="st-total">—</div><div class="stat-l">ทั้งหมด</div></div>
-      <div class="stat" style="border-top:3px solid var(--amber);"><div class="stat-v" id="st-sent">—</div><div class="stat-l">ส่งแล้ว / รอชำระ</div></div>
+      <div class="stat" style="border-top:3px solid var(--amber);"><div class="stat-v" id="st-draft">—</div><div class="stat-l">ร่าง</div></div>
       <div class="stat" style="border-top:3px solid var(--green);"><div class="stat-v" id="st-sent">—</div><div class="stat-l">ส่งแล้ว / รอชำระ</div></div>
       <div class="stat" style="border-top:3px solid var(--purple);"><div class="stat-v" id="st-paid">—</div><div class="stat-l">ชำระแล้ว</div></div>
     </div>
 
     <!-- TOOLBAR -->
     <div class="toolbar">
-      <input class="search-input" placeholder="🔍 ค้นหาเลขที่ QT / ชื่อลูกค้า..." oninput="filterList(this.value)" id="search-input">
+      <input class="search-input" placeholder="🔍 ค้นหาเลขที่ IV / ชื่อลูกค้า / อ้างอิง QT..." oninput="filterList(this.value)" id="search-input">
       <select class="filter-select" id="status-filter" onchange="filterList(document.getElementById('search-input').value)">
         <option value="">ทุกสถานะ</option>
         <option value="draft">✏️ ร่าง</option>
@@ -677,7 +677,7 @@ async function loadAll() {
     _sheetsInited = true;
   }
   try {
-    const [qtR, itemR, custR, prodR] = await Promise.all([
+    const [invR, itemR, custR, prodR] = await Promise.all([
       gs({action:'get', sheet:SH_INV}).catch(()=>[]),
       gs({action:'get', sheet:SH_ITEMS}).catch(()=>[]),
       gs({action:'get', sheet:SH_CUST}).catch(()=>[]),
@@ -1061,7 +1061,7 @@ function onQtyChange(input) {
 
 function applySpecialDisc() {
   // re-apply special discount % to all rows that have a product code
-  const discPct = parseFloat(document.getElementById('f-special-disc').value)||0;
+  const discPct = parseFloat(document.getElementById('f-discount').value)||0;
   document.querySelectorAll('#items-body tr').forEach(tr => {
     const code = tr.cells[1].querySelector('input').value.trim();
     if (!code) return;
@@ -1381,7 +1381,7 @@ function collectData(){
     invRef:       document.getElementById('f-invref').value.trim(),
     issuer:       document.getElementById('f-issuer').value.trim(),
     vatRate:vr, discount:disc,
-    specialDisc: parseFloat(document.getElementById('f-special-disc').value)||0,
+    specialDisc: parseFloat(document.getElementById('f-discount').value)||0,
     remark:document.getElementById('f-remark').value.trim(),
     subtotal:sub, exclVat:excl, vat, total:after, items, createdAt:todayStr(),
   };
@@ -1500,8 +1500,8 @@ function buildQT(d){
 function renderStats(){
   document.getElementById('st-total').textContent=invoices.length;
   document.getElementById('st-sent').textContent=invoices.filter(q=>q.status==='sent').length;
-  document.getElementById('st-approved').textContent=invoices.filter(q=>q.status==='approved').length;
-  document.getElementById('st-invoiced').textContent=invoices.filter(q=>q.status==='invoiced').length;
+  document.getElementById('st-sent').textContent=invoices.filter(q=>q.status==='approved').length;
+  document.getElementById('st-paid').textContent=invoices.filter(q=>q.status==='invoiced').length;
 }
 
 const STATUS_CHIP={
@@ -1514,8 +1514,8 @@ const STATUS_CHIP={
 
 function filterList(q){
   const status=document.getElementById('status-filter').value;
-  let list=quotations;
-  if(q){const s=q.toLowerCase(); list=list.filter(i=>(i.qtNo||'').toLowerCase().includes(s)||(i.custName||'').toLowerCase().includes(s));}
+  let list=invoices;
+  if(q){const s=q.toLowerCase(); list=list.filter(i=>(i.invNo||'').toLowerCase().includes(s)||(i.custName||'').toLowerCase().includes(s));}
   if(status) list=list.filter(i=>i.status===status);
   allFiltered=list;
   renderTableRows(list);
