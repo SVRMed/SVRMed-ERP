@@ -1814,24 +1814,25 @@ function buildQT(d){
       <div class="doc-sig">
         <div style="font-size:10px;font-weight:700;color:#0F2B4E;margin-bottom:4px;">เห็นชอบและให้ดำเนินการสั่งซื้อตามเอกสารใบเสนอราคานี้</div>
         <div style="height:38px;"></div>
-        <div class="doc-sigline" style="width:85%;margin:0 auto 4px;"></div>
+        <div class="doc-sigline" style="width:90%;margin:0 auto 4px;"></div>
         <div class="doc-siglbl">ผู้อนุมัติสั่งซื้อ</div>
-        <div class="doc-sigdate">วันที่ ....................</div>
+        <div class="doc-sigdate">วันที่ &nbsp;....../......./.......</div>
       </div>
       <div class="doc-sig">
         <div style="font-size:10px;font-weight:700;color:#0F2B4E;margin-bottom:4px;">&nbsp;</div>
         <div style="height:38px;"></div>
-        <div class="doc-sigline" style="width:85%;margin:0 auto 4px;"></div>
+        <div class="doc-sigline" style="width:90%;margin:0 auto 4px;"></div>
         <div class="doc-siglbl">ผู้จัดทำ</div>
         <div style="font-size:10px;color:#555;">(${d.issuer||'ผู้เสนอราคา'})</div>
-        <div class="doc-sigdate">วันที่ ....................</div>
+        <div class="doc-sigdate">วันที่ &nbsp;....../......./.......</div>
       </div>
-      <div class="doc-sig">
+      <div class="doc-sig" style="padding-top:14px;">
         <div style="font-size:10px;font-weight:700;color:#0F2B4E;margin-bottom:4px;">บริษัท เอสวีอาร์ เมด จำกัด</div>
         <div style="height:38px;"></div>
-        <div class="doc-sigline" style="width:85%;margin:0 auto 4px;"></div>
+        <div class="doc-sigline" style="width:90%;margin:0 auto 4px;"></div>
         <div class="doc-siglbl">ผู้มีอำนาจลงนาม</div>
-        <div class="doc-sigdate">วันที่ ....................</div>
+        <div style="font-size:10px;color:#555;">(นางสาวสมถวิล รัตนประทุม)</div>
+        <div class="doc-sigdate">วันที่ &nbsp;....../......./.......</div>
       </div>
     </div>
   </div>`;
@@ -1968,21 +1969,34 @@ function printDoc() {
   }
   const styles = [...document.querySelectorAll('style,link[rel="stylesheet"]')]
     .map(el => el.outerHTML).join('\n');
-  const html = `<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+  const html = `<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width">
     ${styles}
     <style>
       @page{ size:A4 portrait; margin:10mm; }
-      html,body{ margin:0; padding:0; background:#fff!important; }
-      .doc{ border:none!important; box-shadow:none!important; width:100%!important; padding:16px 20px!important; margin:0!important; font-size:11px; }
-      .doc-meta{ gap:10px; }
-      .doc-cust,.doc-ref{ font-size:11px; }
+      html{ background:#555; }
+      body{ margin:0; padding:20px; background:#555; display:flex; flex-direction:column; align-items:center; }
+      .print-toolbar{ width:210mm; background:#333; color:#fff; padding:8px 16px; border-radius:6px 6px 0 0; display:flex; align-items:center; justify-content:space-between; font-family:sans-serif; font-size:13px; box-sizing:border-box; }
+      .print-toolbar button{ background:#2563EB; color:#fff; border:none; padding:6px 18px; border-radius:5px; cursor:pointer; font-size:13px; font-weight:600; }
+      .print-toolbar button:hover{ background:#1d4ed8; }
+      .doc-wrap{ width:210mm; min-height:297mm; background:#fff; box-shadow:0 4px 24px rgba(0,0,0,0.4); box-sizing:border-box; }
+      .doc{ border:none!important; box-shadow:none!important; width:100%!important; padding:14px 20px!important; margin:0!important; box-sizing:border-box; }
+      @media print{
+        html,body{ background:#fff!important; padding:0!important; }
+        .print-toolbar{ display:none!important; }
+        .doc-wrap{ box-shadow:none!important; width:100%!important; min-height:auto; }
+      }
     </style>
-  </head><body>${docEl.innerHTML}</body></html>`;
-  const w = window.open('','_blank','width=900,height=700');
+  </head><body>
+    <div class="print-toolbar">
+      <span>📄 ใบเสนอราคา — พรีวิว A4</span>
+      <button onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF</button>
+    </div>
+    <div class="doc-wrap">${docEl.innerHTML}</div>
+  </body></html>`;
+  const w = window.open('','_blank');
   w.document.write(html);
   w.document.close();
   w.focus();
-  setTimeout(()=>{ w.print(); }, 800);
 }
 
 function toast(msg,type='info'){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast ${type} show`;setTimeout(()=>el.classList.remove('show'),3400);}
