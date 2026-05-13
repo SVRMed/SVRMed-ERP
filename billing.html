@@ -1181,6 +1181,14 @@ async function doSave(status) {
       await gs({action:'add', sheet:SH_INV, data:JSON.stringify(hdr)});
     }
 
+    // ตรวจว่ามี items ใน sheet แล้วหรือยัง (กรณี doConvert สร้างไว้แล้ว)
+    const existingItems = await gs({action:'get', sheet:SH_ITEMS}).catch(()=>[]);
+    const existingArr = Array.isArray(existingItems) && existingItems.length > 1 ? existingItems.slice(1) : [];
+    const existingHeaders = Array.isArray(existingItems) && existingItems.length > 0 ? existingItems[0] : [];
+    const colIdx = existingHeaders.indexOf('เลขที่เอกสาร');
+    const alreadyHasItems = colIdx >= 0 && existingArr.some(row => String(row[colIdx]||'').trim() === d.invNo);
+
+    if (!alreadyHasItems) {
     for (const r of d.items) {
       await gs({action:'add', sheet:SH_ITEMS, data:JSON.stringify({
         'เลขที่เอกสาร': d.invNo,
@@ -1192,6 +1200,7 @@ async function doSave(status) {
         'จำนวนเงิน':    r.amount,
       })});
     }
+    } // end if !alreadyHasItems
 
     const msg = status==='sent' ? '📤 บันทึกและส่งเอกสาร SVR แล้ว' : '💾 บันทึกร่างแล้ว';
     toast(msg,'ok');
@@ -1829,11 +1838,16 @@ async function loadApprovedQTs(custName) {
       const qtNo = col(row,'เลขที่ QT');
       const date = col(row,'วันที่');
       const total = parseFloat(col(row,'ยอดรวมสุทธิ'))||0;
-      return `<div class="qt-card" onclick="selectQT(this,'${qtNo}')" data-qtno="${qtNo}">
-        <span class="qt-card-no">${qtNo}</span>
-        <span class="qt-card-amt">${fmt(total)} ฿</span>
-        <div class="qt-card-info">วันที่: ${thaiDateShort(date)}</div>
-      </div>`;
+      return `<label class="qt-card" data-qtno="${qtNo}" style="display:flex;align-items:flex-start;gap:10px;">
+        <input type="radio" name="qt-select" value="${qtNo}" onchange="selectQT(this,'${qtNo}')" style="accent-color:var(--accent);margin-top:2px;width:16px;height:16px;flex-shrink:0;cursor:pointer;">
+        <div style="flex:1;">
+          <div style="display:flex;justify-content:space-between;">
+            <span class="qt-card-no">${qtNo}</span>
+            <span class="qt-card-amt">${fmt(total)} ฿</span>
+          </div>
+          <div class="qt-card-info">วันที่: ${thaiDateShort(date)}</div>
+        </div>
+      </label>`;
     }).join('');
     wrap.style.display = 'block';
     document.getElementById('f-invref').placeholder = 'เลือก QT ด้านบน';
@@ -1842,8 +1856,17 @@ async function loadApprovedQTs(custName) {
 
 async function selectQT(el, qtNo) {
   // Highlight selected card
-  document.querySelectorAll('.qt-card').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
+  document.querySelectorAll('.qt-card').forEach(c => {
+    c.classList.remove('selected');
+    c.style.borderColor = '';
+    c.style.background = '';
+  });
+  const card = el.closest('.qt-card');
+  if (card) {
+    card.classList.add('selected');
+    card.style.borderColor = 'var(--green)';
+    card.style.background = 'var(--green-bg)';
+  }
   document.getElementById('f-invref').value = qtNo;
 
   try {
