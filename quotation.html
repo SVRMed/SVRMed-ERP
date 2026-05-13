@@ -363,7 +363,7 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
     <div class="page-header">
       <div class="page-title">
         <h1>📋 ใบเสนอราคา (Quotation)</h1>
-        <p>สร้าง · ส่ง · อนุมัติ · แปลงเป็นใบกำกับภาษีอัตโนมัติ</p>
+        <p>สร้าง · ส่ง · อนุมัติ · แปลงเป็นใบแจ้งหนี้อัตโนมัติ</p>
       </div>
       <div style="display:flex;gap:8px;">
         <button class="btn btn-secondary" onclick="loadAll()">🔄 รีเฟรช</button>
@@ -636,7 +636,7 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
 <div class="modal-overlay hidden" id="m-convert">
   <div class="modal modal-sm">
     <div class="modal-header">
-      <div class="modal-title">💰 แปลงเป็นใบกำกับภาษี</div>
+      <div class="modal-title">📄 แปลงเป็นใบแจ้งหนี้</div>
       <button class="modal-close" onclick="closeM('m-convert')">✕</button>
     </div>
     <div class="modal-body">
@@ -650,17 +650,17 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
         </div>
       </div>
       <div class="form-group" style="margin-bottom:10px;">
-        <label class="form-label">เลขที่ใบกำกับภาษี (IV) <span class="req">*</span></label>
+        <label class="form-label">เลขที่ใบแจ้งหนี้ (IV) <span class="req">*</span></label>
         <input class="fi" id="f-conv-ivno" placeholder="เช่น IV6903001">
       </div>
       <div class="form-group">
-        <label class="form-label">วันที่ออกใบกำกับภาษี</label>
+        <label class="form-label">วันที่ออกใบแจ้งหนี้</label>
         <input class="fi" type="date" id="f-conv-ivdate">
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeM('m-convert')">ยกเลิก</button>
-      <button class="btn btn-purple" id="btn-do-convert" onclick="doConvert()">💰 แปลงและเปิดใบกำกับภาษี</button>
+      <button class="btn btn-purple" id="btn-do-convert" onclick="doConvert()">📄 แปลงและเปิดใบแจ้งหนี้</button>
     </div>
   </div>
 </div>
@@ -1522,7 +1522,7 @@ async function doConvert() {
       })});
     }
 
-    toast('✅ แปลงเป็นใบกำกับภาษีสำเร็จ! กำลังไปหน้า billing...','ok');
+    toast('✅ แปลงเป็นใบแจ้งหนี้สำเร็จ! กำลังไปหน้า billing...','ok');
     closeM('m-convert');
     await loadAll();
     // ไปหน้า billing พร้อม highlight IV ใหม่
@@ -1532,7 +1532,7 @@ async function doConvert() {
   }
 
   document.getElementById('btn-do-convert').disabled = false;
-  document.getElementById('btn-do-convert').textContent = '💰 แปลงและเปิดใบกำกับภาษี';
+  document.getElementById('btn-do-convert').textContent = '📄 แปลงและเปิดใบแจ้งหนี้';
 }
 
 // ═══════════════════════════════════════
@@ -1927,7 +1927,7 @@ function renderTableRows(list){
           <button class="btn-sm" onclick="viewQt('${qt.id}')" title="ดูตัวอย่าง">👁</button>
           <button class="btn-sm" onclick="openEdit('${qt.id}')" title="แก้ไข${qt.signedPhotoUrl?' / เปลี่ยนภาพ':''}" ${isInvoiced?'disabled style="opacity:.4;"':''}>✏️</button>
           <button class="btn-sm" onclick="openStatusModal('${qt.id}')" title="เปลี่ยนสถานะ" ${isInvoiced?'disabled style="opacity:.4;"':''}>⚡</button>
-          ${canConvert?`<button class="convert-btn" onclick="openConvert('${qt.id}')">💰 ออก IV</button>`:''}
+          ${canConvert?`<button class="convert-btn" onclick="openConvert('${qt.id}')">📄 ออก IV</button>`:''}
           <button class="btn-sm danger" onclick="confirmDel('${qt.id}')" title="ลบ">🗑</button>
         </div>
       </td>
