@@ -1464,8 +1464,8 @@ async function doConvert() {
 
     const ivHdr = {
       'ID':                'INV-'+Date.now(),
-      'เลขที่ใบกำกับ':     ivNo,
-      'วันที่ออกเอกสาร':   ivDate,
+      'เลขที่ IV':         ivNo,
+      'วันที่':            ivDate,
       'อ้างอิง QT':        qt.qtNo,
       'กำหนดชำระ (วัน)':  qt.qtDeliver||'30',
       'ผู้ออกเอกสาร':      qt.issuer||'',
@@ -1497,7 +1497,7 @@ async function doConvert() {
     // 3. Add items to InvoiceItems
     for (const r of qt.items) {
       await gs({action:'add', sheet:'InvoiceItems', data:JSON.stringify({
-        'เลขที่ใบกำกับ':      ivNo,
+        'เลขที่ IV':         ivNo,
         'เลขที่ใบส่งสินค้า':  '',
         'วันที่ส่ง':           ivDate,
         'ผู้รับสินค้า':        '',
