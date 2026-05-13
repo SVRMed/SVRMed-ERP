@@ -740,6 +740,7 @@ async function loadAll() {
       tax:      padTax(col(cust.h,row,'เลขผู้เสียภาษี')),
       custType: col(cust.h,row,'ประเภทลูกค้า')||'',
       office:   col(cust.h,row,'สำนักงาน')||'สำนักงานใหญ่',
+      credit:   col(cust.h,row,'เครดิต')||'30',
     })).filter(c=>c.name);
     populateCustDropdown();
 
@@ -940,6 +941,11 @@ function selectCust(code) {
   document.getElementById('f-ctel').value    = formatPhoneGlobal(c.phone||'');  // format xxx-xxx-xxxx
   document.getElementById('f-ctax').value    = String(c.tax||'');     // เก็บเลขศูนย์นำหน้า
   document.getElementById('f-coffice').value = String(c.office||'');
+  // คำนวณวันครบกำหนดชำระจากเครดิตลูกค้า
+  const creditDays = parseInt(String(c.credit||'30').replace(/[^0-9]/g,''))||30;
+  currentCreditDays = creditDays;
+  const invDate = document.getElementById('f-invdate').value || todayStr();
+  document.getElementById('f-duedate').value = calcDueDate(invDate, creditDays);
   // Load approved QTs for this customer
   loadApprovedQTs(c.name);
 }
@@ -1808,7 +1814,7 @@ async function loadApprovedQTs(custName) {
     // Filter approved QTs for this customer
     const approved = rows.slice(1).filter(row =>
       col(row,'ชื่อลูกค้า') === custName &&
-      col(row,'สถานะ') === 'approved'
+      ['approved','invoiced'].includes(col(row,'สถานะ'))
     );
 
     if (!approved.length) {
