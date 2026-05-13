@@ -764,7 +764,7 @@ async function loadAll() {
     });
 
     invoices = inv.rows.map(row=>{
-      const h = inv.h;
+      const h = qt.h;
       const invNo = col(h,row,'เลขที่ IV');
       let itemsArr = iMap[invNo]||[];
       try {
@@ -1179,7 +1179,7 @@ async function doSave(status) {
 // CHANGE STATUS
 // ═══════════════════════════════════════
 function openStatusModal(id) {
-  const iv2 = invoices.find(i=>i.id===id);
+  const qt = invoices.find(q=>q.id===id);
   if (!iv2) return;
   statusId = id;
   document.getElementById('status-qt-no').textContent = iv2.invNo;
@@ -1188,11 +1188,11 @@ function openStatusModal(id) {
 }
 
 async function changeStatus(newStatus) {
-  const iv2 = invoices.find(i=>i.id===statusId);
-  if (!iv2) return;
+  const qt = invoices.find(q=>q.id===statusId);
+  if (!qt) return;
   try {
     const data = {'สถานะ': newStatus};
-    await gs({action:'update', sheet:SH_INV, keyCol:'ID', keyVal:iv2.id, data:JSON.stringify(data)});
+    await gs({action:'update', sheet:SH_INV, keyCol:'ID', keyVal:qt.id, data:JSON.stringify(data)});
     toast(`✅ เปลี่ยนสถานะเป็น "${newStatus}" แล้ว`,'ok');
     closeM('m-status');
     await loadAll();
@@ -1206,7 +1206,7 @@ async function changeStatus(newStatus) {
 // DELETE
 // ═══════════════════════════════════════
 function confirmDel(id) {
-  const ivd = invoices.find(i=>i.id===id);
+  const qt = invoices.find(q=>q.id===id);
   if (!ivd) return;
   delId = id;
   document.getElementById('del-preview').textContent = `${ivd.invNo} (${ivd.custName})`;
@@ -1214,13 +1214,13 @@ function confirmDel(id) {
 }
 
 async function doDelete() {
-  const ivdel = invoices.find(i=>i.id===delId);
-  if (!ivdel) return;
+  const qt = invoices.find(q=>q.id===delId);
+  if (!qt) return;
   const btn = document.getElementById('btn-del-ok');
   btn.disabled=true; btn.textContent='⏳ กำลังลบ...';
   try {
-    await gs({action:'delete', sheet:SH_INV, keyCol:'ID', keyVal:ivdel.id});
-    try { await gs({action:'deleteWhere', sheet:SH_ITEMS, keyCol:'เลขที่ IV', keyVal:ivdel.invNo}); } catch(e){}
+    await gs({action:'delete', sheet:SH_INV, keyCol:'ID', keyVal:qt.id});
+    try { await gs({action:'deleteWhere', sheet:SH_ITEMS, keyCol:'เลขที่ IV', keyVal:qt.qtNo}); } catch(e){}
     toast('🗑️ ลบแล้ว','ok');
     closeM('m-del');
     await loadAll();
@@ -1262,7 +1262,7 @@ function openNew() {
 }
 
 function openEdit(id) {
-  const iv = invoices.find(i=>i.id===id);
+  const qt = invoices.find(q=>q.id===id);
   if (!iv) return;
   editId = id;
   document.getElementById('m-form-title').textContent = '✏️ แก้ไข ' + iv.invNo;
@@ -1299,8 +1299,9 @@ function openEdit(id) {
   set('f-paydays',iv.invPayDays); set('f-invref',iv.invRef);
   set('f-issuer',iv.issuer);
   document.getElementById('f-vat').value = String(iv.vatRate||7);
-  set('f-discount',String(iv.discount||0));
-  set('f-remark',iv.remark);
+  set('f-discount',String(qt.discount||0));
+  
+  set('f-remark',qt.remark);
   document.getElementById('items-body').innerHTML='';
   (iv.items||[]).forEach(()=>addRow());
   const trs=[...document.querySelectorAll('#items-body tr')];
@@ -1554,22 +1555,310 @@ function renderTableRows(list){
     return;
   }
   tbody.innerHTML=list.map(iv=>{
-    const locked = iv.status==='invoiced'||iv.status==='paid';
-    const payDate = iv.invDate&&iv.invPayDays
-      ? thaiDateShort(new Date(new Date(iv.invDate).getTime()+parseInt(iv.invPayDays)*86400000).toISOString().split('T')[0])
-      : '—';
+    const canConvert = qt.status==='approved';
+    const isInvoiced = qt.status==='invoiced';
+    const photoCell = qt.signedPhotoUrl
+      ? `<img class="signed-thumb" src="${qt.signedPhotoUrl}"
+           onclick="openLightbox('${qt.signedPhotoUrl}','${qt.qtNo} · ใบเซ็นแล้ว')"
+           title="คลิกดูภาพใบเซ็น" onerror="this.style.display='none'">`
+      : `<span style="font-size:10px;color:var(--text3);">—</span>`;
     return `<tr>
-      <td class="mono">${iv.invNo}</td>
-      <td>${iv.custName||'—'}</td>
-      <td class="mono">${thaiDateShort(iv.invDate)}</td>
-      <td class="mono" style="color:var(--amber);">${payDate}</td>
-      <td class="mono" style="color:var(--purple);">${iv.invRef||'—'}</td>
-      <td class="mono" style="text-align:right;">${fmt(iv.total)}</td>
-      <td>${STATUS_CHIP[iv.status]||''}</td>
-      <td><div style="display:flex;gap:4px;flex-wrap:wrap;">
-        <button class="btn-sm" onclick="viewIv('${iv.id}')" title="ดูตัวอย่าง">👁</button>
-        <button class="btn-sm" onclick="openEdit('${iv.id}')" title="แก้ไข" ${locked?'disabled style="opacity:.4;"':''}>✏️</button>
-        <button class="btn-sm" onclick="openStatusModal('${iv.id}')" title="เปลี่ยนสถานะ">🔄</button>
-        <button class="btn-sm danger" onclick="confirmDel('${iv.id}')" title="ลบ">🗑</button>
-      </div></td>
+      <td class="mono" style="font-weight:700;">${qt.qtNo}</td>
+      <td>
+        <div style="font-weight:600;">${qt.custName}</div>
+        ${qt.custContact?`<div style="font-size:11px;color:var(--text3);">ติดต่อ: ${qt.custContact}</div>`:''}
+      </td>
+      <td class="mono" style="font-size:12px;">${thaiDateShort(qt.qtDate)}</td>
+      <td style="font-size:12px;color:var(--text2);">${qt.qtValid||90} วัน</td>
+      <td class="mono" style="text-align:right;font-weight:700;">${fmt(qt.total)}</td>
+      <td>${STATUS_CHIP[qt.status]||''} ${isInvoiced&&qt.linkedIvNo?`<div style="font-size:10px;color:var(--purple);font-family:var(--mono);">→ ${qt.linkedIvNo}</div>`:''}</td>
+      <td style="text-align:center;">${photoCell}</td>
+      <td>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <button class="btn-sm" onclick="viewQt('${qt.id}')" title="ดูตัวอย่าง">👁</button>
+          <button class="btn-sm" onclick="openEdit('${qt.id}')" title="แก้ไข${qt.signedPhotoUrl?' / เปลี่ยนภาพ':''}" ${isInvoiced?'disabled style="opacity:.4;"':''}>✏️</button>
+          <button class="btn-sm" onclick="openStatusModal('${qt.id}')" title="เปลี่ยนสถานะ" ${isInvoiced?'disabled style="opacity:.4;"':''}>🔄</button>
+          ${canConvert?`<button class="convert-btn" onclick="openConvert('${qt.id}')">💰 ออก IV</button>`:''}
+          <button class="btn-sm danger" onclick="confirmDel('${qt.id}')" title="ลบ">🗑</button>
+        </div>
+      </td>
     </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════
+function closeM(id){document.getElementById(id).classList.add('hidden');}
+function setGS(s){
+  const el=document.getElementById('gs-status');
+  if(s==='ok'){el.className='gs-badge gs-ok';el.textContent='✅ Google Sheets';}
+  else if(s==='err'){el.className='gs-badge gs-err';el.textContent='❌ เชื่อมต่อไม่ได้';}
+  else{el.className='gs-badge gs-loading';el.textContent='⏳ กำลังเชื่อมต่อ...';}
+}
+function setBusy(on){
+  ['btn-draft','btn-confirm-iv'].forEach(id=>{const el=document.getElementById(id);if(!el)return;el.disabled=on;if(on)el.textContent='⏳...';});
+  if(!on){
+    const d=document.getElementById('btn-draft');if(d)d.textContent='💾 บันทึกร่าง';
+    const c=document.getElementById('btn-confirm-iv');if(c)c.textContent='📤 บันทึกและส่ง';
+  }
+}
+function todayStr(){return new Date().toISOString().split('T')[0];}
+// format เบอร์โทร: มือถือ 081-234-5678 / สำนักงาน 02-123-4567
+function formatPhoneGlobal(v){
+  let s=String(v||'').trim().replace(/[-\s]/g,'');
+  if(!s)return'';
+  if(/^\d+$/.test(s)){
+    if(s.length===9) s='0'+s;                                            // pad ศูนย์
+    if(s.length===10) return s.replace(/^(\d{3})(\d{3})(\d{4})$/,'$1-$2-$3'); // มือถือ
+    if(s.length===9)  return s.replace(/^(\d{2})(\d{3})(\d{4})$/,'$1-$2-$3'); // สำนักงาน
+  }
+  return s;
+}
+function genInvNo(){
+  const d=new Date();
+  const buddhistYear = d.getFullYear() + 543;
+  const seq=String(invoices.length+1).padStart(3,'0');
+  return `IV${String(buddhistYear).slice(-2)}${String(d.getMonth()+1).padStart(2,'0')}${seq}`;
+}
+function thaiDateShort(d){
+  if(!d)return'—';const dt=new Date(d);if(isNaN(dt))return d;
+  return dt.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+function fmt(n){return(parseFloat(n)||0).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function bahtText(amount){
+  const ones=['','หนึ่ง','สอง','สาม','สี่','ห้า','หก','เจ็ด','แปด','เก้า'];
+  function rg(n){if(n===0)return'';if(n<10)return ones[n];if(n<100){const t=Math.floor(n/10),o=n%10;return(t===1?'สิบ':t===2?'ยี่สิบ':ones[t]+'สิบ')+(o?ones[o]:'');}return ones[Math.floor(n/100)]+'ร้อย'+rg(n%100);}
+  function ra(n){if(n===0)return'ศูนย์';const m=Math.floor(n/1000000),th=Math.floor((n%1000000)/1000),rem=n%1000;return(m?rg(m)+'ล้าน':'')+(th?rg(th)+'พัน':'')+rg(rem);}
+  const tot=Math.round(amount*100);return ra(Math.floor(tot/100))+'บาท'+(tot%100?rg(tot%100)+'สตางค์':'ถ้วน');
+}
+function printDoc() {
+  const docEl = document.getElementById('preview-doc');
+  if (!docEl || !docEl.innerHTML.trim()) {
+    toast('กรุณาดูตัวอย่างก่อนพิมพ์','err'); return;
+  }
+  const styles = [...document.querySelectorAll('style,link[rel="stylesheet"]')]
+    .map(el => el.outerHTML).join('\n');
+  const html = `<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width">
+    ${styles}
+    <style>
+      @page{ size:A4 portrait; margin:10mm; }
+      html{ background:#555; }
+      body{ margin:0; padding:12px 0 20px; background:#555; display:flex; flex-direction:column; align-items:center; }
+      .print-toolbar{ width:210mm; background:#333; color:#fff; padding:8px 16px; border-radius:6px 6px 0 0; display:flex; align-items:center; justify-content:space-between; font-family:sans-serif; font-size:13px; box-sizing:border-box; }
+      .print-toolbar button{ background:#2563EB; color:#fff; border:none; padding:6px 18px; border-radius:5px; cursor:pointer; font-size:13px; font-weight:600; }
+      .print-toolbar button:hover{ background:#1d4ed8; }
+      .doc-outer{ width:210mm; background:#fff; box-shadow:0 4px 24px rgba(0,0,0,0.4); transform-origin:top center; }
+      .doc{ border:none!important; box-shadow:none!important; width:100%!important; padding:12px 18px!important; margin:0!important; box-sizing:border-box; font-size:10.5px; }
+      @media print{
+        html,body{ background:#fff!important; padding:0!important; }
+        .print-toolbar{ display:none!important; }
+        .doc-outer{ box-shadow:none!important; width:100%!important; transform:none!important; }
+      }
+    </style>
+    <script>
+      window.addEventListener('load', function(){
+        const outer = document.querySelector('.doc-outer');
+        const toolbar = document.querySelector('.print-toolbar');
+        const availH = window.innerHeight - toolbar.offsetHeight - 24;
+        const availW = window.innerWidth - 40;
+        const docW = outer.offsetWidth;
+        const docH = outer.offsetHeight;
+        const scaleW = availW / docW;
+        const scaleH = availH / docH;
+        const scale = Math.min(1, scaleW, scaleH);
+        outer.style.transformOrigin = 'top center';
+        outer.style.transform = 'scale('+scale+')';
+        outer.style.marginBottom = '-'+(docH*(1-scale))+'px';
+        document.body.style.overflow = 'hidden';
+      });
+    <\/script>
+  </head><body>
+    <div class="print-toolbar">
+      <span>📄 ใบแจ้งหนี้ — พรีวิว A4</span>
+      <button onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF</button>
+    </div>
+    <div class="doc-outer">${docEl.innerHTML}</div>
+  </body></html>`;
+  const w = window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+}
+
+function toast(msg,type='info'){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast ${type} show`;setTimeout(()=>el.classList.remove('show'),3400);}
+
+
+// ═══════════════════════════════════════
+// LOOKUP QT — auto-fill items from Quotation
+// ═══════════════════════════════════════
+async function lookupQT(qtNo) {
+  qtNo = (qtNo||'').trim().toUpperCase();
+  if (!qtNo || qtNo.length < 6) return;
+  try {
+    const res = await gs({action:'get', sheet:'Quotations'});
+    if (!Array.isArray(res) || res.length < 2) return;
+    const headers = res[0];
+    const col = (row, n) => { const i=headers.indexOf(n); return i>=0?(row[i]||''):''; };
+    const row = res.slice(1).find(r => col(r,'เลขที่ QT').toUpperCase() === qtNo);
+    if (!row) return;
+
+    // Fill customer if empty
+    if (!document.getElementById('f-cname').value) {
+      document.getElementById('f-cname').value   = col(row,'ชื่อลูกค้า');
+      document.getElementById('f-caddr').value   = col(row,'ที่อยู่ลูกค้า');
+      document.getElementById('f-ccont').value   = col(row,'ผู้ติดต่อ');
+      document.getElementById('f-ctel').value    = col(row,'เบอร์ลูกค้า');
+      document.getElementById('f-ctax').value    = col(row,'เลขภาษีลูกค้า');
+      document.getElementById('f-coffice').value = col(row,'สำนักงาน');
+      document.getElementById('cust-selected-code').textContent = '';
+      document.getElementById('cust-selected-name').textContent = col(row,'ชื่อลูกค้า');
+      document.getElementById('cust-selected').classList.add('show');
+    }
+
+    // Fill issuer
+    if (!document.getElementById('f-issuer').value)
+      document.getElementById('f-issuer').value = col(row,'ผู้เสนอราคา');
+
+    // Fill VAT
+    const vat = col(row,'VAT%');
+    if (vat) document.getElementById('f-vat').value = vat;
+
+    // Fill items from ItemsJSON
+    let items = [];
+    try { items = JSON.parse(col(row,'ItemsJSON')); } catch(e) {}
+    if (!items.length) return;
+
+    // Clear and refill items table
+    document.getElementById('items-body').innerHTML = '';
+    items.forEach(() => addRow());
+    const trs = [...document.querySelectorAll('#items-body tr')];
+    items.forEach((r, i) => {
+      if (!trs[i]) return;
+      trs[i].cells[1].querySelector('input').value = r.code||'';
+      trs[i].cells[2].querySelector('input').value = r.name||'';
+      trs[i].cells[3].querySelector('input').value = r.qty||1;
+      trs[i].cells[4].querySelector('input').value = r.unit||'';
+      trs[i].cells[5].querySelector('input').value = r.price||0;
+    });
+
+    // Fill discount
+    const disc = col(row,'ส่วนลด');
+    if (disc) document.getElementById('f-discount').value = disc;
+
+    recalc();
+    toast('✅ ดึงข้อมูลจาก '+qtNo+' แล้ว','ok');
+  } catch(e) {
+    // silent fail
+  }
+}
+
+
+// ═══════════════════════════════════════
+// APPROVED QT LOOKUP
+// ═══════════════════════════════════════
+let _qtData = [];  // cache quotations data
+
+async function loadApprovedQTs(custName) {
+  // Reset
+  document.getElementById('qt-list-wrap').style.display = 'none';
+  document.getElementById('qt-list').innerHTML = '';
+  document.getElementById('f-invref').value = '';
+  document.getElementById('items-body').innerHTML = '';
+  addRow(); addRow(); addRow();
+  recalc();
+
+  try {
+    // Use cached data if available
+    let rows = _qtData;
+    if (!rows.length) {
+      const res = await gs({action:'get', sheet:'Quotations'});
+      if (!Array.isArray(res) || res.length < 2) return;
+      _qtData = res;
+      rows = res;
+    }
+    const headers = rows[0];
+    const col = (row, n) => { const i=headers.indexOf(n); return i>=0?(row[i]||''):''; };
+
+    // Filter approved QTs for this customer
+    const approved = rows.slice(1).filter(row =>
+      col(row,'ชื่อลูกค้า') === custName &&
+      col(row,'สถานะ') === 'approved'
+    );
+
+    if (!approved.length) {
+      document.getElementById('f-invref').placeholder = 'ไม่พบใบเสนอราคาที่อนุมัติแล้วของลูกค้านี้';
+      return;
+    }
+
+    // Render QT cards
+    const wrap = document.getElementById('qt-list-wrap');
+    const list = document.getElementById('qt-list');
+    list.innerHTML = approved.map(row => {
+      const qtNo = col(row,'เลขที่ QT');
+      const date = col(row,'วันที่');
+      const total = parseFloat(col(row,'ยอดรวมสุทธิ'))||0;
+      return `<div class="qt-card" onclick="selectQT(this,'${qtNo}')" data-qtno="${qtNo}">
+        <span class="qt-card-no">${qtNo}</span>
+        <span class="qt-card-amt">${fmt(total)} ฿</span>
+        <div class="qt-card-info">วันที่: ${thaiDateShort(date)}</div>
+      </div>`;
+    }).join('');
+    wrap.style.display = 'block';
+    document.getElementById('f-invref').placeholder = 'เลือก QT ด้านบน';
+  } catch(e) {}
+}
+
+async function selectQT(el, qtNo) {
+  // Highlight selected card
+  document.querySelectorAll('.qt-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('f-invref').value = qtNo;
+
+  try {
+    const rows = _qtData;
+    if (!rows.length) return;
+    const headers = rows[0];
+    const col = (row, n) => { const i=headers.indexOf(n); return i>=0?(row[i]||''):''; };
+    const row = rows.slice(1).find(r => col(r,'เลขที่ QT') === qtNo);
+    if (!row) return;
+
+    // Fill issuer
+    document.getElementById('f-issuer').value = col(row,'ผู้เสนอราคา');
+
+    // Fill VAT
+    const vat = col(row,'VAT%');
+    if (vat) document.getElementById('f-vat').value = String(vat);
+
+    // Fill discount
+    const disc = col(row,'ส่วนลด');
+    document.getElementById('f-discount').value = disc||'0';
+
+    // Fill items
+    let items = [];
+    try { items = JSON.parse(col(row,'ItemsJSON')); } catch(e) {}
+    if (!items.length) { recalc(); return; }
+
+    document.getElementById('items-body').innerHTML = '';
+    items.forEach(() => addRow());
+    const trs = [...document.querySelectorAll('#items-body tr')];
+    items.forEach((r, i) => {
+      if (!trs[i]) return;
+      trs[i].cells[1].querySelector('input').value = r.code||'';
+      trs[i].cells[2].querySelector('input').value = r.name||'';
+      trs[i].cells[3].querySelector('input').value = r.qty||1;
+      trs[i].cells[4].querySelector('input').value = r.unit||'';
+      trs[i].cells[5].querySelector('input').value = r.price||0;
+    });
+    recalc();
+    toast('✅ ดึงรายการจาก '+qtNo+' แล้ว','ok');
+  } catch(e) {}
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('f-invdate').value=todayStr();
+  loadAll();
+});
+</script>
+</body>
+</html>
