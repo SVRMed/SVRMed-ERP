@@ -737,7 +737,7 @@ async function gs(params) {
     }
     const res = await fetch(SCRIPT_URL, {
       method: 'POST',
-      headers: {'Content-Type': 'text/plain'},
+      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(body),
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -1424,8 +1424,11 @@ function openConvert(id) {
   convertId = id;
   // Auto-generate IV number
   const d = new Date();
-  const seq = String(Math.floor(Math.random()*900)+100);
-  document.getElementById('f-conv-ivno').value = `IV${String(d.getFullYear()).slice(-2)}${String(d.getMonth()+1).padStart(2,'0')}${seq}`;
+  // นับจำนวน IV ที่มีอยู่แล้วใน quotations เพื่อรันเลขลำดับ
+  const buddhistYear = d.getFullYear() + 543;
+  const existingIVs = quotations.filter(q => q.linkedIvNo && q.linkedIvNo.startsWith('IV')).length;
+  const seq = String(existingIVs + 1).padStart(3, '0');
+  document.getElementById('f-conv-ivno').value = `IV${String(buddhistYear).slice(-2)}${String(d.getMonth()+1).padStart(2,'0')}${seq}`;
   document.getElementById('f-conv-ivdate').value = todayStr();
   document.getElementById('m-convert').classList.remove('hidden');
 }
