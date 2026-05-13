@@ -344,7 +344,9 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
     <div class="nav-section">
       <div class="nav-label">การขาย</div>
       <a class="nav-item active"><span class="icon">📋</span>ใบเสนอราคา (QT)</a>
-      <a class="nav-item" href="billing.html"><span class="icon">💰</span>ใบกำกับภาษี (IV)</a>
+      <a class="nav-item" href="billing.html"><span class="icon">📄</span>ใบแจ้งหนี้ (IV)</a>
+      <a class="nav-item disabled"><span class="icon">🧾</span>ใบกำกับภาษี (TX)<span class="nav-badge">Soon</span></a>
+      <a class="nav-item disabled"><span class="icon">💵</span>ใบเสร็จรับเงิน (RC)<span class="nav-badge">Soon</span></a>
     </div>
     <div class="nav-section">
       <div class="nav-label">การจัดซื้อ</div>
@@ -374,7 +376,7 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
       <div class="stat" style="border-top:3px solid var(--teal);"><div class="stat-v" id="st-total">—</div><div class="stat-l">ทั้งหมด</div></div>
       <div class="stat" style="border-top:3px solid var(--amber);"><div class="stat-v" id="st-sent">—</div><div class="stat-l">ส่งแล้ว / รอตอบ</div></div>
       <div class="stat" style="border-top:3px solid var(--green);"><div class="stat-v" id="st-approved">—</div><div class="stat-l">อนุมัติแล้ว</div></div>
-      <div class="stat" style="border-top:3px solid var(--purple);"><div class="stat-v" id="st-invoiced">—</div><div class="stat-l">ออกใบกำกับแล้ว</div></div>
+      <div class="stat" style="border-top:3px solid var(--purple);"><div class="stat-v" id="st-invoiced">—</div><div class="stat-l">ออกใบแจ้งหนี้แล้ว</div></div>
     </div>
 
     <!-- TOOLBAR -->
@@ -386,7 +388,7 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
         <option value="sent">📤 ส่งแล้ว</option>
         <option value="approved">✅ อนุมัติ</option>
         <option value="rejected">❌ ปฏิเสธ</option>
-        <option value="invoiced">💰 ออกใบกำกับแล้ว</option>
+        <option value="invoiced">📄 ออกใบแจ้งหนี้แล้ว</option>
       </select>
       <span id="record-count" style="font-size:12px;color:var(--text3);margin-left:4px;"></span>
     </div>
@@ -1869,7 +1871,7 @@ const STATUS_CHIP={
   sent:     '<span class="chip chip-sent">📤 ส่งแล้ว</span>',
   approved: '<span class="chip chip-approved">✅ อนุมัติ</span>',
   rejected: '<span class="chip chip-rejected">❌ ปฏิเสธ</span>',
-  invoiced: '<span class="chip chip-invoiced">💰 ออกใบกำกับแล้ว</span>',
+  invoiced: '<span class="chip chip-invoiced">📄 ออกใบแจ้งหนี้แล้ว</span>',
 };
 
 function filterList(q){
@@ -1907,7 +1909,7 @@ function renderTableRows(list){
       <td class="mono" style="font-size:12px;">${thaiDateShort(qt.qtDate)}</td>
       <td style="font-size:12px;color:var(--text2);">${qt.qtValid||90} วัน</td>
       <td class="mono" style="text-align:right;font-weight:700;">${fmt(qt.total)}</td>
-      <td>${STATUS_CHIP[qt.status]||''} ${isInvoiced&&qt.linkedIvNo?`<div style="font-size:10px;color:var(--purple);font-family:var(--mono);">→ ${qt.linkedIvNo}</div>`:''}</td>
+      <td>${STATUS_CHIP[qt.status]||''} ${isInvoiced&&qt.linkedIvNo?`<div style="font-size:10px;color:var(--purple);font-family:var(--mono);">→ ${qt.linkedIvNo}</div><a href="billing.html" style="font-size:10px;color:var(--accent);font-weight:600;">📄 เปิดใบแจ้งหนี้ →</a>`:''}</td>
       <td style="text-align:center;">${photoCell}</td>
       <td>
         <div style="display:flex;gap:4px;flex-wrap:wrap;">
