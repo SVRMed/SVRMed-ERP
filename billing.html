@@ -814,7 +814,7 @@ async function loadAll() {
         custAddr:      col(h,row,'ที่อยู่ลูกค้า'),
         custContact:   col(h,row,'ผู้ติดต่อ'),
         custTel:       formatPhoneGlobal(col(h,row,'เบอร์ลูกค้า')),
-        custTax:       col(h,row,'เลขภาษีลูกค้า'),
+        custTax:       padTax(col(h,row,'เลขภาษีลูกค้า')),
         custOffice:    col(h,row,'สำนักงาน'),
         custType:      col(h,row,'ประเภทลูกค้า')||'',
         specialDisc:   parseFloat(col(h,row,'ส่วนลดพิเศษ%'))||0,
@@ -1649,6 +1649,7 @@ function thaiDateShort(d){
   if(!d)return'—';const dt=new Date(d);if(isNaN(dt))return d;
   return dt.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
 }
+function padTax(v){const s=String(v||'').trim();return s&&/^\d+$/.test(s)&&s.length===12?'0'+s:s;}
 function fmt(n){return(parseFloat(n)||0).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function bahtText(amount){
   const ones=['','หนึ่ง','สอง','สาม','สี่','ห้า','หก','เจ็ด','แปด','เก้า'];
