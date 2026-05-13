@@ -1449,7 +1449,7 @@ async function doConvert() {
   if (!qt) return;
   const ivNo   = document.getElementById('f-conv-ivno').value.trim();
   const ivDate = document.getElementById('f-conv-ivdate').value;
-  if (!ivNo)   { toast('กรุณากรอกเลขที่ใบกำกับภาษี','err'); return; }
+  if (!ivNo)   { toast('กรุณากรอกเลขที่ใบแจ้งหนี้','err'); return; }
   if (!ivDate) { toast('กรุณาเลือกวันที่','err'); return; }
 
   document.getElementById('btn-do-convert').disabled = true;
@@ -1498,7 +1498,9 @@ async function doConvert() {
       'เบอร์ลูกค้า':       qt.custTel,
       'เลขภาษีลูกค้า':    qt.custTax,
       'สำนักงาน':          qt.custOffice,
-      'DeliveriesJSON':    JSON.stringify([delivery]),
+      'ประเภทลูกค้า':      qt.custType||'',
+      'เลขที่ TX อ้างอิง': '',
+      'ItemsJSON':         JSON.stringify(qt.items),
     };
 
     await gs({action:'add', sheet:'Invoices', data:JSON.stringify(ivHdr)});
