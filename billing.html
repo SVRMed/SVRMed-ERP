@@ -751,7 +751,7 @@ async function loadAll() {
     // Items lookup
     const iMap = {};
     items.rows.forEach(row=>{
-      const invNo2 = col(items.h,row,'เลขที่ IV');
+      const invNo2 = col(items.h,row,'เลขที่ IV')||col(items.h,row,'เลขที่ใบกำกับ');
       if (!iMap[invNo2]) iMap[invNo2]=[];
       iMap[invNo2].push({
         code:   col(items.h,row,'รหัสสินค้า'),
@@ -765,7 +765,7 @@ async function loadAll() {
 
     invoices = inv.rows.map(row=>{
       const h = inv.h;
-      const invNo = col(h,row,'เลขที่ IV');
+      const invNo = col(h,row,'เลขที่ IV')||col(h,row,'เลขที่ใบกำกับ');
       let itemsArr = iMap[invNo]||[];
       try {
         const j = col(h,row,'ItemsJSON');
@@ -774,10 +774,10 @@ async function loadAll() {
       return {
         id:            col(h,row,'ID'),
         invNo,
-        invDate:      col(h,row,'วันที่'),
+        invDate:      col(h,row,'วันที่')||col(h,row,'วันที่ออกเอกสาร'),
         invPayDays:   col(h,row,'กำหนดชำระ (วัน)'),
         invRef:       col(h,row,'อ้างอิง QT'),
-        issuer:        col(h,row,'ผู้ออกเอกสาร'),
+        issuer:        col(h,row,'ผู้ออกเอกสาร')||col(h,row,'ผู้เสนอราคา'),
         vatRate:       parseFloat(col(h,row,'VAT%'))||7,
         discount:      parseFloat(col(h,row,'ส่วนลด'))||0,
         remark:        col(h,row,'หมายเหตุ'),
