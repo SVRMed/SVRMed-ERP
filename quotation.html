@@ -344,7 +344,7 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
     <div class="nav-section">
       <div class="nav-label">การขาย</div>
       <a class="nav-item active"><span class="icon">📋</span>ใบเสนอราคา (QT)</a>
-      <a class="nav-item" href="billing.html"><span class="icon">📄</span>ใบแจ้งหนี้ (IV)</a>
+      <a class="nav-item" href="billing.html"><span class="icon">📄</span>ใบกำกับภาษี/ใบส่งสินค้า (SVR)</a>
       <a class="nav-item disabled"><span class="icon">🧾</span>ใบกำกับภาษี (TX)<span class="nav-badge">Soon</span></a>
       <a class="nav-item disabled"><span class="icon">💵</span>ใบเสร็จรับเงิน (RC)<span class="nav-badge">Soon</span></a>
     </div>
@@ -363,7 +363,7 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
     <div class="page-header">
       <div class="page-title">
         <h1>📋 ใบเสนอราคา (Quotation)</h1>
-        <p>สร้าง · ส่ง · อนุมัติ · แปลงเป็นใบแจ้งหนี้อัตโนมัติ</p>
+        <p>สร้าง · ส่ง · อนุมัติ · ออกเอกสาร SVRอัตโนมัติ</p>
       </div>
       <div style="display:flex;gap:8px;">
         <button class="btn btn-secondary" onclick="loadAll()">🔄 รีเฟรช</button>
@@ -636,7 +636,7 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
 <div class="modal-overlay hidden" id="m-convert">
   <div class="modal modal-sm">
     <div class="modal-header">
-      <div class="modal-title">📄 แปลงเป็นใบแจ้งหนี้</div>
+      <div class="modal-title">📄 ออกเอกสาร SVR</div>
       <button class="modal-close" onclick="closeM('m-convert')">✕</button>
     </div>
     <div class="modal-body">
@@ -650,17 +650,17 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
         </div>
       </div>
       <div class="form-group" style="margin-bottom:10px;">
-        <label class="form-label">เลขที่ใบแจ้งหนี้ (IV) <span class="req">*</span></label>
+        <label class="form-label">เลขที่เอกสาร (SVR) <span class="req">*</span></label>
         <input class="fi" id="f-conv-ivno" placeholder="เช่น IV6903001">
       </div>
       <div class="form-group">
-        <label class="form-label">วันที่ออกใบแจ้งหนี้</label>
+        <label class="form-label">วันที่ออกเอกสาร / วันที่ส่งสินค้า</label>
         <input class="fi" type="date" id="f-conv-ivdate">
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeM('m-convert')">ยกเลิก</button>
-      <button class="btn btn-purple" id="btn-do-convert" onclick="doConvert()">📄 แปลงและเปิดใบแจ้งหนี้</button>
+      <button class="btn btn-purple" id="btn-do-convert" onclick="doConvert()">📄 ออกและเปิดเอกสาร SVR</button>
     </div>
   </div>
 </div>
@@ -801,6 +801,7 @@ async function loadAll() {
       tax:      padTax(col(cust.h,row,'เลขผู้เสียภาษี')),
       custType: col(cust.h,row,'ประเภทลูกค้า')||'',
       office:   col(cust.h,row,'สำนักงาน')||'สำนักงานใหญ่',
+      credit:   col(cust.h,row,'เครดิต')||'30',
     })).filter(c=>c.name);
     populateCustDropdown();
 
@@ -1437,11 +1438,26 @@ function openConvert(id) {
   const d = new Date();
   // นับจำนวน IV ที่มีอยู่แล้วใน quotations เพื่อรันเลขลำดับ
   const buddhistYear = d.getFullYear() + 543;
-  const existingIVs = quotations.filter(q => q.linkedIvNo && q.linkedIvNo.startsWith('IV')).length;
-  const seq = String(existingIVs + 1).padStart(3, '0');
-  document.getElementById('f-conv-ivno').value = `IV${String(buddhistYear).slice(-2)}${String(d.getMonth()+1).padStart(2,'0')}${seq}`;
+  const existingSVRs = quotations.filter(q => q.linkedIvNo && q.linkedIvNo.startsWith('SVR')).length;
+  const seq = String(existingSVRs + 1).padStart(3, '0');
+  document.getElementById('f-conv-ivno').value = `SVR${String(buddhistYear).slice(-2)}${String(d.getMonth()+1).padStart(2,'0')}${seq}`;
   document.getElementById('f-conv-ivdate').value = todayStr();
   document.getElementById('m-convert').classList.remove('hidden');
+}
+
+
+function setDeliveryFlow(flow) {
+  const labels = document.querySelectorAll('input[name="delivery-flow"]');
+  labels.forEach(inp => {
+    const lbl = inp.closest('label');
+    if (inp.value === flow) {
+      lbl.style.border = '2px solid var(--accent)';
+      lbl.style.background = '#EFF6FF';
+    } else {
+      lbl.style.border = '2px solid var(--border2)';
+      lbl.style.background = '';
+    }
+  });
 }
 
 async function doConvert() {
@@ -1449,17 +1465,21 @@ async function doConvert() {
   if (!qt) return;
   const ivNo   = document.getElementById('f-conv-ivno').value.trim();
   const ivDate = document.getElementById('f-conv-ivdate').value;
-  if (!ivNo)   { toast('กรุณากรอกเลขที่ใบแจ้งหนี้','err'); return; }
+  if (!ivNo)   { toast('กรุณากรอกเลขที่เอกสาร SVR','err'); return; }
   if (!ivDate) { toast('กรุณาเลือกวันที่','err'); return; }
 
   document.getElementById('btn-do-convert').disabled = true;
   document.getElementById('btn-do-convert').textContent = '⏳ กำลังแปลง...';
 
+  // ดึงเครดิตจาก customers
+  const custMatch = customers.find(c=>c.name===qt.custName);
+  const custCreditDays = custMatch ? (parseInt(custMatch.credit)||30) : 30;
+
   try {
     // 1. Mark QT as invoiced + link IV number
     await gs({action:'update', sheet:SH_QT, keyCol:'ID', keyVal:qt.id, data:JSON.stringify({
       'สถานะ': 'invoiced',
-      'เลขที่ IV อ้างอิง': ivNo,
+      'เลขที่ SVR อ้างอิง': ivNo,
     })});
 
     // 2. Build Invoice header (single delivery, items from QT)
@@ -1471,36 +1491,48 @@ async function doConvert() {
       rows: qt.items,
     };
 
+    // คำนวณวันครบกำหนดชำระ (บวกเครดิตเป็นเดือน)
+    const creditDays = parseInt(custCreditDays||30);
+    const creditMonths = creditDays<=30?1:creditDays<=60?2:3;
+    const dueDate = new Date(ivDate);
+    dueDate.setMonth(dueDate.getMonth() + creditMonths);
+    const dueDateStr = dueDate.toISOString().split('T')[0];
+
+    // Flow type
+    const deliveryFlow = document.querySelector('input[name="delivery-flow"]:checked')?.value||'single';
+
     const ivHdr = {
-      'ID':                'INV-'+Date.now(),
-      'เลขที่ IV':         ivNo,
-      'วันที่':            ivDate,
-      'อ้างอิง QT':        qt.qtNo,
-      'กำหนดชำระ (วัน)':  qt.qtDeliver||'30',
-      'ผู้ออกเอกสาร':      qt.issuer||'',
-      'VAT%':              qt.vatRate,
-      'ส่วนลด':            qt.discount,
-      'หมายเหตุ':          qt.remark,
-      'รวมเงิน':           qt.subtotal,
-      'ยอดก่อน VAT':       qt.exclVat,
-      'VAT':               qt.vat,
-      'ยอดรวมสุทธิ':       qt.total,
-      'สถานะ':             'draft',
-      'วันที่สร้าง':       todayStr(),
-      'ชื่อบริษัท (ไทย)':  qt.sellerNameTh,
-      'ชื่อบริษัท (EN)':   qt.sellerNameEn,
-      'ที่อยู่บริษัท':     qt.sellerAddr,
-      'โทรบริษัท':         qt.sellerTel,
-      'เลขภาษีบริษัท':    qt.sellerTax,
-      'ชื่อลูกค้า':        qt.custName,
-      'ที่อยู่ลูกค้า':    qt.custAddr,
-      'ผู้ติดต่อ':         qt.custContact,
-      'เบอร์ลูกค้า':       qt.custTel,
-      'เลขภาษีลูกค้า':    qt.custTax,
-      'สำนักงาน':          qt.custOffice,
-      'ประเภทลูกค้า':      qt.custType||'',
-      'เลขที่ TX อ้างอิง': '',
-      'ItemsJSON':         JSON.stringify(qt.items),
+      'ID':                    'SVR-'+Date.now(),
+      'เลขที่เอกสาร':          ivNo,
+      'วันที่ออกเอกสาร':       ivDate,
+      'วันที่ครบกำหนดชำระ':   dueDateStr,
+      'เครดิต (วัน)':          String(creditDays),
+      'อ้างอิง QT':             qt.qtNo,
+      'ผู้ออกเอกสาร':           qt.issuer||'',
+      'VAT%':                   qt.vatRate,
+      'ส่วนลด':                 qt.discount,
+      'หมายเหตุ':               qt.remark,
+      'รวมเงิน':                qt.subtotal,
+      'ยอดก่อน VAT':            qt.exclVat,
+      'VAT':                    qt.vat,
+      'ยอดรวมสุทธิ':            qt.total,
+      'สถานะ':                  'draft',
+      'วันที่สร้าง':            todayStr(),
+      'รูปแบบส่งมอบ':           deliveryFlow,
+      'ชื่อบริษัท (ไทย)':       qt.sellerNameTh,
+      'ชื่อบริษัท (EN)':        qt.sellerNameEn,
+      'ที่อยู่บริษัท':          qt.sellerAddr,
+      'โทรบริษัท':              qt.sellerTel,
+      'เลขภาษีบริษัท':         qt.sellerTax,
+      'ชื่อลูกค้า':             qt.custName,
+      'ที่อยู่ลูกค้า':         qt.custAddr,
+      'ผู้ติดต่อ':              qt.custContact,
+      'เบอร์ลูกค้า':            qt.custTel,
+      'เลขภาษีลูกค้า':         qt.custTax,
+      'สำนักงาน':               qt.custOffice,
+      'ประเภทลูกค้า':           qt.custType||'',
+      'ItemsJSON':              JSON.stringify(qt.items),
+      'DN2JSON':                '',
     };
 
     await gs({action:'add', sheet:'Invoices', data:JSON.stringify(ivHdr)});
@@ -1522,7 +1554,7 @@ async function doConvert() {
       })});
     }
 
-    toast('✅ แปลงเป็นใบแจ้งหนี้สำเร็จ! กำลังไปหน้า billing...','ok');
+    toast('✅ ออกเอกสาร SVRสำเร็จ! กำลังไปหน้า billing...','ok');
     closeM('m-convert');
     await loadAll();
     // ไปหน้า billing พร้อม highlight IV ใหม่
@@ -1532,7 +1564,7 @@ async function doConvert() {
   }
 
   document.getElementById('btn-do-convert').disabled = false;
-  document.getElementById('btn-do-convert').textContent = '📄 แปลงและเปิดใบแจ้งหนี้';
+  document.getElementById('btn-do-convert').textContent = '📄 ออกและเปิดเอกสาร SVR';
 }
 
 // ═══════════════════════════════════════
@@ -1882,7 +1914,7 @@ const STATUS_CHIP={
   sent:     '<span class="chip chip-sent">📤 ส่งแล้ว</span>',
   approved: '<span class="chip chip-approved">✅ อนุมัติ</span>',
   rejected: '<span class="chip chip-rejected">❌ ปฏิเสธ</span>',
-  invoiced: '<span class="chip chip-invoiced">📄 ออกใบแจ้งหนี้แล้ว</span>',
+  invoiced: '<span class="chip chip-invoiced">📄 ออก SVR แล้ว</span>',
 };
 
 function filterList(q){
@@ -1920,7 +1952,7 @@ function renderTableRows(list){
       <td class="mono" style="font-size:12px;">${thaiDateShort(qt.qtDate)}</td>
       <td style="font-size:12px;color:var(--text2);">${qt.qtValid||90} วัน</td>
       <td class="mono" style="text-align:right;font-weight:700;">${fmt(qt.total)}</td>
-      <td>${STATUS_CHIP[qt.status]||''} ${isInvoiced&&qt.linkedIvNo?`<div style="font-size:10px;color:var(--purple);font-family:var(--mono);">→ ${qt.linkedIvNo}</div><a href="billing.html" style="font-size:10px;color:var(--accent);font-weight:600;">📄 เปิดใบแจ้งหนี้ →</a>`:''}</td>
+      <td>${STATUS_CHIP[qt.status]||''} ${isInvoiced&&qt.linkedIvNo?`<div style="font-size:10px;color:var(--purple);font-family:var(--mono);">→ ${qt.linkedIvNo}</div><a href="billing.html" style="font-size:10px;color:var(--accent);font-weight:600;">📄 เปิด SVR →</a>`:''}</td>
       <td style="text-align:center;">${photoCell}</td>
       <td>
         <div style="display:flex;gap:4px;flex-wrap:wrap;">
