@@ -1613,7 +1613,7 @@ function openEdit(id) {
     tag.style.display = '';
   } else { tag.style.display = 'none'; }
   updateChannelTag();
-  set('f-qtno',qt.qtNo); set('f-qtdate',qt.qtDate);
+  set('f-qtno',qt.qtNo); set('f-qtdate', normalizeDate(qt.qtDate));
   set('f-qtvalid',qt.qtValid); set('f-qtdeliver',qt.qtDeliver);
   set('f-issuer',qt.issuer);
   document.getElementById('f-vat').value = String(qt.vatRate||7);
@@ -1937,6 +1937,34 @@ function setBusy(on){
   }
 }
 function todayStr(){return new Date().toISOString().split('T')[0];}
+// แปลง date string ทุก format ให้เป็น YYYY-MM-DD (สำหรับ input[type=date])
+function normalizeDate(v){
+  if(!v) return '';
+  // ถ้าเป็น YYYY-MM-DD อยู่แล้ว
+  if(/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+  // ลอง parse ด้วย Date
+  const dt = new Date(v);
+  if(!isNaN(dt)){
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth()+1).padStart(2,'0');
+    const d = String(dt.getDate()).padStart(2,'0');
+    // ถ้าปีเป็น พ.ศ. (> 2400) ให้ลบออก 543
+    return y > 2400 ? `${y-543}-${m}-${d}` : `${y}-${m}-${d}`;
+  }
+  // รูปแบบ D/M/YYYY หรือ DD/MM/YYYY (ไทย locale)
+  const parts = v.split('/');
+  if(parts.length === 3){
+    let [a,b,c] = parts.map(Number);
+    // ถ้า c เป็นปี พ.ศ.
+    if(c > 2400) c -= 543;
+    // a อาจเป็น day หรือ month ขึ้นอยู่กับ locale
+    // สมมติ format D/M/YYYY
+    const m2 = String(b).padStart(2,'0');
+    const d2 = String(a).padStart(2,'0');
+    return `${c}-${m2}-${d2}`;
+  }
+  return '';
+}
 // format เบอร์โทร: มือถือ 081-234-5678 / สำนักงาน 02-123-4567
 function formatPhoneGlobal(v){
   let s=String(v||'').trim().replace(/[-\s]/g,'');
@@ -1955,7 +1983,11 @@ function genQtNo(){
   return `QT${String(buddhistYear).slice(-2)}${String(d.getMonth()+1).padStart(2,'0')}${seq}`;
 }
 function thaiDateShort(d){
-  if(!d)return'—';const dt=new Date(d);if(isNaN(dt))return d;
+  if(!d)return'—';
+  // normalize ก่อนเพื่อให้ parse ได้เสมอ
+  const iso = normalizeDate(d);
+  const dt = iso ? new Date(iso+'T00:00:00') : new Date(d);
+  if(isNaN(dt))return d;
   return dt.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
 }
 function fmt(n){return(parseFloat(n)||0).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});}
