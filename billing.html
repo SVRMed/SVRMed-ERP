@@ -390,7 +390,7 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
           <thead><tr>
             <th>เลขที่ SVR</th>
             <th>ลูกค้า</th>
-            <th>วันที่</th>
+            <th>วันที่ออก SVR</th>
             <th>กำหนดชำระ</th>
             <th>อ้างอิง QT</th>
             <th style="text-align:right;">ยอดรวม (฿)</th>
@@ -1287,7 +1287,7 @@ function openNew() {
     .forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-invno').value  = genInvNo();
   document.getElementById('f-invdate').value = todayStr();
-  document.getElementById('f-duedate').value = '30';
+  document.getElementById('f-duedate').value = calcDueDate(todayStr(), 30);
   document.getElementById('f-invref').value  = '';
   document.getElementById('f-discount').value   = '0';
   
@@ -1902,6 +1902,11 @@ async function selectQT(el, qtNo) {
       trs[i].cells[5].querySelector('input').value = r.price||0;
     });
     recalc();
+    // คำนวณวันครบกำหนดจากเครดิตลูกค้าอีกครั้ง (เผื่อยังไม่คำนวณ)
+    const invDateVal = document.getElementById('f-invdate').value || todayStr();
+    if (currentCreditDays) {
+      document.getElementById('f-duedate').value = calcDueDate(invDateVal, currentCreditDays);
+    }
     toast('✅ ดึงรายการจาก '+qtNo+' แล้ว','ok');
   } catch(e) {}
 }
