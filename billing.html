@@ -764,7 +764,7 @@ async function loadAll() {
     });
 
     invoices = inv.rows.map(row=>{
-      const h = qt.h;
+      const h = inv.h;
       const invNo = col(h,row,'เลขที่ IV');
       let itemsArr = iMap[invNo]||[];
       try {
@@ -1179,7 +1179,7 @@ async function doSave(status) {
 // CHANGE STATUS
 // ═══════════════════════════════════════
 function openStatusModal(id) {
-  const qt = invoices.find(q=>q.id===id);
+  const iv2 = invoices.find(i=>i.id===id);
   if (!iv2) return;
   statusId = id;
   document.getElementById('status-qt-no').textContent = iv2.invNo;
@@ -1188,11 +1188,11 @@ function openStatusModal(id) {
 }
 
 async function changeStatus(newStatus) {
-  const qt = invoices.find(q=>q.id===statusId);
-  if (!qt) return;
+  const iv2 = invoices.find(i=>i.id===statusId);
+  if (!iv2) return;
   try {
     const data = {'สถานะ': newStatus};
-    await gs({action:'update', sheet:SH_INV, keyCol:'ID', keyVal:qt.id, data:JSON.stringify(data)});
+    await gs({action:'update', sheet:SH_INV, keyCol:'ID', keyVal:iv2.id, data:JSON.stringify(data)});
     toast(`✅ เปลี่ยนสถานะเป็น "${newStatus}" แล้ว`,'ok');
     closeM('m-status');
     await loadAll();
@@ -1206,7 +1206,7 @@ async function changeStatus(newStatus) {
 // DELETE
 // ═══════════════════════════════════════
 function confirmDel(id) {
-  const qt = invoices.find(q=>q.id===id);
+  const ivd = invoices.find(i=>i.id===id);
   if (!ivd) return;
   delId = id;
   document.getElementById('del-preview').textContent = `${ivd.invNo} (${ivd.custName})`;
@@ -1214,13 +1214,13 @@ function confirmDel(id) {
 }
 
 async function doDelete() {
-  const qt = invoices.find(q=>q.id===delId);
-  if (!qt) return;
+  const ivdel = invoices.find(i=>i.id===delId);
+  if (!ivdel) return;
   const btn = document.getElementById('btn-del-ok');
   btn.disabled=true; btn.textContent='⏳ กำลังลบ...';
   try {
-    await gs({action:'delete', sheet:SH_INV, keyCol:'ID', keyVal:qt.id});
-    try { await gs({action:'deleteWhere', sheet:SH_ITEMS, keyCol:'เลขที่ IV', keyVal:qt.qtNo}); } catch(e){}
+    await gs({action:'delete', sheet:SH_INV, keyCol:'ID', keyVal:ivdel.id});
+    try { await gs({action:'deleteWhere', sheet:SH_ITEMS, keyCol:'เลขที่ IV', keyVal:ivdel.invNo}); } catch(e){}
     toast('🗑️ ลบแล้ว','ok');
     closeM('m-del');
     await loadAll();
@@ -1262,7 +1262,7 @@ function openNew() {
 }
 
 function openEdit(id) {
-  const qt = invoices.find(q=>q.id===id);
+  const iv = invoices.find(i=>i.id===id);
   if (!iv) return;
   editId = id;
   document.getElementById('m-form-title').textContent = '✏️ แก้ไข ' + iv.invNo;
@@ -1299,9 +1299,9 @@ function openEdit(id) {
   set('f-paydays',iv.invPayDays); set('f-invref',iv.invRef);
   set('f-issuer',iv.issuer);
   document.getElementById('f-vat').value = String(iv.vatRate||7);
-  set('f-discount',String(qt.discount||0));
+  set('f-discount',String(iv.discount||0));
   
-  set('f-remark',qt.remark);
+  set('f-remark',iv.remark);
   document.getElementById('items-body').innerHTML='';
   (iv.items||[]).forEach(()=>addRow());
   const trs=[...document.querySelectorAll('#items-body tr')];
@@ -1419,10 +1419,10 @@ function openPreview(){
   document.getElementById('preview-doc').innerHTML=buildQT(d);
   document.getElementById('m-preview').classList.remove('hidden');
 }
-function viewQt(id){
-  const qt=invoices.find(q=>q.id===id);
-  if(!qt) return;
-  document.getElementById('preview-doc').innerHTML=buildQT(qt);
+function viewIv(id){
+  const ivp=invoices.find(i=>i.id===id);
+  if(!ivp) return;
+  document.getElementById('preview-doc').innerHTML=buildIV(ivp);
   document.getElementById('m-preview').classList.remove('hidden');
 }
 
@@ -1555,31 +1555,31 @@ function renderTableRows(list){
     return;
   }
   tbody.innerHTML=list.map(iv=>{
-    const canConvert = qt.status==='approved';
-    const isInvoiced = qt.status==='invoiced';
-    const photoCell = qt.signedPhotoUrl
-      ? `<img class="signed-thumb" src="${qt.signedPhotoUrl}"
-           onclick="openLightbox('${qt.signedPhotoUrl}','${qt.qtNo} · ใบเซ็นแล้ว')"
+    const canConvert = iv.status==='approved';
+    const isInvoiced = iv.status==='invoiced';
+    const photoCell = iv.signedPhotoUrl
+      ? `<img class="signed-thumb" src="${iv.signedPhotoUrl}"
+           onclick="openLightbox('${iv.signedPhotoUrl}','${iv.invNo} · ใบเซ็นแล้ว')"
            title="คลิกดูภาพใบเซ็น" onerror="this.style.display='none'">`
       : `<span style="font-size:10px;color:var(--text3);">—</span>`;
     return `<tr>
-      <td class="mono" style="font-weight:700;">${qt.qtNo}</td>
+      <td class="mono" style="font-weight:700;">${iv.invNo}</td>
       <td>
-        <div style="font-weight:600;">${qt.custName}</div>
-        ${qt.custContact?`<div style="font-size:11px;color:var(--text3);">ติดต่อ: ${qt.custContact}</div>`:''}
+        <div style="font-weight:600;">${iv.custName}</div>
+        ${iv.custContact?`<div style="font-size:11px;color:var(--text3);">ติดต่อ: ${iv.custContact}</div>`:''}
       </td>
-      <td class="mono" style="font-size:12px;">${thaiDateShort(qt.qtDate)}</td>
-      <td style="font-size:12px;color:var(--text2);">${qt.qtValid||90} วัน</td>
-      <td class="mono" style="text-align:right;font-weight:700;">${fmt(qt.total)}</td>
-      <td>${STATUS_CHIP[qt.status]||''} ${isInvoiced&&qt.linkedIvNo?`<div style="font-size:10px;color:var(--purple);font-family:var(--mono);">→ ${qt.linkedIvNo}</div>`:''}</td>
+      <td class="mono" style="font-size:12px;">${thaiDateShort(iv.invDate)}</td>
+      <td style="font-size:12px;color:var(--text2);">${iv.invPayDays||30} วัน</td>
+      <td class="mono" style="text-align:right;font-weight:700;">${fmt(iv.total)}</td>
+      <td>${STATUS_CHIP[iv.status]||''} ${isInvoiced&&iv.linkedTxNo?`<div style="font-size:10px;color:var(--purple);font-family:var(--mono);">→ ${iv.linkedTxNo}</div>`:''}</td>
       <td style="text-align:center;">${photoCell}</td>
       <td>
         <div style="display:flex;gap:4px;flex-wrap:wrap;">
-          <button class="btn-sm" onclick="viewQt('${qt.id}')" title="ดูตัวอย่าง">👁</button>
-          <button class="btn-sm" onclick="openEdit('${qt.id}')" title="แก้ไข${qt.signedPhotoUrl?' / เปลี่ยนภาพ':''}" ${isInvoiced?'disabled style="opacity:.4;"':''}>✏️</button>
-          <button class="btn-sm" onclick="openStatusModal('${qt.id}')" title="เปลี่ยนสถานะ" ${isInvoiced?'disabled style="opacity:.4;"':''}>🔄</button>
-          ${canConvert?`<button class="convert-btn" onclick="openConvert('${qt.id}')">💰 ออก IV</button>`:''}
-          <button class="btn-sm danger" onclick="confirmDel('${qt.id}')" title="ลบ">🗑</button>
+          <button class="btn-sm" onclick="viewIv('${iv.id}')" title="ดูตัวอย่าง">👁</button>
+          <button class="btn-sm" onclick="openEdit('${iv.id}')" title="แก้ไข${''}" ${isInvoiced?'disabled style="opacity:.4;"':''}>✏️</button>
+          <button class="btn-sm" onclick="openStatusModal('${iv.id}')" title="เปลี่ยนสถานะ" ${isInvoiced?'disabled style="opacity:.4;"':''}>🔄</button>
+          ${canConvert?`<button class="convert-btn" onclick="">💰 ออก IV</button>`:''}
+          <button class="btn-sm danger" onclick="confirmDel('${iv.id}')" title="ลบ">🗑</button>
         </div>
       </td>
     </tr>`;
