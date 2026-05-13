@@ -576,13 +576,15 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
       <button class="modal-close" onclick="closeM('m-status')">✕</button>
     </div>
     <div class="modal-body">
-      <p style="font-size:13px;margin-bottom:14px;color:var(--text2);">เลือกสถานะใหม่สำหรับ <strong id="status-qt-no"></strong></p>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:4px;">ปรับสถานะใบแจ้งหนี้เลขที่</p>
+      <p style="font-size:16px;font-weight:700;font-family:var(--mono);color:var(--navy);margin-bottom:6px;" id="status-qt-no"></p>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">สถานะปัจจุบัน: <span id="current-status-badge"></span></p>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        <button class="btn btn-secondary" style="justify-content:flex-start;" onclick="changeStatus('draft')">✏️ ร่าง</button>
-        <button class="btn" style="background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal);justify-content:flex-start;" onclick="changeStatus('sent')">📤 ส่งแล้ว / รอชำระ</button>
-        <button class="btn" style="background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple);justify-content:flex-start;" onclick="changeStatus('invoiced')">🧾 ออกใบกำกับภาษีแล้ว</button>
-        <button class="btn btn-green" style="justify-content:flex-start;" onclick="changeStatus('paid')">💵 ชำระแล้ว</button>
-        <button class="btn btn-red" style="justify-content:flex-start;" onclick="changeStatus('overdue')">⚠️ เกินกำหนดชำระ</button>
+        <button class="btn btn-secondary" style="justify-content:flex-start;" id="sbtn-draft" onclick="changeStatus('draft')">✏️ ร่าง</button>
+        <button class="btn" style="background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal);justify-content:flex-start;" id="sbtn-sent" onclick="changeStatus('sent')">📤 ส่งแล้ว / รอชำระ</button>
+        <button class="btn" style="background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple);justify-content:flex-start;" id="sbtn-invoiced" onclick="changeStatus('invoiced')">🧾 ออก TX แล้ว</button>
+        <button class="btn btn-green" style="justify-content:flex-start;" id="sbtn-paid" onclick="changeStatus('paid')">💵 ชำระแล้ว</button>
+        <button class="btn btn-red" style="justify-content:flex-start;" id="sbtn-overdue" onclick="changeStatus('overdue')">⚠️ เกินกำหนดชำระ</button>
       </div>
     </div>
     <div class="modal-footer">
@@ -1183,7 +1185,16 @@ function openStatusModal(id) {
   if (!iv2) return;
   statusId = id;
   document.getElementById('status-qt-no').textContent = iv2.invNo;
-  document.getElementById('m-status-title').textContent = `เปลี่ยนสถานะ: ${iv2.invNo}`;
+  document.getElementById('m-status-title').textContent = '⚡ เปลี่ยนสถานะใบแจ้งหนี้';
+  // Show current status badge
+  document.getElementById('current-status-badge').innerHTML = STATUS_CHIP[iv2.status]||'';
+  // Highlight current status button
+  ['draft','sent','invoiced','paid','overdue'].forEach(s => {
+    const btn = document.getElementById('sbtn-'+s);
+    if (btn) btn.style.outline = iv2.status===s ? '3px solid #2563EB' : '';
+    if (btn && iv2.status===s) btn.innerHTML = '✅ ' + btn.innerHTML.replace(/^✅ /,'');
+    else if (btn) btn.innerHTML = btn.innerHTML.replace(/^✅ /,'');
+  });
   document.getElementById('m-status').classList.remove('hidden');
 }
 
@@ -1295,7 +1306,8 @@ function openEdit(id) {
     tag.style.display = '';
   } else { tag.style.display = 'none'; }
   updateChannelTag();
-  set('f-invno',iv.invNo); set('f-invdate',iv.invDate);
+  set('f-invno',iv.invNo);
+  document.getElementById('f-invdate').value = iv.invDate ? iv.invDate.split('T')[0] : todayStr();
   set('f-paydays',iv.invPayDays); set('f-invref',iv.invRef);
   set('f-issuer',iv.issuer);
   document.getElementById('f-vat').value = String(iv.vatRate||7);
@@ -1550,6 +1562,34 @@ function renderTable(){filterList(document.getElementById('search-input').value)
 function renderTableRows(list){
   const tbody=document.getElementById('table-body');
   document.getElementById('record-count').textContent=list.length+' รายการ';
+  if(!list.length){
+    tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">ไม่พบรายการ</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML=list.map(iv=>{
+    const locked = iv.status==='invoiced'||iv.status==='paid';
+    const payDate = iv.invDate&&iv.invPayDays
+      ? thaiDateShort(new Date(new Date(iv.invDate).getTime()+parseInt(iv.invPayDays)*86400000).toISOString().split('T')[0])
+      : '—';
+    const curStatus = iv.status||'draft';
+    return `<tr>
+      <td class="mono" style="font-weight:700;">${iv.invNo}</td>
+      <td><div style="font-weight:600;">${iv.custName||'—'}</div>
+        ${iv.custContact?`<div style="font-size:11px;color:var(--text3);">ติดต่อ: ${iv.custContact}</div>`:''}</td>
+      <td class="mono">${thaiDateShort(iv.invDate)}</td>
+      <td class="mono" style="color:var(--amber);">${payDate}</td>
+      <td class="mono" style="color:var(--purple);">${iv.invRef||'—'}</td>
+      <td class="mono" style="text-align:right;">${fmt(iv.total)}</td>
+      <td>${STATUS_CHIP[curStatus]||''}</td>
+      <td><div style="display:flex;gap:4px;flex-wrap:wrap;">
+        <button class="btn-sm" onclick="viewIv('${iv.id}')" title="ดูตัวอย่าง">👁</button>
+        <button class="btn-sm" onclick="openEdit('${iv.id}')" title="แก้ไข" ${locked?'disabled style="opacity:.4;"':''}>✏️</button>
+        <button class="btn-sm" onclick="openStatusModal('${iv.id}')" title="เปลี่ยนสถานะ" style="font-size:14px;">⚡</button>
+        <button class="btn-sm danger" onclick="confirmDel('${iv.id}')" title="ลบ">🗑</button>
+      </div></td>
+    </tr>`;
+  });
+    document.getElementById('record-count').textContent=list.length+' รายการ';
   if(!list.length){
     tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">ไม่พบรายการ</div></div></td></tr>`;
     return;
