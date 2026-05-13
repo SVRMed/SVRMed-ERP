@@ -530,7 +530,6 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeM('m-form')">ยกเลิก</button>
-      <button class="btn btn-secondary" onclick="closeM('m-form')">ยกเลิก</button>
       <button class="btn btn-amber" id="btn-draft" onclick="doSave('draft')">💾 บันทึกร่าง</button>
       <button class="btn btn-green" onclick="openPreview()">👁 ดูตัวอย่าง / พิมพ์</button>
       <button class="btn btn-primary" id="btn-confirm-iv" onclick="doSave('sent')">📤 บันทึกและส่ง</button>
@@ -1599,7 +1598,7 @@ function genInvNo(){
   const d=new Date();
   const buddhistYear = d.getFullYear() + 543;
   const seq=String(invoices.length+1).padStart(3,'0');
-  return `QT${String(buddhistYear).slice(-2)}${String(d.getMonth()+1).padStart(2,'0')}${seq}`;
+  return `IV${String(buddhistYear).slice(-2)}${String(d.getMonth()+1).padStart(2,'0')}${seq}`;
 }
 function thaiDateShort(d){
   if(!d)return'—';const dt=new Date(d);if(isNaN(dt))return d;
