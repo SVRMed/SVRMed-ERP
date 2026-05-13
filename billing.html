@@ -236,6 +236,12 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
 .prod-opt-price{font-size:10px;color:var(--green);font-family:var(--mono);float:right;margin-top:2px;}
 .prod-opt-tier{font-size:10px;color:var(--purple);font-family:var(--mono);}
 .no-prod{padding:10px 12px;font-size:12px;color:var(--text3);text-align:center;}
+.qt-card{border:1.5px solid var(--border2);border-radius:8px;padding:10px 14px;cursor:pointer;transition:all .15s;background:var(--surface);}
+.qt-card:hover{border-color:var(--accent);background:#EFF6FF;}
+.qt-card.selected{border-color:var(--green);background:var(--green-bg);}
+.qt-card-no{font-family:var(--mono);font-weight:700;color:var(--accent);font-size:13px;}
+.qt-card-info{font-size:11px;color:var(--text2);margin-top:3px;}
+.qt-card-amt{font-family:var(--mono);font-size:12px;color:var(--green);font-weight:700;float:right;}
 
 /* ── PRICE SOURCE BADGE ── */
 .price-src{font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;margin-left:3px;vertical-align:middle;}
@@ -485,7 +491,15 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
           <input class="fi" id="f-invno" placeholder="เช่น IV6905001"></div>
         <div class="form-group"><label class="form-label">วันที่ออกเอกสาร <span class="req">*</span></label><input class="fi" type="date" id="f-invdate"></div>
         <div class="form-group"><label class="form-label">กำหนดชำระ (วัน)</label><input class="fi" type="number" id="f-paydays" value="30" min="1"></div>
-        <div class="form-group"><label class="form-label">อ้างอิงใบแจ้งหนี้ (QT)</label><input class="fi" id="f-invref" placeholder="เช่น QT6905001"></div>
+        <div class="form-group form-full">
+          <label class="form-label">อ้างอิงใบเสนอราคา (QT) <span class="req">*</span>
+            <span style="font-size:10px;font-weight:400;color:var(--text3);margin-left:6px;">เฉพาะที่ลูกค้าอนุมัติแล้ว</span>
+          </label>
+          <div id="qt-list-wrap" style="display:none;margin-bottom:8px;">
+            <div id="qt-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+          </div>
+          <input class="fi" id="f-invref" placeholder="เลือกลูกค้าก่อน เพื่อดู QT ที่อนุมัติแล้ว" readonly>
+        </div>
         <div class="form-group"><label class="form-label">ผู้เสนอราคา</label><input class="fi" id="f-issuer" placeholder="เช่น นางสาววิลัยพร พอนิคม"></div>
         <div class="form-group"><label class="form-label">ภาษีมูลค่าเพิ่ม</label>
           <select class="fs" id="f-vat" onchange="recalc()"><option value="7">7%</option><option value="0">0% (ยกเว้น VAT)</option></select></div>
@@ -908,6 +922,8 @@ function selectCust(code) {
   document.getElementById('f-ctel').value    = formatPhoneGlobal(c.phone||'');  // format xxx-xxx-xxxx
   document.getElementById('f-ctax').value    = String(c.tax||'');     // เก็บเลขศูนย์นำหน้า
   document.getElementById('f-coffice').value = String(c.office||'');
+  // Load approved QTs for this customer
+  loadApprovedQTs(c.name);
 }
 
 function closeCustDrop() {
@@ -915,6 +931,10 @@ function closeCustDrop() {
 }
 
 function clearCustSearch() {
+  document.getElementById('qt-list-wrap').style.display='none';
+  document.getElementById('qt-list').innerHTML='';
+  document.getElementById('f-invref').value='';
+  document.getElementById('f-invref').placeholder='เลือกลูกค้าก่อน เพื่อดู QT ที่อนุมัติแล้ว';
   currentCustType = '';
   document.getElementById('cust-search').value = '';
   document.getElementById('cust-selected').classList.remove('show');
@@ -1214,6 +1234,7 @@ async function doDelete() {
 // FORM UI
 // ═══════════════════════════════════════
 function openNew() {
+  _qtData = [];
   editId = null;
   currentCustType = '';
   document.getElementById('m-form-title').textContent = '📄 สร้างใบแจ้งหนี้';
@@ -1666,6 +1687,173 @@ function printDoc() {
 }
 
 function toast(msg,type='info'){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast ${type} show`;setTimeout(()=>el.classList.remove('show'),3400);}
+
+
+// ═══════════════════════════════════════
+// LOOKUP QT — auto-fill items from Quotation
+// ═══════════════════════════════════════
+async function lookupQT(qtNo) {
+  qtNo = (qtNo||'').trim().toUpperCase();
+  if (!qtNo || qtNo.length < 6) return;
+  try {
+    const res = await gs({action:'get', sheet:'Quotations'});
+    if (!Array.isArray(res) || res.length < 2) return;
+    const headers = res[0];
+    const col = (row, n) => { const i=headers.indexOf(n); return i>=0?(row[i]||''):''; };
+    const row = res.slice(1).find(r => col(r,'เลขที่ QT').toUpperCase() === qtNo);
+    if (!row) return;
+
+    // Fill customer if empty
+    if (!document.getElementById('f-cname').value) {
+      document.getElementById('f-cname').value   = col(row,'ชื่อลูกค้า');
+      document.getElementById('f-caddr').value   = col(row,'ที่อยู่ลูกค้า');
+      document.getElementById('f-ccont').value   = col(row,'ผู้ติดต่อ');
+      document.getElementById('f-ctel').value    = col(row,'เบอร์ลูกค้า');
+      document.getElementById('f-ctax').value    = col(row,'เลขภาษีลูกค้า');
+      document.getElementById('f-coffice').value = col(row,'สำนักงาน');
+      document.getElementById('cust-selected-code').textContent = '';
+      document.getElementById('cust-selected-name').textContent = col(row,'ชื่อลูกค้า');
+      document.getElementById('cust-selected').classList.add('show');
+    }
+
+    // Fill issuer
+    if (!document.getElementById('f-issuer').value)
+      document.getElementById('f-issuer').value = col(row,'ผู้เสนอราคา');
+
+    // Fill VAT
+    const vat = col(row,'VAT%');
+    if (vat) document.getElementById('f-vat').value = vat;
+
+    // Fill items from ItemsJSON
+    let items = [];
+    try { items = JSON.parse(col(row,'ItemsJSON')); } catch(e) {}
+    if (!items.length) return;
+
+    // Clear and refill items table
+    document.getElementById('items-body').innerHTML = '';
+    items.forEach(() => addRow());
+    const trs = [...document.querySelectorAll('#items-body tr')];
+    items.forEach((r, i) => {
+      if (!trs[i]) return;
+      trs[i].cells[1].querySelector('input').value = r.code||'';
+      trs[i].cells[2].querySelector('input').value = r.name||'';
+      trs[i].cells[3].querySelector('input').value = r.qty||1;
+      trs[i].cells[4].querySelector('input').value = r.unit||'';
+      trs[i].cells[5].querySelector('input').value = r.price||0;
+    });
+
+    // Fill discount
+    const disc = col(row,'ส่วนลด');
+    if (disc) document.getElementById('f-discount').value = disc;
+
+    recalc();
+    toast('✅ ดึงข้อมูลจาก '+qtNo+' แล้ว','ok');
+  } catch(e) {
+    // silent fail
+  }
+}
+
+
+// ═══════════════════════════════════════
+// APPROVED QT LOOKUP
+// ═══════════════════════════════════════
+let _qtData = [];  // cache quotations data
+
+async function loadApprovedQTs(custName) {
+  // Reset
+  document.getElementById('qt-list-wrap').style.display = 'none';
+  document.getElementById('qt-list').innerHTML = '';
+  document.getElementById('f-invref').value = '';
+  document.getElementById('items-body').innerHTML = '';
+  addRow(); addRow(); addRow();
+  recalc();
+
+  try {
+    // Use cached data if available
+    let rows = _qtData;
+    if (!rows.length) {
+      const res = await gs({action:'get', sheet:'Quotations'});
+      if (!Array.isArray(res) || res.length < 2) return;
+      _qtData = res;
+      rows = res;
+    }
+    const headers = rows[0];
+    const col = (row, n) => { const i=headers.indexOf(n); return i>=0?(row[i]||''):''; };
+
+    // Filter approved QTs for this customer
+    const approved = rows.slice(1).filter(row =>
+      col(row,'ชื่อลูกค้า') === custName &&
+      col(row,'สถานะ') === 'approved'
+    );
+
+    if (!approved.length) {
+      document.getElementById('f-invref').placeholder = 'ไม่พบใบเสนอราคาที่อนุมัติแล้วของลูกค้านี้';
+      return;
+    }
+
+    // Render QT cards
+    const wrap = document.getElementById('qt-list-wrap');
+    const list = document.getElementById('qt-list');
+    list.innerHTML = approved.map(row => {
+      const qtNo = col(row,'เลขที่ QT');
+      const date = col(row,'วันที่');
+      const total = parseFloat(col(row,'ยอดรวมสุทธิ'))||0;
+      return `<div class="qt-card" onclick="selectQT(this,'${qtNo}')" data-qtno="${qtNo}">
+        <span class="qt-card-no">${qtNo}</span>
+        <span class="qt-card-amt">${fmt(total)} ฿</span>
+        <div class="qt-card-info">วันที่: ${thaiDateShort(date)}</div>
+      </div>`;
+    }).join('');
+    wrap.style.display = 'block';
+    document.getElementById('f-invref').placeholder = 'เลือก QT ด้านบน';
+  } catch(e) {}
+}
+
+async function selectQT(el, qtNo) {
+  // Highlight selected card
+  document.querySelectorAll('.qt-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('f-invref').value = qtNo;
+
+  try {
+    const rows = _qtData;
+    if (!rows.length) return;
+    const headers = rows[0];
+    const col = (row, n) => { const i=headers.indexOf(n); return i>=0?(row[i]||''):''; };
+    const row = rows.slice(1).find(r => col(r,'เลขที่ QT') === qtNo);
+    if (!row) return;
+
+    // Fill issuer
+    document.getElementById('f-issuer').value = col(row,'ผู้เสนอราคา');
+
+    // Fill VAT
+    const vat = col(row,'VAT%');
+    if (vat) document.getElementById('f-vat').value = String(vat);
+
+    // Fill discount
+    const disc = col(row,'ส่วนลด');
+    document.getElementById('f-discount').value = disc||'0';
+
+    // Fill items
+    let items = [];
+    try { items = JSON.parse(col(row,'ItemsJSON')); } catch(e) {}
+    if (!items.length) { recalc(); return; }
+
+    document.getElementById('items-body').innerHTML = '';
+    items.forEach(() => addRow());
+    const trs = [...document.querySelectorAll('#items-body tr')];
+    items.forEach((r, i) => {
+      if (!trs[i]) return;
+      trs[i].cells[1].querySelector('input').value = r.code||'';
+      trs[i].cells[2].querySelector('input').value = r.name||'';
+      trs[i].cells[3].querySelector('input').value = r.qty||1;
+      trs[i].cells[4].querySelector('input').value = r.unit||'';
+      trs[i].cells[5].querySelector('input').value = r.price||0;
+    });
+    recalc();
+    toast('✅ ดึงรายการจาก '+qtNo+' แล้ว','ok');
+  } catch(e) {}
+}
 
 document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('f-invdate').value=todayStr();
