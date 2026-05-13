@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ใบแจ้งหนี้ (Invoice) · SVRMed ERP</title>
+<title>ใบกำกับภาษี/ใบส่งสินค้า (SVR) · SVRMed ERP</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -301,7 +301,7 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
 <div class="topbar">
   <div class="brand">
     <div class="brand-icon">🏥</div>
-    <div><div class="brand-name">SVRMed ERP</div><div class="brand-sub">v1.0.0 · Invoice Module</div></div>
+    <div><div class="brand-name">SVRMed ERP</div><div class="brand-sub">v1.0.0 · SVR Module</div></div>
   </div>
   <div class="topbar-right">
     <span id="gs-status" class="gs-badge gs-loading">⏳ กำลังเชื่อมต่อ...</span>
@@ -325,8 +325,7 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
     <div class="nav-section">
       <div class="nav-label">การขาย</div>
       <a class="nav-item" href="quotation.html"><span class="icon">📋</span>ใบเสนอราคา (QT)</a>
-      <a class="nav-item active"><span class="icon">📄</span>ใบแจ้งหนี้ (IV)</a>
-      <a class="nav-item disabled"><span class="icon">🧾</span>ใบกำกับภาษี (TX)<span class="nav-badge">Soon</span></a>
+      <a class="nav-item active"><span class="icon">📄</span>ใบกำกับภาษี/ใบส่งสินค้า (SVR)</a>
       <a class="nav-item disabled"><span class="icon">💵</span>ใบเสร็จรับเงิน (RC)<span class="nav-badge">Soon</span></a>
     </div>
     <div class="nav-section">
@@ -345,20 +344,20 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
       <span style="font-size:11px;font-weight:700;color:var(--text2);">Sales Flow:</span>
       <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:var(--green-bg);color:var(--green);">✅ QT ใบเสนอราคา</span>
       <span style="color:var(--text3);font-size:14px;">→</span>
-      <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:#E0E7FF;color:#4338CA;outline:2px solid #4338CA;">📄 IV ใบแจ้งหนี้</span>
+      <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:#E0E7FF;color:#4338CA;outline:2px solid #4338CA;">📄 SVR เอกสาร</span>
       <span style="color:var(--text3);font-size:14px;">→</span>
-      <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:var(--surface2);color:var(--text3);">🧾 TX ใบกำกับภาษี</span>
+      <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:var(--surface2);color:var(--text3);"></span>
       <span style="color:var(--text3);font-size:14px;">→</span>
       <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:var(--surface2);color:var(--text3);">💵 RC ใบเสร็จรับเงิน</span>
     </div>
     <div class="page-header">
       <div class="page-title">
-        <h1>📄 ใบแจ้งหนี้ (Invoice)</h1>
-        <p>แจ้งยอดเรียกเก็บเงิน · QT → <strong>IV</strong> → TX → RC · เชื่อมต่อ Google Sheets</p>
+        <h1>📄 ใบกำกับภาษี/ใบส่งสินค้า (SVR)</h1>
+        <p>ออกเอกสาร SVR · QT → <strong>SVR</strong> → RC · เชื่อมต่อ Google Sheets</p>
       </div>
       <div style="display:flex;gap:8px;">
         <button class="btn btn-secondary" onclick="loadAll()">🔄 รีเฟรช</button>
-        <button class="btn btn-primary" onclick="openNew()">＋ สร้างใบแจ้งหนี้</button>
+        <button class="btn btn-primary" onclick="openNew()">＋ สร้างเอกสาร SVR</button>
       </div>
     </div>
 
@@ -366,13 +365,13 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
     <div class="stats">
       <div class="stat" style="border-top:3px solid var(--teal);"><div class="stat-v" id="st-total">—</div><div class="stat-l">ทั้งหมด</div></div>
       <div class="stat" style="border-top:3px solid var(--amber);"><div class="stat-v" id="st-draft">—</div><div class="stat-l">ร่าง</div></div>
-      <div class="stat" style="border-top:3px solid var(--green);"><div class="stat-v" id="st-sent">—</div><div class="stat-l">ส่งแล้ว / รอชำระ</div></div>
+      <div class="stat" style="border-top:3px solid var(--green);"><div class="stat-v" id="st-sent">—</div><div class="stat-l">ส่งแล้ว</div></div>
       <div class="stat" style="border-top:3px solid var(--purple);"><div class="stat-v" id="st-paid">—</div><div class="stat-l">ชำระแล้ว</div></div>
     </div>
 
     <!-- TOOLBAR -->
     <div class="toolbar">
-      <input class="search-input" placeholder="🔍 ค้นหาเลขที่ IV / ชื่อลูกค้า / อ้างอิง QT..." oninput="filterList(this.value)" id="search-input">
+      <input class="search-input" placeholder="🔍 ค้นหาเลขที่ SVR / ชื่อลูกค้า / อ้างอิง QT..." oninput="filterList(this.value)" id="search-input">
       <select class="filter-select" id="status-filter" onchange="filterList(document.getElementById('search-input').value)">
         <option value="">ทุกสถานะ</option>
         <option value="draft">✏️ ร่าง</option>
@@ -389,7 +388,7 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
       <div class="table-wrap">
         <table id="main-table">
           <thead><tr>
-            <th>เลขที่ IV</th>
+            <th>เลขที่ SVR</th>
             <th>ลูกค้า</th>
             <th>วันที่</th>
             <th>กำหนดชำระ</th>
@@ -411,7 +410,7 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
 <div class="modal-overlay hidden" id="m-form">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title" id="m-form-title">📄 สร้างใบแจ้งหนี้</div>
+      <div class="modal-title" id="m-form-title">📄 สร้างเอกสาร SVR</div>
       <button class="modal-close" onclick="closeM('m-form')">✕</button>
     </div>
     <div class="modal-body">
@@ -486,19 +485,33 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
       <!-- ข้อมูลเอกสาร -->
       <div class="section-title">📋 ข้อมูลเอกสาร</div>
       <div class="form-grid-3">
-        <div class="form-group"><label class="form-label">เลขที่ใบแจ้งหนี้ <span class="req">*</span>
+        <div class="form-group"><label class="form-label">เลขที่เอกสาร (SVR) <span class="req">*</span>
           <span style="font-size:10px;font-weight:400;color:var(--green);margin-left:6px;">✨ ออกให้อัตโนมัติ</span></label>
-          <input class="fi" id="f-invno" placeholder="เช่น IV6905001"></div>
-        <div class="form-group"><label class="form-label">วันที่ออกเอกสาร <span class="req">*</span></label><input class="fi" type="date" id="f-invdate"></div>
-        <div class="form-group"><label class="form-label">กำหนดชำระ (วัน)</label><input class="fi" type="number" id="f-paydays" value="30" min="1"></div>
+          <input class="fi" id="f-invno" placeholder="เช่น SVR6905001"></div>
+        <div class="form-group"><label class="form-label">วันที่ออกเอกสาร <span class="req">*</span></label><input class="fi" type="date" id="f-invdate" oninput="if(currentCreditDays){document.getElementById('f-duedate').value=calcDueDate(this.value,currentCreditDays);}"></div>
+        <div class="form-group"><label class="form-label">วันที่ครบกำหนดชำระ <span class="ref-badge">คำนวณจากเครดิตลูกค้า</span></label><input class="fi" type="date" id="f-duedate" style="background:#F1F5F9;" readonly></div>
         <div class="form-group form-full">
-          <label class="form-label">อ้างอิงใบเสนอราคา (QT) <span class="req">*</span>
+          <label class="form-label">อ้างอิงใบเสนอราคา (QT)
             <span style="font-size:10px;font-weight:400;color:var(--text3);margin-left:6px;">เฉพาะที่ลูกค้าอนุมัติแล้ว</span>
           </label>
           <div id="qt-list-wrap" style="display:none;margin-bottom:8px;">
             <div id="qt-list" style="display:flex;flex-direction:column;gap:6px;"></div>
           </div>
           <input class="fi" id="f-invref" placeholder="เลือกลูกค้าก่อน เพื่อดู QT ที่อนุมัติแล้ว" readonly>
+        </div>
+        <!-- รูปแบบส่งมอบ -->
+        <div class="form-group form-full">
+          <label class="form-label">รูปแบบส่งมอบสินค้า</label>
+          <div style="display:flex;gap:10px;">
+            <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 14px;border:2px solid var(--accent);border-radius:10px;cursor:pointer;background:#EFF6FF;" id="lbl-flow-single">
+              <input type="radio" name="bl-delivery-flow" value="single" checked onchange="setBLFlow('single')" style="accent-color:var(--accent);">
+              <div><div style="font-size:13px;font-weight:700;color:var(--accent);">🚚 ส่งมอบครั้งเดียว</div><div style="font-size:11px;color:var(--text3);">Flow ปกติ (95%)</div></div>
+            </label>
+            <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 14px;border:2px solid var(--border2);border-radius:10px;cursor:pointer;" id="lbl-flow-partial">
+              <input type="radio" name="bl-delivery-flow" value="partial" onchange="setBLFlow('partial')" style="accent-color:var(--amber);">
+              <div><div style="font-size:13px;font-weight:700;color:var(--amber);">📦 ส่งมอบบางส่วนก่อน</div><div style="font-size:11px;color:var(--text3);">มีใบส่งสินค้าครั้งที่ 2 ทีหลัง</div></div>
+            </label>
+          </div>
         </div>
         <div class="form-group"><label class="form-label">ผู้เสนอราคา</label><input class="fi" id="f-issuer" placeholder="เช่น นางสาววิลัยพร พอนิคม"></div>
         <div class="form-group"><label class="form-label">ภาษีมูลค่าเพิ่ม</label>
@@ -576,15 +589,13 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
       <button class="modal-close" onclick="closeM('m-status')">✕</button>
     </div>
     <div class="modal-body">
-      <p style="font-size:12px;color:var(--text3);margin-bottom:4px;">ปรับสถานะใบแจ้งหนี้เลขที่</p>
-      <p style="font-size:16px;font-weight:700;font-family:var(--mono);color:var(--navy);margin-bottom:6px;" id="status-qt-no"></p>
-      <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">สถานะปัจจุบัน: <span id="current-status-badge"></span></p>
+      <p style="font-size:13px;margin-bottom:14px;color:var(--text2);">เลือกสถานะใหม่สำหรับ <strong id="status-qt-no"></strong></p>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        <button class="btn btn-secondary" style="justify-content:flex-start;" id="sbtn-draft" onclick="changeStatus('draft')">✏️ ร่าง</button>
-        <button class="btn" style="background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal);justify-content:flex-start;" id="sbtn-sent" onclick="changeStatus('sent')">📤 ส่งแล้ว / รอชำระ</button>
-        <button class="btn" style="background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple);justify-content:flex-start;" id="sbtn-invoiced" onclick="changeStatus('invoiced')">🧾 ออก TX แล้ว</button>
-        <button class="btn btn-green" style="justify-content:flex-start;" id="sbtn-paid" onclick="changeStatus('paid')">💵 ชำระแล้ว</button>
-        <button class="btn btn-red" style="justify-content:flex-start;" id="sbtn-overdue" onclick="changeStatus('overdue')">⚠️ เกินกำหนดชำระ</button>
+        <button class="btn btn-secondary" style="justify-content:flex-start;" onclick="changeStatus('draft')">✏️ ร่าง</button>
+        <button class="btn" style="background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal);justify-content:flex-start;" onclick="changeStatus('sent')">📤 ส่งแล้ว / รอชำระ</button>
+        <button class="btn" style="background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple);justify-content:flex-start;" onclick="changeStatus('invoiced')">🧾 ออกใบกำกับภาษีแล้ว</button>
+        <button class="btn btn-green" style="justify-content:flex-start;" onclick="changeStatus('paid')">💵 ชำระแล้ว</button>
+        <button class="btn btn-red" style="justify-content:flex-start;" onclick="changeStatus('overdue')">⚠️ เกินกำหนดชำระ</button>
       </div>
     </div>
     <div class="modal-footer">
@@ -601,7 +612,7 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
       <button class="modal-close" onclick="closeM('m-del')">✕</button>
     </div>
     <div class="modal-body">
-      <p style="font-size:14px;">ลบใบแจ้งหนี้ <strong id="del-preview"></strong>?</p>
+      <p style="font-size:14px;">ลบเอกสาร SVR <strong id="del-preview"></strong>?</p>
       <p style="font-size:12px;color:var(--red);margin-top:8px;">⚠️ ข้อมูลจะถูกลบออกจาก Google Sheets</p>
     </div>
     <div class="modal-footer">
@@ -626,7 +637,7 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
 // ═══════════════════════════════════════
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2D5_31NsX8GJZW0PORXfhSNScmq1gRZKfXXi--UmqQwpLMyjZqJ2hHXn3qmzE5z0IXQ/exec';
 let _sheetsInited = false;   // flag: สร้าง Sheet แค่ครั้งเดียว
-const SH_INV   = 'Invoices';
+const SH_INV = 'Invoices';
 const SH_ITEMS = 'InvoiceItems';
 const SH_CUST  = 'Customers';
 const SH_PROD  = 'Products';
@@ -753,7 +764,7 @@ async function loadAll() {
     // Items lookup
     const iMap = {};
     items.rows.forEach(row=>{
-      const invNo2 = col(items.h,row,'เลขที่ IV')||col(items.h,row,'เลขที่ใบกำกับ');
+      const invNo2 = col(items.h,row,'เลขที่เอกสาร')||col(items.h,row,'เลขที่ IV')||col(items.h,row,'เลขที่ใบกำกับ');
       if (!iMap[invNo2]) iMap[invNo2]=[];
       iMap[invNo2].push({
         code:   col(items.h,row,'รหัสสินค้า'),
@@ -767,7 +778,7 @@ async function loadAll() {
 
     invoices = inv.rows.map(row=>{
       const h = inv.h;
-      const invNo = col(h,row,'เลขที่ IV')||col(h,row,'เลขที่ใบกำกับ');
+      const invNo = col(h,row,'เลขที่เอกสาร')||col(h,row,'เลขที่ IV')||col(h,row,'เลขที่ใบกำกับ');
       let itemsArr = iMap[invNo]||[];
       try {
         const j = col(h,row,'ItemsJSON');
@@ -776,10 +787,15 @@ async function loadAll() {
       return {
         id:            col(h,row,'ID'),
         invNo,
-        invDate:      col(h,row,'วันที่')||col(h,row,'วันที่ออกเอกสาร'),
-        invPayDays:   col(h,row,'กำหนดชำระ (วัน)'),
+        invDate:      col(h,row,'วันที่ออกเอกสาร')||col(h,row,'วันที่'),
+        invDueDate:   col(h,row,'วันที่ครบกำหนดชำระ'),
+        invCredit:    col(h,row,'เครดิต (วัน)'),
+        deliveryFlow: col(h,row,'รูปแบบส่งมอบ')||'single',
+        dn2Json:      col(h,row,'DN2JSON')||'',
+        invPayDays:   col(h,row,'วันที่ครบกำหนดชำระ'),
         invRef:       col(h,row,'อ้างอิง QT'),
-        issuer:        col(h,row,'ผู้ออกเอกสาร')||col(h,row,'ผู้เสนอราคา'),
+        issuer:        col(h,row,'ผู้ออกเอกสาร'),
+        invRef:       col(h,row,'อ้างอิง QT'),
         vatRate:       parseFloat(col(h,row,'VAT%'))||7,
         discount:      parseFloat(col(h,row,'ส่วนลด'))||0,
         remark:        col(h,row,'หมายเหตุ'),
@@ -1107,7 +1123,7 @@ async function doSave(status) {
   const d = collectData();
   d.status = status;
   if (!d.custName) { toast('กรุณากรอกชื่อลูกค้า','err'); return; }
-  if (!d.invNo)    { toast('กรุณากรอกเลขที่ใบแจ้งหนี้','err'); return; }
+  if (!d.invNo)    { toast('กรุณากรอกเลขที่เอกสาร SVR','err'); return; }
   if (!d.invDate)  { toast('กรุณาเลือกวันที่','err'); return; }
   if (d.items.length===0) { toast('กรุณาเพิ่มรายการสินค้าอย่างน้อย 1 รายการ','err'); return; }
 
@@ -1115,9 +1131,12 @@ async function doSave(status) {
   try {
     const hdr = {
       'ID':                 d.id,
-      'เลขที่ IV':         d.invNo,
-      'วันที่':            d.invDate,
-      'กำหนดชำระ (วัน)':  d.invPayDays,
+      'เลขที่เอกสาร':          d.invNo,
+      'วันที่ออกเอกสาร':       d.invDate,
+      'วันที่ครบกำหนดชำระ':   d.invDueDate||'',
+      'เครดิต (วัน)':          d.invCredit||'30',
+      'รูปแบบส่งมอบ':           d.deliveryFlow||'single',
+      'วันที่ครบกำหนดชำระ':  d.invPayDays,
       'อ้างอิง QT':        d.invRef,
       'ผู้ออกเอกสาร':      d.issuer,
       'VAT%':              d.vatRate,
@@ -1145,19 +1164,20 @@ async function doSave(status) {
       'เลขที่ TX อ้างอิง': d.linkedTxNo||'',
       
       
-      'ItemsJSON':         JSON.stringify(d.items),
+      'ItemsJSON':              JSON.stringify(d.items),
+      'DN2JSON':                d.dn2Json||'',
     };
 
     if (editId) {
       await gs({action:'update', sheet:SH_INV, keyCol:'ID', keyVal:d.id, data:JSON.stringify(hdr)});
-      try { await gs({action:'deleteWhere', sheet:SH_ITEMS, keyCol:'เลขที่ IV', keyVal:d.invNo}); } catch(e){}
+      try { await gs({action:'deleteWhere', sheet:SH_ITEMS, keyCol:'เลขที่เอกสาร', keyVal:d.invNo}); } catch(e){}
     } else {
       await gs({action:'add', sheet:SH_INV, data:JSON.stringify(hdr)});
     }
 
     for (const r of d.items) {
       await gs({action:'add', sheet:SH_ITEMS, data:JSON.stringify({
-        'เลขที่ IV':    d.invNo,
+        'เลขที่เอกสาร': d.invNo,
         'รหัสสินค้า':  r.code||'',
         'รายการ':       r.name||'',
         'จำนวน':        r.qty,
@@ -1167,7 +1187,7 @@ async function doSave(status) {
       })});
     }
 
-    const msg = status==='sent' ? '📤 บันทึกและส่งใบแจ้งหนี้แล้ว' : '💾 บันทึกร่างแล้ว';
+    const msg = status==='sent' ? '📤 บันทึกและส่งเอกสาร SVR แล้ว' : '💾 บันทึกร่างแล้ว';
     toast(msg,'ok');
     closeM('m-form');
     await loadAll();
@@ -1185,16 +1205,7 @@ function openStatusModal(id) {
   if (!iv2) return;
   statusId = id;
   document.getElementById('status-qt-no').textContent = iv2.invNo;
-  document.getElementById('m-status-title').textContent = '⚡ เปลี่ยนสถานะใบแจ้งหนี้';
-  // Show current status badge
-  document.getElementById('current-status-badge').innerHTML = STATUS_CHIP[iv2.status]||'';
-  // Highlight current status button
-  ['draft','sent','invoiced','paid','overdue'].forEach(s => {
-    const btn = document.getElementById('sbtn-'+s);
-    if (btn) btn.style.outline = iv2.status===s ? '3px solid #2563EB' : '';
-    if (btn && iv2.status===s) btn.innerHTML = '✅ ' + btn.innerHTML.replace(/^✅ /,'');
-    else if (btn) btn.innerHTML = btn.innerHTML.replace(/^✅ /,'');
-  });
+  document.getElementById('m-status-title').textContent = `เปลี่ยนสถานะ: ${iv2.invNo}`;
   document.getElementById('m-status').classList.remove('hidden');
 }
 
@@ -1248,7 +1259,7 @@ function openNew() {
   _qtData = [];
   editId = null;
   currentCustType = '';
-  document.getElementById('m-form-title').textContent = '📄 สร้างใบแจ้งหนี้';
+  document.getElementById('m-form-title').textContent = '📄 สร้างเอกสาร SVR';
   document.getElementById('items-body').innerHTML='';
   // Reset customer search + type tags
   document.getElementById('cust-search').value='';
@@ -1261,7 +1272,7 @@ function openNew() {
     .forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-invno').value  = genInvNo();
   document.getElementById('f-invdate').value = todayStr();
-  document.getElementById('f-paydays').value = '30';
+  document.getElementById('f-duedate').value = '30';
   document.getElementById('f-invref').value  = '';
   document.getElementById('f-discount').value   = '0';
   
@@ -1306,8 +1317,7 @@ function openEdit(id) {
     tag.style.display = '';
   } else { tag.style.display = 'none'; }
   updateChannelTag();
-  set('f-invno',iv.invNo);
-  document.getElementById('f-invdate').value = iv.invDate ? iv.invDate.split('T')[0] : todayStr();
+  set('f-invno',iv.invNo); set('f-invdate',iv.invDate);
   set('f-paydays',iv.invPayDays); set('f-invref',iv.invRef);
   set('f-issuer',iv.issuer);
   document.getElementById('f-vat').value = String(iv.vatRate||7);
@@ -1413,7 +1423,9 @@ function collectData(){
     custType:     currentCustType,
     invNo:        document.getElementById('f-invno').value.trim(),
     invDate:      document.getElementById('f-invdate').value,
-    invPayDays:   document.getElementById('f-paydays').value,
+    invDueDate:   document.getElementById('f-duedate').value,
+    invCredit:    String(currentCreditDays),
+    deliveryFlow: document.querySelector('input[name="bl-delivery-flow"]:checked')?.value||'single',
     invRef:       document.getElementById('f-invref').value.trim(),
     issuer:       document.getElementById('f-issuer').value.trim(),
     vatRate:vr, discount:disc,
@@ -1567,34 +1579,6 @@ function renderTableRows(list){
     return;
   }
   tbody.innerHTML=list.map(iv=>{
-    const locked = iv.status==='invoiced'||iv.status==='paid';
-    const payDate = iv.invDate&&iv.invPayDays
-      ? thaiDateShort(new Date(new Date(iv.invDate).getTime()+parseInt(iv.invPayDays)*86400000).toISOString().split('T')[0])
-      : '—';
-    const curStatus = iv.status||'draft';
-    return `<tr>
-      <td class="mono" style="font-weight:700;">${iv.invNo}</td>
-      <td><div style="font-weight:600;">${iv.custName||'—'}</div>
-        ${iv.custContact?`<div style="font-size:11px;color:var(--text3);">ติดต่อ: ${iv.custContact}</div>`:''}</td>
-      <td class="mono">${thaiDateShort(iv.invDate)}</td>
-      <td class="mono" style="color:var(--amber);">${payDate}</td>
-      <td class="mono" style="color:var(--purple);">${iv.invRef||'—'}</td>
-      <td class="mono" style="text-align:right;">${fmt(iv.total)}</td>
-      <td>${STATUS_CHIP[curStatus]||''}</td>
-      <td><div style="display:flex;gap:4px;flex-wrap:wrap;">
-        <button class="btn-sm" onclick="viewIv('${iv.id}')" title="ดูตัวอย่าง">👁</button>
-        <button class="btn-sm" onclick="openEdit('${iv.id}')" title="แก้ไข" ${locked?'disabled style="opacity:.4;"':''}>✏️</button>
-        <button class="btn-sm" onclick="openStatusModal('${iv.id}')" title="เปลี่ยนสถานะ" style="font-size:14px;">⚡</button>
-        <button class="btn-sm danger" onclick="confirmDel('${iv.id}')" title="ลบ">🗑</button>
-      </div></td>
-    </tr>`;
-  });
-    document.getElementById('record-count').textContent=list.length+' รายการ';
-  if(!list.length){
-    tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">ไม่พบรายการ</div></div></td></tr>`;
-    return;
-  }
-  tbody.innerHTML=list.map(iv=>{
     const canConvert = iv.status==='approved';
     const isInvoiced = iv.status==='invoiced';
     const photoCell = iv.signedPhotoUrl
@@ -1659,7 +1643,7 @@ function genInvNo(){
   const d=new Date();
   const buddhistYear = d.getFullYear() + 543;
   const seq=String(invoices.length+1).padStart(3,'0');
-  return `IV${String(buddhistYear).slice(-2)}${String(d.getMonth()+1).padStart(2,'0')}${seq}`;
+  return `SVR${String(buddhistYear).slice(-2)}${String(d.getMonth()+1).padStart(2,'0')}${seq}`;
 }
 function thaiDateShort(d){
   if(!d)return'—';const dt=new Date(d);if(isNaN(dt))return d;
@@ -1895,8 +1879,37 @@ async function selectQT(el, qtNo) {
   } catch(e) {}
 }
 
+
+// ── Delivery Flow Toggle ──
+function setBLFlow(flow) {
+  const lblSingle = document.getElementById('lbl-flow-single');
+  const lblPartial = document.getElementById('lbl-flow-partial');
+  if (!lblSingle) return;
+  if (flow === 'single') {
+    lblSingle.style.border = '2px solid var(--accent)';
+    lblSingle.style.background = '#EFF6FF';
+    lblPartial.style.border = '2px solid var(--border2)';
+    lblPartial.style.background = '';
+  } else {
+    lblPartial.style.border = '2px solid var(--amber)';
+    lblPartial.style.background = '#FEF3C7';
+    lblSingle.style.border = '2px solid var(--border2)';
+    lblSingle.style.background = '';
+  }
+}
+
+// คำนวณวันครบกำหนดชำระ (บวกเครดิตเป็นเดือน)
+function calcDueDate(dateStr, creditDays) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const months = parseInt(creditDays)<=30 ? 1 : parseInt(creditDays)<=60 ? 2 : 3;
+  d.setMonth(d.getMonth() + months);
+  return d.toISOString().split('T')[0];
+}
+
 document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('f-invdate').value=todayStr();
+  document.getElementById('f-duedate').value=calcDueDate(todayStr(),30);
   loadAll();
 });
 </script>
