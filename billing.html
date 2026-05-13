@@ -837,7 +837,7 @@ function renderCustDrop(hits, q) {
   }
   dd.innerHTML = hits.map((c, i) => `
     <div class="cust-option${i===custHighlight?' hl':''}" 
-      onmousedown="selectCust('${c.code}')"
+      data-code="${c.code}"
       data-idx="${i}">
       <div class="cust-opt-top">
         <span class="cust-opt-code">${hl(c.code||'',q)}</span>
@@ -910,6 +910,13 @@ function selectCust(code) {
 function closeCustDrop() {
   document.getElementById('cust-dropdown').classList.remove('open');
 }
+// Event delegation — ป้องกัน quote ใน code ทำให้ onmousedown แตก
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('cust-dropdown').addEventListener('mousedown', e => {
+    const opt = e.target.closest('[data-code]');
+    if (opt) { e.preventDefault(); selectCust(opt.dataset.code); }
+  });
+});
 
 function clearCustSearch() {
   currentCustType = '';
