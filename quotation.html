@@ -376,7 +376,7 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
       <div class="stat" style="border-top:3px solid var(--teal);"><div class="stat-v" id="st-total">—</div><div class="stat-l">ทั้งหมด</div></div>
       <div class="stat" style="border-top:3px solid var(--amber);"><div class="stat-v" id="st-sent">—</div><div class="stat-l">ส่งแล้ว / รอตอบ</div></div>
       <div class="stat" style="border-top:3px solid var(--green);"><div class="stat-v" id="st-approved">—</div><div class="stat-l">อนุมัติแล้ว</div></div>
-      <div class="stat" style="border-top:3px solid var(--purple);"><div class="stat-v" id="st-invoiced">—</div><div class="stat-l">ออกใบแจ้งหนี้แล้ว</div></div>
+      <div class="stat" style="border-top:3px solid var(--purple);"><div class="stat-v" id="st-invoiced">—</div><div class="stat-l">ออก SVR แล้ว</div></div>
     </div>
 
     <!-- TOOLBAR -->
@@ -1959,7 +1959,7 @@ function renderTableRows(list){
           <button class="btn-sm" onclick="viewQt('${qt.id}')" title="ดูตัวอย่าง">👁</button>
           <button class="btn-sm" onclick="openEdit('${qt.id}')" title="แก้ไข${qt.signedPhotoUrl?' / เปลี่ยนภาพ':''}" ${isInvoiced?'disabled style="opacity:.4;"':''}>✏️</button>
           <button class="btn-sm" onclick="openStatusModal('${qt.id}')" title="เปลี่ยนสถานะ" ${isInvoiced?'disabled style="opacity:.4;"':''}>⚡</button>
-          ${canConvert?`<button class="convert-btn" onclick="openConvert('${qt.id}')">📄 ออก IV</button>`:''}
+          ${canConvert?`<button class="convert-btn" onclick="openConvert('${qt.id}')">📄 ออกเอกสาร SVR</button>`:''}
           <button class="btn-sm danger" onclick="confirmDel('${qt.id}')" title="ลบ">🗑</button>
         </div>
       </td>
