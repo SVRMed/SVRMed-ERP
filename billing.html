@@ -393,12 +393,13 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
             <th>วันที่ออก SVR</th>
             <th>กำหนดชำระ</th>
             <th>อ้างอิง QT</th>
+            <th>เลขที่ PO</th>
             <th style="text-align:right;">ยอดรวม (฿)</th>
             <th>สถานะ</th>
             <th style="width:200px;">จัดการ</th>
           </tr></thead>
           <tbody id="table-body">
-            <tr><td colspan="7"><div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-text">กำลังโหลดจาก Google Sheets...</div></div></td></tr>
+            <tr><td colspan="8"><div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-text">กำลังโหลดจาก Google Sheets...</div></div></td></tr>
           </tbody>
         </table>
       </div>
@@ -498,6 +499,12 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
             <div id="qt-list" style="display:flex;flex-direction:column;gap:6px;"></div>
           </div>
           <input class="fi" id="f-invref" placeholder="เลือกลูกค้าก่อน เพื่อดู QT ที่อนุมัติแล้ว" readonly>
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">เลขที่ PO อ้างอิง
+            <span style="font-size:10px;font-weight:400;color:var(--text3);margin-left:6px;">Purchase Order จากลูกค้า (ถ้ามี)</span>
+          </label>
+          <input class="fi" id="f-poref" placeholder="เช่น PO-2025-0123 (ไม่บังคับ)">
         </div>
         <!-- รูปแบบส่งมอบ -->
         <div class="form-group form-full">
@@ -807,6 +814,7 @@ async function loadAll() {
         deliveryFlow: col(h,row,'รูปแบบส่งมอบ')||'single',
         dn2Json:      col(h,row,'DN2JSON')||'',
         invRef:       col(h,row,'อ้างอิง QT'),
+        poRef:        col(h,row,'เลขที่ PO'),
         issuer:        col(h,row,'ผู้ออกเอกสาร'),
         vatRate:       parseFloat(col(h,row,'VAT%'))||7,
         discount:      parseFloat(col(h,row,'ส่วนลด'))||0,
@@ -1154,6 +1162,7 @@ async function doSave(status) {
       'เครดิต':                d.invCredit||'30',
       'รูปแบบส่งมอบ':           d.deliveryFlow||'single',
       'อ้างอิง QT':        d.invRef,
+      'เลขที่ PO':          d.poRef||'',
       'ผู้ออกเอกสาร':      d.issuer,
       'VAT%':              d.vatRate,
       'ส่วนลด':             d.discount,
@@ -1356,6 +1365,7 @@ function openEdit(id) {
   document.getElementById('f-duedate').value = iv.invDueDate ? String(iv.invDueDate).split('T')[0] : '';
   if (iv.invCredit) currentCreditDays = parseInt(iv.invCredit)||30;
   set('f-invref',iv.invRef);
+  set('f-poref', iv.poRef||'');
   set('f-issuer',iv.issuer);
   document.getElementById('f-vat').value = String(iv.vatRate||7);
   set('f-discount',String(iv.discount||0));
@@ -1463,6 +1473,7 @@ function collectData(){
     invDueDate:   document.getElementById('f-duedate').value,
     invCredit:    String(currentCreditDays),
     invRef:       document.getElementById('f-invref').value.trim(),
+    poRef:        document.getElementById('f-poref').value.trim(),
     deliveryFlow: document.querySelector('input[name="bl-delivery-flow"]:checked')?.value||'single',
     invRef:       document.getElementById('f-invref').value.trim(),
     issuer:       document.getElementById('f-issuer').value.trim(),
@@ -1585,20 +1596,7 @@ function buildQT(d){
 // ═══════════════════════════════════════
 function buildIV(d) {
   // ── rows ──
-  let rows = ''; let n = 1;
-  (d.items||[]).forEach(r => {
-    rows += `<tr>
-      <td class="ctr">${n++}</td>
-      <td>${r.code||''}</td>
-      <td>${r.name||''}</td>
-      <td class="ctr">${r.qty}</td>
-      <td class="ctr">${r.unit||''}</td>
-      <td class="num">${fmt(r.price)}</td>
-      <td class="num">${fmt(r.amount)}</td>
-    </tr>`;
-  });
   const filled = (d.items||[]).length;
-  for (let i = filled; i < 12; i++) rows += `<tr style="height:21px;"><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
 
   const vr = d.vatRate || 7;
   const sub = d.subtotal || 0;
@@ -1704,7 +1702,8 @@ function buildIV(d) {
       <div class="doc-ref" style="background:${copy.metaBg};border-color:${copy.metaBorder};">
         <div><span class="lbl">เลขที่</span>&nbsp;:&nbsp;<strong>${d.invNo||''}</strong></div>
         <div><span class="lbl">วันที่</span>&nbsp;:&nbsp;${thaiDateShort(d.invDate||'')}</div>
-        <div><span class="lbl">อ้างอิง QT</span>&nbsp;:&nbsp;${d.invRef||'—'}</div>
+        ${d.invRef?`<div><span class="lbl">อ้างอิง QT</span>&nbsp;:&nbsp;${d.invRef}</div>`:''}
+        ${d.poRef?`<div><span class="lbl">อ้างอิง PO</span>&nbsp;:&nbsp;<strong>${d.poRef}</strong></div>`:''}
         <div><span class="lbl">กำหนดชำระ</span>&nbsp;:&nbsp;${thaiDateShort(d.invDueDate||'')}</div>
       </div>
     </div>
@@ -1713,6 +1712,36 @@ function buildIV(d) {
 
 
   // ── build sharedBody per copy (for colour theming) ──
+  // ── generate rows with per-copy alt-row colour ──
+  const buildRows = (copy) => {
+    let html = ''; let n = 1;
+    (d.items||[]).forEach((r, i) => {
+      const bg = i % 2 === 1 ? `background:${copy.tdAltBg};` : '';
+      const br = `border-color:${copy.tdBorder};`;
+      html += `<tr>
+        <td class="ctr" style="${bg}${br}">${n++}</td>
+        <td style="${bg}${br}">${r.code||''}</td>
+        <td style="${bg}${br}">${r.name||''}</td>
+        <td class="ctr" style="${bg}${br}">${r.qty}</td>
+        <td class="ctr" style="${bg}${br}">${r.unit||''}</td>
+        <td class="num" style="${bg}${br}">${fmt(r.price)}</td>
+        <td class="num" style="${bg}${br}">${fmt(r.amount)}</td>
+      </tr>`;
+    });
+    const filled = (d.items||[]).length;
+    for (let i = filled; i < 12; i++) {
+      const bg = i % 2 === 1 ? `background:${copy.tdAltBg};` : '';
+      const br = `border-color:${copy.tdBorder};`;
+      html += `<tr style="height:21px;">
+        <td style="${bg}${br}"></td><td style="${bg}${br}"></td>
+        <td style="${bg}${br}"></td><td style="${bg}${br}"></td>
+        <td style="${bg}${br}"></td><td style="${bg}${br}"></td>
+        <td style="${bg}${br}"></td>
+      </tr>`;
+    }
+    return html;
+  };
+
   const buildSharedBody = (copy) => `
 
     <!-- ITEMS TABLE -->
@@ -1726,7 +1755,7 @@ function buildIV(d) {
         <th style="width:80px;background:${copy.thBg};border-color:${copy.thBorder};">ราคา/หน่วย</th>
         <th style="width:84px;background:${copy.thBg};border-color:${copy.thBorder};">จำนวนเงิน</th>
       </tr></thead>
-      <tbody>${rows.replace(/background:#F5F8FC/g, 'background:'+copy.tdAltBg).replace(/#B8CADC/g, copy.tdBorder)}</tbody>
+      <tbody>${buildRows(copy)}</tbody>
     </table>
 
     <!-- SUMMARY SECTION -->
@@ -1865,6 +1894,7 @@ function renderTableRows(list){
       <td class="mono">${thaiDateShort(invDateStr)}</td>
       <td class="mono" style="color:var(--amber);">${thaiDateShort(dueDateStr)}</td>
       <td class="mono" style="color:var(--purple);">${iv.invRef||'—'}</td>
+      <td class="mono" style="color:#0369a1;">${iv.poRef||'—'}</td>
       <td class="mono" style="text-align:right;">${fmt(iv.total)}</td>
       <td>${STATUS_CHIP[iv.status||'draft']||''}</td>
       <td><div style="display:flex;gap:4px;flex-wrap:wrap;">
