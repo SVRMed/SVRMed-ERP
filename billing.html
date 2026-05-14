@@ -841,19 +841,32 @@ async function gs(params) {
     if (typeof body.data === 'string') {
       try { body.data = JSON.parse(body.data); } catch(e) {}
     }
-    // ใช้ no-cors เพราะ Apps Script redirect ทำให้ CORS header หาย
-    // แต่ข้อมูลยังถูกบันทึกลง Sheet ได้
-    await fetch(SCRIPT_URL, {
+    const dataStr = JSON.stringify(body.data||{});
+    // ถ้าข้อมูลเล็ก (<1500 chars) ใช้ GET เพื่อหลีกเลี่ยง CORS redirect
+    if (dataStr.length < 1500) {
+      const url = SCRIPT_URL + '?' + new URLSearchParams({
+        action: body.action,
+        sheet: body.sheet||'',
+        keyCol: body.keyCol||'',
+        keyVal: body.keyVal||'',
+        data: dataStr,
+      });
+      const res = await fetch(url);
+      const text = await res.text();
+      try { return JSON.parse(text); } catch(e) { throw new Error('Error: ' + text.substring(0,200)); }
+    }
+    // ถ้าข้อมูลใหญ่ ใช้ POST
+    const res = await fetch(SCRIPT_URL, {
       method: 'POST',
-      mode: 'no-cors',
       headers: {'Content-Type': 'text/plain;charset=utf-8'},
       body: JSON.stringify(body),
     });
-    return 'ok';
+    const text = await res.text();
+    try { return JSON.parse(text); } catch(e) { throw new Error('Error: ' + text.substring(0,200)); }
   }
   const res = await fetch(SCRIPT_URL + '?' + new URLSearchParams(params));
   const text = await res.text();
-  try { return JSON.parse(text); } catch(e) { throw new Error('Apps Script error: ' + text.substring(0,200)); }
+  try { return JSON.parse(text); } catch(e) { throw new Error('Error: ' + text.substring(0,200)); }
 }
 
 // ═══════════════════════════════════════
