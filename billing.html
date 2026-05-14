@@ -2955,7 +2955,9 @@ async function saveDN2() {
   setBusy(true);
   try {
     await gs({ action:'update', sheet:SH_INV, keyCol:'ID', keyVal:iv.id,
-      data: JSON.stringify({ 'DN2JSON': JSON.stringify(dn2Save), 'สถานะ': 'completed' }) });
+      data: JSON.stringify({ 'สถานะ': 'completed' }) });
+    await gs({ action:'update', sheet:SH_INV, keyCol:'ID', keyVal:iv.id,
+      data: JSON.stringify({ 'DN2JSON': JSON.stringify(dn2Save) }) });
     toast('✅ บันทึกใบส่งสินค้าคงค้างแล้ว','ok');
     closeM('m-dn2');
     await loadAll();
