@@ -553,6 +553,37 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
       </div>
       <button class="btn-add-row" onclick="addRow()">＋ เพิ่มรายการสินค้า</button>
 
+      <!-- ███ ใบค้างส่งสินค้า (DN1) — แสดงเมื่อเลือกส่งมอบบางส่วน ███ -->
+      <div id="dn1-section" style="display:none;margin-top:16px;border:2px solid var(--amber);border-radius:12px;padding:14px 16px;background:#FFFBEB;">
+        <div style="font-size:13px;font-weight:700;color:var(--amber);margin-bottom:10px;">
+          📋 ใบค้างส่งสินค้า — ระบุสินค้าที่ส่งครั้งแรก
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">
+          กรอกจำนวนที่จะส่งครั้งแรก (ส่วนที่เหลือจะเป็นรายการค้างส่งอัตโนมัติ)
+        </div>
+        <table class="it" style="font-size:12px;">
+          <thead><tr>
+            <th style="width:34px;">#</th>
+            <th>รายการ</th>
+            <th style="width:80px;" class="ctr">จำนวนทั้งหมด</th>
+            <th style="width:90px;" class="ctr">ส่งครั้งแรก</th>
+            <th style="width:90px;" class="ctr">ค้างส่ง</th>
+            <th style="width:65px;" class="ctr">หน่วย</th>
+          </tr></thead>
+          <tbody id="dn1-body"></tbody>
+        </table>
+        <div style="margin-top:10px;display:flex;gap:10px;align-items:center;">
+          <div style="flex:1;">
+            <label class="form-label" style="font-size:11px;">กำหนดส่งมอบส่วนที่เหลือ</label>
+            <input class="fi" type="date" id="f-dn1-duedate" style="margin:0;">
+          </div>
+          <div style="flex:1;">
+            <label class="form-label" style="font-size:11px;">หมายเหตุใบค้างส่ง</label>
+            <input class="fi" id="f-dn1-remark" placeholder="เช่น รอสินค้าเข้าโกดัง" style="margin:0;">
+          </div>
+        </div>
+      </div>
+
       <div class="form-grid" style="margin-top:14px;">
         <div class="form-group"><label class="form-label">ส่วนลดรวม (บาท)</label><input class="fi" type="number" id="f-discount" value="0" min="0" oninput="recalc()"></div>
         
@@ -623,6 +654,45 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
       <div id="thumb-strip" style="display:flex;gap:8px;"></div>
     </div>
 
+  </div>
+</div>
+
+<!-- ████ MODAL: DN2 — ใบส่งสินค้าคงค้าง ████ -->
+<div class="modal-overlay hidden" id="m-dn2">
+  <div class="modal" style="width:700px;">
+    <div class="modal-header">
+      <div class="modal-title">📦 สร้างใบส่งสินค้าคงค้าง</div>
+      <button class="modal-close" onclick="closeM('m-dn2')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="dn2-info" style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:12px;line-height:2;"></div>
+      <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px;">รายการสินค้าค้างส่ง</div>
+      <table class="it" style="font-size:12px;">
+        <thead><tr>
+          <th style="width:34px;">#</th>
+          <th>รายการ</th>
+          <th style="width:80px;" class="ctr">ค้างส่งทั้งหมด</th>
+          <th style="width:90px;" class="ctr">ส่งครั้งนี้</th>
+          <th style="width:65px;" class="ctr">หน่วย</th>
+        </tr></thead>
+        <tbody id="dn2-body"></tbody>
+      </table>
+      <div class="form-grid" style="margin-top:14px;">
+        <div class="form-group">
+          <label class="form-label">วันที่ส่งมอบ</label>
+          <input class="fi" type="date" id="f-dn2-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">หมายเหตุ</label>
+          <input class="fi" id="f-dn2-remark" placeholder="หมายเหตุ">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeM('m-dn2')">ยกเลิก</button>
+      <button class="btn btn-green" onclick="previewDN2()">👁 ดูตัวอย่าง</button>
+      <button class="btn btn-primary" onclick="saveDN2()">📤 บันทึกและพิมพ์</button>
+    </div>
   </div>
 </div>
 
@@ -1815,7 +1885,7 @@ function buildIV(d) {
     <div class="doc-meta">
       <div class="doc-cust" style="background:${copy.metaBg};border-color:${copy.metaBorder};">
         <div><span class="lbl">นามลูกค้า &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;<strong style="color:#0F2B4E;">${d.custName||''}</strong></div>
-        <div style="display:flex;"><span class="lbl" style="flex-shrink:0;">ที่อยู่ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;<span>${(d.custAddr||'').replace(/\n/g,'<br>')}</span></div>
+        <div style="display:flex;"><span class="lbl" style="flex-shrink:0;">ที่อยู่ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;<span>${(d.custAddr||'').split('\n').join('<br>')}</span></div>
         ${d.custContact?`<div><span class="lbl">ผู้ติดต่อ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;คุณ${d.custContact}${d.custTel?' &emsp;เบอร์โทร '+d.custTel:''}</div>`:''}
         <div><span class="lbl">เลขประจำตัวผู้เสียภาษี :</span>&nbsp;${d.custTax||''}${d.custOffice?'&emsp;('+d.custOffice+')':''}</div>
       </div>
@@ -2021,6 +2091,7 @@ function renderTableRows(list){
         <button class="btn-sm" onclick="viewIv('${iv.id}')" title="ดูตัวอย่าง">👁</button>
         <button class="btn-sm" onclick="openEdit('${iv.id}')" title="แก้ไข" ${locked?'disabled style="opacity:.4;"':''}>✏️</button>
         <button class="btn-sm" onclick="openStatusModal('${iv.id}')" title="เปลี่ยนสถานะ" style="font-size:14px;">⚡</button>
+        ${iv.deliveryFlow==='partial'?`<button class="btn-sm" onclick="openDN2('${iv.id}')" title="ส่งของที่ค้างส่ง" style="background:#FEF3C7;color:#92400E;border-color:#FCD34D;">📦</button>`:''}
         <button class="btn-sm danger" onclick="confirmDel('${iv.id}')" title="ลบ">🗑</button>
       </div></td>
     </tr>`;
@@ -2366,22 +2437,7 @@ async function selectQT(el, qtNo) {
 
 
 // ── Delivery Flow Toggle ──
-function setBLFlow(flow) {
-  const lblSingle = document.getElementById('lbl-flow-single');
-  const lblPartial = document.getElementById('lbl-flow-partial');
-  if (!lblSingle) return;
-  if (flow === 'single') {
-    lblSingle.style.border = '2px solid var(--accent)';
-    lblSingle.style.background = '#EFF6FF';
-    lblPartial.style.border = '2px solid var(--border2)';
-    lblPartial.style.background = '';
-  } else {
-    lblPartial.style.border = '2px solid var(--amber)';
-    lblPartial.style.background = '#FEF3C7';
-    lblSingle.style.border = '2px solid var(--border2)';
-    lblSingle.style.background = '';
-  }
-}
+// setBLFlow — moved to DN section above
 
 // คำนวณวันครบกำหนดชำระ (บวกเครดิตเป็นเดือน)
 function calcDueDate(dateStr, creditDays) {
@@ -2390,6 +2446,285 @@ function calcDueDate(dateStr, creditDays) {
   const months = parseInt(creditDays)<=30 ? 1 : parseInt(creditDays)<=60 ? 2 : 3;
   d.setMonth(d.getMonth() + months);
   return d.toISOString().split('T')[0];
+}
+
+
+// ═══════════════════════════════════════════════════
+// PARTIAL DELIVERY — DN1 / DN2
+// ═══════════════════════════════════════════════════
+
+// สร้างเลขที่ DN จาก SVR no
+function genDNNo(invNo, suffix) {
+  // SVR6905001 → DN6905001-1 หรือ DN6905001-2
+  const num = invNo.replace(/^[A-Z]+/, '');
+  return `DN${num}-${suffix}`;
+}
+
+// อัพเดต DN1 table เมื่อเปลี่ยน items ในฟอร์ม
+function refreshDN1Table() {
+  const tbody = document.getElementById('dn1-body');
+  if (!tbody) return;
+  const rows = [...document.querySelectorAll('#items-body tr')];
+  let html = '';
+  let n = 1;
+  rows.forEach(tr => {
+    const name  = tr.cells[2].querySelector('input').value.trim();
+    const qty   = parseFloat(tr.cells[3].querySelector('input').value) || 0;
+    const unit  = tr.cells[4].querySelector('input').value.trim();
+    if (!name) return;
+    html += `<tr>
+      <td class="ctr">${n++}</td>
+      <td>${name}</td>
+      <td class="ctr">${qty}</td>
+      <td class="ctr"><input type="number" min="0" max="${qty}" value="${qty}"
+          style="width:70px;text-align:center;border:1px solid #FCD34D;border-radius:6px;padding:3px 6px;"
+          oninput="updateDN1Backorder(this,${qty})" data-max="${qty}"></td>
+      <td class="ctr" id="dn1-back-${n-1}" style="color:var(--amber);font-weight:700;">0</td>
+      <td class="ctr">${unit}</td>
+    </tr>`;
+  });
+  tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:12px;">ยังไม่มีรายการสินค้า</td></tr>';
+}
+
+function updateDN1Backorder(input, totalQty) {
+  const sent = parseFloat(input.value) || 0;
+  const back = Math.max(0, totalQty - sent);
+  const row = input.closest('tr');
+  const backCell = row.cells[4];
+  backCell.textContent = back;
+  backCell.style.color = back > 0 ? 'var(--amber)' : '#22C55E';
+}
+
+// setBLFlow — แสดง/ซ่อน DN1 section
+function setBLFlow(flow) {
+  const lblSingle  = document.getElementById('lbl-flow-single');
+  const lblPartial = document.getElementById('lbl-flow-partial');
+  const dn1Section = document.getElementById('dn1-section');
+  if (!lblSingle) return;
+  if (flow === 'single') {
+    lblSingle.style.border  = '2px solid var(--accent)';
+    lblSingle.style.background = '#EFF6FF';
+    lblPartial.style.border = '2px solid var(--border2)';
+    lblPartial.style.background = '';
+    if (dn1Section) dn1Section.style.display = 'none';
+  } else {
+    lblPartial.style.border = '2px solid var(--amber)';
+    lblPartial.style.background = '#FEF3C7';
+    lblSingle.style.border  = '2px solid var(--border2)';
+    lblSingle.style.background = '';
+    if (dn1Section) { dn1Section.style.display = ''; refreshDN1Table(); }
+  }
+}
+
+// เก็บ DN1 data จากฟอร์ม
+function collectDN1() {
+  const rows = [...document.querySelectorAll('#dn1-body tr')];
+  const items = [];
+  rows.forEach((tr, i) => {
+    const inp = tr.querySelector('input[type="number"]');
+    if (!inp) return;
+    const name    = tr.cells[1].textContent.trim();
+    const total   = parseFloat(inp.dataset.max) || 0;
+    const sent1   = parseFloat(inp.value) || 0;
+    const backlog = Math.max(0, total - sent1);
+    items.push({ name, total, sent1, backlog, unit: tr.cells[5].textContent.trim() });
+  });
+  return {
+    dn1No:    '',  // จะ set ตอน save
+    dueDate:  document.getElementById('f-dn1-duedate')?.value || '',
+    remark:   document.getElementById('f-dn1-remark')?.value.trim() || '',
+    items,
+  };
+}
+
+// ─── DN2 Modal ───────────────────────────────────
+let _dn2InvId = null;
+
+function openDN2(invId) {
+  const iv = invoices.find(i => i.id === invId);
+  if (!iv) return;
+  if (iv.deliveryFlow !== 'partial') { toast('ใบนี้ไม่ใช่การส่งมอบบางส่วน','err'); return; }
+
+  _dn2InvId = invId;
+  const dn1 = iv.dn2Json ? JSON.parse(iv.dn2Json) : null;
+
+  // info box
+  const dn2No = genDNNo(iv.invNo, '2');
+  const dn1No = genDNNo(iv.invNo, '1');
+  document.getElementById('dn2-info').innerHTML = `
+    <div><strong>ใบส่งสินค้าคงค้างเลขที่:</strong> <span style="color:var(--accent);font-weight:700;">${dn2No}</span></div>
+    <div><strong>อ้างอิงใบค้างส่ง:</strong> ${dn1No}</div>
+    <div><strong>อ้างอิงใบกำกับ:</strong> ${iv.invNo}</div>
+    <div><strong>ลูกค้า:</strong> ${iv.custName}</div>`;
+
+  // สร้าง rows จาก dn1 data
+  const tbody = document.getElementById('dn2-body');
+  let items = [];
+  if (dn1 && dn1.items) {
+    items = dn1.items.filter(r => r.backlog > 0);
+  } else if (iv.items) {
+    items = iv.items.map(r => ({ name: r.name, backlog: r.qty, unit: r.unit }));
+  }
+
+  tbody.innerHTML = items.map((r, i) => `<tr>
+    <td class="ctr">${i+1}</td>
+    <td>${r.name}</td>
+    <td class="ctr">${r.backlog}</td>
+    <td class="ctr"><input type="number" min="0" max="${r.backlog}" value="${r.backlog}"
+        style="width:70px;text-align:center;border:1px solid var(--accent);border-radius:6px;padding:3px 6px;"
+        data-max="${r.backlog}"></td>
+    <td class="ctr">${r.unit||''}</td>
+  </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:12px;">ไม่มีรายการค้างส่ง</td></tr>';
+
+  document.getElementById('f-dn2-date').value = todayStr();
+  document.getElementById('m-dn2').classList.remove('hidden');
+}
+
+function previewDN2() {
+  const iv = invoices.find(i => i.id === _dn2InvId);
+  if (!iv) return;
+  const dn2Data = collectDN2Data(iv);
+  _initPreview(buildDN2(dn2Data));
+}
+
+function collectDN2Data(iv) {
+  const rows = [...document.querySelectorAll('#dn2-body tr')];
+  const items = rows.map((tr, i) => {
+    const inp = tr.querySelector('input[type="number"]');
+    if (!inp) return null;
+    return {
+      name: tr.cells[1].textContent.trim(),
+      qty:  parseFloat(inp.value) || 0,
+      unit: tr.cells[4].textContent.trim(),
+    };
+  }).filter(r => r && r.qty > 0);
+
+  const dn1 = iv.dn2Json ? JSON.parse(iv.dn2Json) : {};
+  return {
+    dn2No:    genDNNo(iv.invNo, '2'),
+    dn1No:    genDNNo(iv.invNo, '1'),
+    invNo:    iv.invNo,
+    date:     document.getElementById('f-dn2-date').value,
+    remark:   document.getElementById('f-dn2-remark').value.trim(),
+    custName: iv.custName,
+    custAddr: iv.custAddr,
+    custTax:  iv.custTax,
+    items,
+    sellerNameTh: iv.sellerNameTh,
+    sellerAddr:   iv.sellerAddr,
+    sellerTel:    iv.sellerTel,
+    sellerTax:    iv.sellerTax,
+  };
+}
+
+async function saveDN2() {
+  const iv = invoices.find(i => i.id === _dn2InvId);
+  if (!iv) return;
+  const d = collectDN2Data(iv);
+  if (!d.items.length) { toast('ไม่มีรายการที่จะส่ง','err'); return; }
+
+  // บันทึกลง sheet (ใช้คอลัมน์ DN2JSON เก็บข้อมูล)
+  setBusy(true);
+  try {
+    await gs({ action:'update', sheet:SH_INV, keyCol:'ID', keyVal:iv.id,
+      data: JSON.stringify({ 'DN2JSON': JSON.stringify(d), 'สถานะ': 'completed' }) });
+    toast('✅ บันทึกใบส่งสินค้าคงค้างแล้ว','ok');
+    closeM('m-dn2');
+    // เปิด preview พิมพ์
+    _initPreview(buildDN2(d));
+    await loadAll();
+  } catch(e) {
+    toast('❌ บันทึกไม่สำเร็จ: '+e.message,'err');
+  }
+  setBusy(false);
+}
+
+// ─── buildDN2 — สร้าง HTML ใบส่งสินค้าคงค้าง ───
+function buildDN2(d) {
+  const LOGO_SRC  = LOGO_B64;
+  const STAMP_SRC = STAMP_B64;
+  const rows = (d.items||[]).map((r,i) => `<tr>
+    <td class="ctr">${i+1}</td>
+    <td></td>
+    <td>${r.name||''}</td>
+    <td class="ctr">${r.qty}</td>
+    <td class="ctr">${r.unit||''}</td>
+  </tr>`).join('');
+  // empty rows
+  const filled = (d.items||[]).length;
+  let emptyRows = '';
+  for (let i = filled; i < 10; i++) emptyRows += `<tr style="height:22px;"><td></td><td></td><td></td><td></td><td></td></tr>`;
+
+  return `<div class="doc" style="page-break-after:always;">
+    <div class="doc-header" style="position:relative;">
+      <div class="doc-header-left">
+        <img class="doc-logo-img" src="${LOGO_SRC}" style="width:110px;height:auto;object-fit:contain;">
+        <div class="doc-seller-block">
+          <div class="doc-seller-name-th">${d.sellerNameTh||'บริษัท เอสวีอาร์ เมด จำกัด'}</div>
+          <div class="doc-seller-name-en">SVR MED CO.,LTD.</div>
+          <div class="doc-seller-addr">${d.sellerAddr||''}<br>โทร : ${d.sellerTel||''} &nbsp;&nbsp; เลขผู้เสียภาษี ${d.sellerTax||''} (สำนักงานใหญ่)</div>
+        </div>
+      </div>
+      <div style="position:absolute;top:0;right:0;border:2px solid #F59E0B;border-radius:10px;padding:8px 14px;text-align:center;background:#FEF3C7;min-width:120px;">
+        <div style="font-size:13px;font-weight:800;color:#92400E;">ใบส่งสินค้าคงค้าง</div>
+        <div style="font-size:9px;font-weight:700;color:#B45309;">DELIVERY NOTE (BACKORDER)</div>
+      </div>
+    </div>
+
+    <div class="doc-meta">
+      <div class="doc-cust" style="background:#FFF7ED;border-color:#FED7AA;">
+        <div><span class="lbl">นามลูกค้า &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;<strong style="color:#0F2B4E;">${d.custName||''}</strong></div>
+        <div style="display:flex;"><span class="lbl" style="flex-shrink:0;">ที่อยู่ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;<span>${(d.custAddr||'').split('\n').join('<br>')}</span></div>
+        <div><span class="lbl">เลขประจำตัวผู้เสียภาษี :</span>&nbsp;${d.custTax||''}</div>
+      </div>
+      <div class="doc-ref" style="background:#FFF7ED;border-color:#FED7AA;">
+        <div><span class="lbl">เลขที่</span>&nbsp;:&nbsp;<strong style="color:#B45309;">${d.dn2No}</strong></div>
+        <div><span class="lbl">วันที่</span>&nbsp;:&nbsp;${thaiDateShort(d.date||'')}</div>
+        <div><span class="lbl">อ้างอิงใบค้างส่ง</span>&nbsp;:&nbsp;${d.dn1No}</div>
+        <div><span class="lbl">อ้างอิงใบกำกับ</span>&nbsp;:&nbsp;${d.invNo}</div>
+      </div>
+    </div>
+
+    <table class="doc-t">
+      <thead><tr>
+        <th style="width:30px;background:#FED7AA;border-color:#F59E0B;">ลำดับ</th>
+        <th style="width:80px;background:#FED7AA;border-color:#F59E0B;">รหัสสินค้า</th>
+        <th style="background:#FED7AA;border-color:#F59E0B;">รายการ</th>
+        <th style="width:60px;background:#FED7AA;border-color:#F59E0B;">จำนวน</th>
+        <th style="width:60px;background:#FED7AA;border-color:#F59E0B;">หน่วย</th>
+      </tr></thead>
+      <tbody>${rows}${emptyRows}</tbody>
+    </table>
+
+    ${d.remark ? `<div style="font-size:10px;color:#444;margin-top:8px;">หมายเหตุ : ${d.remark}</div>` : ''}
+
+    <div class="doc-sigs" style="grid-template-columns:1fr 1fr 1fr;margin-top:20px;">
+      <div class="doc-sig" style="text-align:center;">
+        <div style="font-size:10px;color:#444;margin-bottom:4px;text-align:left;">ได้รับสินค้าตามรายการข้างบนไว้เรียบร้อยแล้ว</div>
+        <div style="flex:1;min-height:52px;"></div>
+        <div style="border-top:1px solid #999;width:85%;margin:28px auto 4px;"></div>
+        <div style="font-size:10.5px;font-weight:700;color:#0F2B4E;text-align:center;">ผู้รับสินค้า</div>
+        <div style="font-size:10px;color:#555;margin-top:8px;text-align:center;">วันที่ &nbsp;..................................</div>
+      </div>
+      <div class="doc-sig" style="text-align:center;">
+        <div style="flex:1;min-height:68px;"></div>
+        <div style="border-top:1px solid #999;width:85%;margin:28px auto 4px;"></div>
+        <div style="font-size:10.5px;font-weight:700;color:#0F2B4E;text-align:center;">ผู้ส่งสินค้า</div>
+        <div style="font-size:10px;color:#555;margin-top:8px;text-align:center;">วันที่ &nbsp;..................................</div>
+      </div>
+      <div class="doc-sig">
+        <div style="font-size:10px;font-weight:700;color:#0F2B4E;margin-bottom:6px;text-align:center;">ในนาม บริษัท เอสวีอาร์ เมด จำกัด</div>
+        <div style="flex:1;"></div>
+        <div style="position:relative;width:90%;margin:0 auto;">
+          <img src="${STAMP_SRC}" style="display:block;width:100%;max-height:80px;object-fit:contain;object-position:bottom;mix-blend-mode:multiply;margin-bottom:-6px;">
+          <div class="doc-sigline" style="width:100%;margin:0 0 4px;"></div>
+        </div>
+        <div class="doc-siglbl">ผู้มีอำนาจลงนาม</div>
+        <div style="font-size:10px;color:#555;">(นางสาวสมถวิล รัตนประทุม)</div>
+        <div class="doc-sigdate">วันที่ &nbsp;................................</div>
+      </div>
+    </div>
+  </div>`;
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
