@@ -841,14 +841,15 @@ async function gs(params) {
     if (typeof body.data === 'string') {
       try { body.data = JSON.parse(body.data); } catch(e) {}
     }
-    const res = await fetch(SCRIPT_URL, {
+    // ใช้ no-cors เพราะ Apps Script redirect ทำให้ CORS header หาย
+    // แต่ข้อมูลยังถูกบันทึกลง Sheet ได้
+    await fetch(SCRIPT_URL, {
       method: 'POST',
-      redirect: 'follow',
+      mode: 'no-cors',
       headers: {'Content-Type': 'text/plain;charset=utf-8'},
       body: JSON.stringify(body),
     });
-    const text = await res.text();
-    try { return JSON.parse(text); } catch(e) { throw new Error('Apps Script error: ' + text.substring(0,200)); }
+    return 'ok';
   }
   const res = await fetch(SCRIPT_URL + '?' + new URLSearchParams(params));
   const text = await res.text();
