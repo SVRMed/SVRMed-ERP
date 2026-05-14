@@ -2765,13 +2765,14 @@ function refreshDN1Table() {
     const qty   = parseFloat(tr.cells[3].querySelector('input').value) || 0;
     const unit  = tr.cells[4].querySelector('input').value.trim();
     if (!name) return;
+    const code = tr.cells[1].querySelector('input').value.trim();
     html += `<tr>
       <td class="ctr">${n++}</td>
       <td>${name}</td>
       <td class="ctr">${qty}</td>
       <td class="ctr"><input type="number" min="0" max="${qty}" value="${qty}"
           style="width:70px;text-align:center;border:1px solid #FCD34D;border-radius:6px;padding:3px 6px;"
-          oninput="updateDN1Backorder(this,${qty})" data-max="${qty}"></td>
+          oninput="updateDN1Backorder(this,${qty})" data-max="${qty}" data-code="${code}"></td>
       <td class="ctr" id="dn1-back-${n-1}" style="color:var(--amber);font-weight:700;">0</td>
       <td class="ctr">${unit}</td>
     </tr>`;
@@ -2843,7 +2844,8 @@ function collectDN1() {
     const sent1   = parseFloat(inp.value) || 0;
     const backlog = Math.max(0, total - sent1);
     const unit    = tr.cells[5] ? tr.cells[5].textContent.trim() : '';
-    if (name) items.push({ name, total, sent1, backlog, unit });
+    const code = inp.dataset.code||'';
+    if (name) items.push({ code, name, total, sent1, backlog, unit });
   });
   return {
     dn1No:   '',
@@ -2877,9 +2879,9 @@ function openDN2(invId) {
   const tbody = document.getElementById('dn2-body');
   let items = [];
   if (dn1 && dn1.items) {
-    items = dn1.items.filter(r => r.backlog > 0);
+    items = dn1.items.filter(r => r.backlog > 0).map(r => ({...r, code: r.code||''}));
   } else if (iv.items) {
-    items = iv.items.map(r => ({ name: r.name, backlog: r.qty, unit: r.unit }));
+    items = iv.items.map(r => ({ code: r.code||'', name: r.name, backlog: r.qty, unit: r.unit }));
   }
 
   tbody.innerHTML = items.map((r, i) => `<tr>
@@ -2888,7 +2890,7 @@ function openDN2(invId) {
     <td class="ctr">${r.backlog}</td>
     <td class="ctr"><input type="number" min="0" max="${r.backlog}" value="${r.backlog}"
         style="width:70px;text-align:center;border:1px solid var(--accent);border-radius:6px;padding:3px 6px;"
-        data-max="${r.backlog}"></td>
+        data-max="${r.backlog}" data-code="${r.code||''}"></td>
     <td class="ctr">${r.unit||''}</td>
   </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:12px;">ไม่มีรายการค้างส่ง</td></tr>';
 
@@ -2910,6 +2912,7 @@ function collectDN2Data(iv) {
     const inp = tr.querySelector('input[type="number"]');
     if (!inp) return null;
     return {
+      code: inp.dataset.code||'',
       name: tr.cells[1].textContent.trim(),
       qty:  parseFloat(inp.value) || 0,
       unit: tr.cells[4].textContent.trim(),
@@ -2953,9 +2956,9 @@ async function saveDN2() {
 
   setBusy(true);
   try {
-    console.log('saveDN2 iv.id:', iv.id, 'keyVal:', iv.id);
+    console.log('saveDN2 iv.id:', iv.id, 'iv.invNo:', iv.invNo);
     console.log('DN2JSON size:', JSON.stringify(dn2Save).length, 'bytes');
-    await gs({ action:'update', sheet:SH_INV, keyCol:'ID', keyVal:iv.id,
+    await gs({ action:'update', sheet:SH_INV, keyCol:'เลขที่เอกสาร', keyVal:iv.invNo,
       data: JSON.stringify({ 'DN2JSON': JSON.stringify(dn2Save), 'สถานะ': 'completed' }) });
     toast('✅ บันทึกใบส่งสินค้าคงค้างแล้ว','ok');
     closeM('m-dn2');
@@ -3009,7 +3012,7 @@ function buildDN2(d) {
   const STAMP_SRC = STAMP_B64;
   const rows = (d.items||[]).map((r,i) => `<tr>
     <td class="ctr">${i+1}</td>
-    <td></td>
+    <td>${r.code||''}</td>
     <td>${r.name||''}</td>
     <td class="ctr">${r.qty}</td>
     <td class="ctr">${r.unit||''}</td>
