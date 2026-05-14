@@ -657,6 +657,37 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
   </div>
 </div>
 
+<!-- ████ MODAL: ITEM EXTRA ████ -->
+<div class="modal-overlay hidden" id="m-item-extra">
+  <div class="modal modal-sm" style="width:480px;">
+    <div class="modal-header">
+      <div class="modal-title" id="m-item-extra-title">📝 ข้อมูลเพิ่มเติมสินค้า</div>
+      <button class="modal-close" onclick="closeM('m-item-extra')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="m-item-extra-name"
+           style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:8px;
+                  padding:8px 14px;font-size:13px;font-weight:600;color:#166534;margin-bottom:16px;"></div>
+      <div class="form-group form-full">
+        <label class="form-label">ข้อมูลเพิ่มเติม 1</label>
+        <input class="fi" id="f-extra1" placeholder="เช่น Lot No., Batch No., Serial No.">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">ข้อมูลเพิ่มเติม 2</label>
+        <input class="fi" id="f-extra2" placeholder="เช่น วันผลิต, วันหมดอายุ">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">ข้อมูลเพิ่มเติม 3</label>
+        <input class="fi" id="f-extra3" placeholder="เช่น หมายเหตุเฉพาะรายการ">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeM('m-item-extra')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveItemExtra()">✅ บันทึก</button>
+    </div>
+  </div>
+</div>
+
 <!-- ████ MODAL: DN2 — ใบส่งสินค้าคงค้าง ████ -->
 <div class="modal-overlay hidden" id="m-dn2">
   <div class="modal" style="width:700px;">
@@ -1331,6 +1362,9 @@ async function doSave(status) {
         'หน่วย':        r.unit||'',
         'ราคา/หน่วย':  r.price,
         'จำนวนเงิน':    r.amount,
+        'ข้อมูลเพิ่มเติม1': r.extra1||'',
+        'ข้อมูลเพิ่มเติม2': r.extra2||'',
+        'ข้อมูลเพิ่มเติม3': r.extra3||'',
       })});
     }
     } // end if !alreadyHasItems
@@ -1495,6 +1529,10 @@ function openEdit(id) {
     trs[i].cells[3].querySelector('input').value=r.qty||0;
     trs[i].cells[4].querySelector('input').value=r.unit||'';
     trs[i].cells[5].querySelector('input').value=r.price||0;
+    if(r.extra1) trs[i].dataset.extra1=r.extra1;
+    if(r.extra2) trs[i].dataset.extra2=r.extra2;
+    if(r.extra3) trs[i].dataset.extra3=r.extra3;
+    _updateExtraBtn(trs[i]);
   });
   if(!(iv.items||[]).length) { addRow(); addRow(); }
   recalc();
@@ -1506,6 +1544,8 @@ function addRow() {
   const tbody=document.getElementById('items-body');
   const idx=tbody.children.length+1;
   const tr=document.createElement('tr');
+  const rowId = 'row-'+Date.now()+'-'+idx;
+  tr.dataset.rowId = rowId;
   tr.innerHTML=`
     <td class="ctr" style="color:var(--text3);font-size:11px;">${idx}</td>
     <td>
@@ -1520,7 +1560,12 @@ function addRow() {
     <td><input class="tdi" value="" style="width:56px;" oninput="recalc()"></td>
     <td><input class="tdi num" type="number" value="0" min="0" step="0.01" style="width:90px;" oninput="recalc()"></td>
     <td class="num" style="font-family:var(--mono);padding-right:6px;" data-amount="0">0.00</td>
-    <td><button class="btn-del-row" onclick="delRow(this)">✕</button></td>`;
+    <td style="white-space:nowrap;">
+      <button class="btn-sm" onclick="openItemExtra(this)" title="ข้อมูลเพิ่มเติม"
+        style="font-size:12px;padding:2px 6px;margin-right:2px;background:#F0FDF4;border-color:#86EFAC;color:#166534;">📝</button>
+      <button class="btn-del-row" onclick="delRow(this)">✕</button>
+    </td>`;
+  tr.dataset.rowId = rowId;
   tbody.appendChild(tr);
   recalc();
 }
@@ -1560,7 +1605,10 @@ function collectData(){
     const qty=parseFloat(tr.cells[3].querySelector('input').value)||0;
     const unit=tr.cells[4].querySelector('input').value.trim();
     const price=parseFloat(tr.cells[5].querySelector('input').value)||0;
-    if(name||code) items.push({code,name,qty,unit,price,amount:qty*price});
+    const extra1 = tr.dataset.extra1||'';
+    const extra2 = tr.dataset.extra2||'';
+    const extra3 = tr.dataset.extra3||'';
+    if(name||code) items.push({code,name,qty,unit,price,amount:qty*price,extra1,extra2,extra3});
   });
   let sub=items.reduce((s,r)=>s+r.amount,0);
   const disc=parseFloat(document.getElementById('f-discount').value)||0;
@@ -1916,6 +1964,18 @@ function buildIV(d) {
         <td class="num" style="${bg}${br}">${fmt(r.price)}</td>
         <td class="num" style="${bg}${br}">${fmt(r.amount)}</td>
       </tr>`;
+      // แสดง extra ใต้แถวสินค้า (ถ้ามี)
+      if (r.extra1||r.extra2||r.extra3) {
+        const extraStyle = `font-size:9.5px;color:#555;padding:1px 8px 3px 8px;border-bottom:1px solid ${copy.tdBorder};${bg}`;
+        html += `<tr>
+          <td style="${bg}${br}"></td>
+          <td colspan="6" style="${extraStyle}">
+            ${r.extra1?`<span style="margin-right:16px;">▸ ${r.extra1}</span>`:''}
+            ${r.extra2?`<span style="margin-right:16px;">▸ ${r.extra2}</span>`:''}
+            ${r.extra3?`<span>▸ ${r.extra3}</span>`:''}
+          </td>
+        </tr>`;
+      }
     });
     const filled = (d.items||[]).length;
     for (let i = filled; i < 12; i++) {
@@ -2448,6 +2508,46 @@ function calcDueDate(dateStr, creditDays) {
   return d.toISOString().split('T')[0];
 }
 
+
+// ═══════════════════════════════════════════════════
+// ITEM EXTRA DATA — ข้อมูลเพิ่มเติมสินค้าแต่ละบรรทัด
+// ═══════════════════════════════════════════════════
+let _extraTargetRow = null;
+
+function openItemExtra(btn) {
+  const tr = btn.closest('tr');
+  _extraTargetRow = tr;
+  const name = tr.cells[2].querySelector('input').value.trim() || '(ยังไม่ได้ใส่ชื่อสินค้า)';
+  document.getElementById('m-item-extra-title').textContent = '📝 ข้อมูลเพิ่มเติม';
+  document.getElementById('m-item-extra-name').textContent = name;
+  document.getElementById('f-extra1').value = tr.dataset.extra1||'';
+  document.getElementById('f-extra2').value = tr.dataset.extra2||'';
+  document.getElementById('f-extra3').value = tr.dataset.extra3||'';
+  document.getElementById('m-item-extra').classList.remove('hidden');
+}
+
+function saveItemExtra() {
+  if (!_extraTargetRow) return;
+  const e1 = document.getElementById('f-extra1').value.trim();
+  const e2 = document.getElementById('f-extra2').value.trim();
+  const e3 = document.getElementById('f-extra3').value.trim();
+  _extraTargetRow.dataset.extra1 = e1;
+  _extraTargetRow.dataset.extra2 = e2;
+  _extraTargetRow.dataset.extra3 = e3;
+  _updateExtraBtn(_extraTargetRow);
+  closeM('m-item-extra');
+  _extraTargetRow = null;
+}
+
+function _updateExtraBtn(tr) {
+  const btn = tr.querySelector('button[onclick="openItemExtra(this)"]');
+  if (!btn) return;
+  const hasData = tr.dataset.extra1 || tr.dataset.extra2 || tr.dataset.extra3;
+  btn.style.background  = hasData ? '#DCFCE7' : '#F0FDF4';
+  btn.style.borderColor = hasData ? '#4ADE80' : '#86EFAC';
+  btn.style.color       = hasData ? '#14532D' : '#166534';
+  btn.textContent       = hasData ? '📝✓'    : '📝';
+}
 
 // ═══════════════════════════════════════════════════
 // PARTIAL DELIVERY — DN1 / DN2
