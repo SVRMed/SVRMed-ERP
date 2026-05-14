@@ -1337,7 +1337,24 @@ async function doSave(status) {
       
       'ItemsJSON':              JSON.stringify(d.items),
       'DN2JSON':                d.dn2Json||'',
-      'DN1JSON':                d.dn1Data ? JSON.stringify({...d.dn1Data, dn1No: genDNNo(d.invNo,'1')}) : (d.dn1Json||''),
+      'DN1JSON':                (() => {
+        if (d.deliveryFlow !== 'partial') return d.dn1Json||'';
+        // ถ้ามี dn1Data ที่มี items จริง ใช้เลย
+        if (d.dn1Data && (d.dn1Data.items||[]).length > 0) {
+          return JSON.stringify({...d.dn1Data, dn1No: genDNNo(d.invNo,'1')});
+        }
+        // fallback: สร้างจาก items โดยตรง (sent1=qty ทั้งหมด, backlog=0)
+        // จะได้ update ได้ทีหลังตอนแก้ไข
+        const dn1Fallback = {
+          dn1No: genDNNo(d.invNo,'1'),
+          dueDate: document.getElementById('f-dn1-duedate')?.value||'',
+          remark: document.getElementById('f-dn1-remark')?.value.trim()||'',
+          items: d.items.map(r => ({
+            name: r.name, total: r.qty, sent1: r.qty, backlog: 0, unit: r.unit
+          }))
+        };
+        return JSON.stringify(dn1Fallback);
+      })(),
     };
 
     if (editId) {
