@@ -2900,6 +2900,7 @@ function previewDN2() {
   const iv = invoices.find(i => i.id === _dn2InvId);
   if (!iv) return;
   const dn2Data = collectDN2Data(iv);
+  closeM('m-dn2');
   _initPreview(buildDN2(dn2Data));
 }
 
@@ -2915,16 +2916,18 @@ function collectDN2Data(iv) {
     };
   }).filter(r => r && r.qty > 0);
 
-  const dn1 = iv.dn2Json ? JSON.parse(iv.dn2Json) : {};
   return {
-    dn2No:    genDNNo(iv.invNo, '2'),
-    dn1No:    genDNNo(iv.invNo, '1'),
-    invNo:    iv.invNo,
-    date:     document.getElementById('f-dn2-date').value,
-    remark:   document.getElementById('f-dn2-remark').value.trim(),
-    custName: iv.custName,
-    custAddr: iv.custAddr,
-    custTax:  iv.custTax,
+    dn2No:       genDNNo(iv.invNo, '2'),
+    dn1No:       genDNNo(iv.invNo, '1'),
+    invNo:       iv.invNo,
+    date:        document.getElementById('f-dn2-date').value,
+    remark:      document.getElementById('f-dn2-remark').value.trim(),
+    custName:    iv.custName,
+    custAddr:    iv.custAddr,
+    custContact: iv.custContact,
+    custTel:     iv.custTel,
+    custTax:     iv.custTax,
+    custOffice:  iv.custOffice,
     items,
     sellerNameTh: iv.sellerNameTh,
     sellerAddr:   iv.sellerAddr,
@@ -2939,20 +2942,65 @@ async function saveDN2() {
   const d = collectDN2Data(iv);
   if (!d.items.length) { toast('ไม่มีรายการที่จะส่ง','err'); return; }
 
-  // บันทึกลง sheet (ใช้คอลัมน์ DN2JSON เก็บข้อมูล)
+  // เก็บเฉพาะ items + meta ที่จำเป็น (ไม่เก็บ addr ซ้ำซ้อน)
+  const dn2Save = {
+    dn2No:  d.dn2No,
+    dn1No:  d.dn1No,
+    date:   d.date,
+    remark: d.remark,
+    items:  d.items,
+  };
+
   setBusy(true);
   try {
+    console.log('saveDN2 iv.id:', iv.id, 'keyVal:', iv.id);
+    console.log('DN2JSON size:', JSON.stringify(dn2Save).length, 'bytes');
     await gs({ action:'update', sheet:SH_INV, keyCol:'ID', keyVal:iv.id,
-      data: JSON.stringify({ 'DN2JSON': JSON.stringify(d), 'สถานะ': 'completed' }) });
+      data: JSON.stringify({ 'DN2JSON': JSON.stringify(dn2Save), 'สถานะ': 'completed' }) });
     toast('✅ บันทึกใบส่งสินค้าคงค้างแล้ว','ok');
     closeM('m-dn2');
-    // เปิด preview พิมพ์
-    _initPreview(buildDN2(d));
     await loadAll();
+    printDN2Doc(buildDN2(d));
   } catch(e) {
     toast('❌ บันทึกไม่สำเร็จ: '+e.message,'err');
   }
   setBusy(false);
+}
+
+// ─── printDN2Doc — เปิด popup พิมพ์ DN2 ───
+function printDN2Doc(html) {
+  const styles = [...document.querySelectorAll('style')].map(s=>s.outerHTML).join('');
+  const page = `<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+    ${styles}
+    <style>
+      html{background:#555;}
+      body{margin:0;padding:16px 0 32px;background:#555;display:flex;flex-direction:column;align-items:center;}
+      .print-toolbar{position:sticky;top:0;z-index:100;width:210mm;max-width:96vw;background:#1e293b;color:#fff;
+        padding:9px 16px;display:flex;align-items:center;justify-content:space-between;
+        font-family:sans-serif;font-size:13px;box-sizing:border-box;margin-bottom:8px;}
+      .print-toolbar button{background:#2563EB;color:#fff;border:none;padding:7px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700;}
+      .doc-wrap{width:210mm;max-width:96vw;background:#fff;box-shadow:0 6px 28px rgba(0,0,0,.4);box-sizing:border-box;}
+      .doc{border:none!important;box-shadow:none!important;width:100%!important;padding:11px 15px!important;
+        margin:0!important;box-sizing:border-box!important;font-size:10px!important;}
+      @page{size:A4 portrait;margin:8mm 10mm;}
+      @media print{
+        html,body{background:#fff!important;padding:0!important;margin:0!important;display:block!important;}
+        .print-toolbar{display:none!important;}
+        .doc-wrap{width:100%!important;box-shadow:none!important;margin:0!important;}
+        .doc{padding:0!important;font-size:9.5px!important;
+          -webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+      }
+    </style>
+  </head><body>
+    <div class="print-toolbar">
+      <span>📄 ใบส่งสินค้าคงค้าง</span>
+      <button onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF</button>
+    </div>
+    <div class="doc-wrap">${html}</div>
+  </body></html>`;
+  const w = window.open('','_blank');
+  if (!w) { toast('กรุณาอนุญาต pop-up','err'); return; }
+  w.document.open(); w.document.write(page); w.document.close(); w.focus();
 }
 
 // ─── buildDN2 — สร้าง HTML ใบส่งสินค้าคงค้าง ───
@@ -2991,7 +3039,8 @@ function buildDN2(d) {
       <div class="doc-cust" style="background:#FFF7ED;border-color:#FED7AA;">
         <div><span class="lbl">นามลูกค้า &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;<strong style="color:#0F2B4E;">${d.custName||''}</strong></div>
         <div style="display:flex;"><span class="lbl" style="flex-shrink:0;">ที่อยู่ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;<span>${(d.custAddr||'').split('\n').join('<br>')}</span></div>
-        <div><span class="lbl">เลขประจำตัวผู้เสียภาษี :</span>&nbsp;${d.custTax||''}</div>
+        ${d.custContact?'<div><span class="lbl">ผู้ติดต่อ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;คุณ'+d.custContact+(d.custTel?' &emsp;เบอร์โทร '+d.custTel:'')+'</div>':''}
+        <div><span class="lbl">เลขประจำตัวผู้เสียภาษี :</span>&nbsp;${d.custTax||''}${d.custOffice?'&emsp;('+d.custOffice+')':''}</div>
       </div>
       <div class="doc-ref" style="background:#FFF7ED;border-color:#FED7AA;">
         <div><span class="lbl">เลขที่</span>&nbsp;:&nbsp;<strong style="color:#B45309;">${d.dn2No}</strong></div>
