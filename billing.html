@@ -1667,7 +1667,14 @@ function collectData(){
     specialDisc: parseFloat(document.getElementById('f-discount').value)||0,
     remark:document.getElementById('f-remark').value.trim(),
     subtotal:sub, exclVat:excl, vat, total:after, items, createdAt:todayStr(),
-    dn1Data: (document.querySelector('input[name="bl-delivery-flow"]:checked')?.value==='partial') ? collectDN1() : null,
+    dn1Data: (() => {
+      const flow = document.querySelector('input[name="bl-delivery-flow"]:checked')?.value;
+      if (flow !== 'partial') return null;
+      // ensure DN1 section + table is built before collecting
+      const sec = document.getElementById('dn1-section');
+      if (sec && sec.style.display === 'none') { sec.style.display = ''; refreshDN1Table(); }
+      return collectDN1();
+    })(),
   };
 }
 
@@ -1981,27 +1988,21 @@ function buildIV(d) {
     (d.items||[]).forEach((r, i) => {
       const bg = i % 2 === 1 ? `background:${copy.tdAltBg};` : '';
       const br = `border-color:${copy.tdBorder};`;
+      const extraHtml = (r.extra1||r.extra2||r.extra3) ?
+        '<div style="font-size:8.5px;font-style:italic;color:#666;margin-top:2px;line-height:1.6;">'
+        +(r.extra1?'<span style="margin-right:14px;">▸ '+r.extra1+'</span>':'')
+        +(r.extra2?'<span style="margin-right:14px;">▸ '+r.extra2+'</span>':'')
+        +(r.extra3?'<span>▸ '+r.extra3+'</span>':'')
+        +'</div>' : '';
       html += `<tr>
         <td class="ctr" style="${bg}${br}">${n++}</td>
         <td style="${bg}${br}">${r.code||''}</td>
-        <td style="${bg}${br}">${r.name||''}</td>
+        <td style="${bg}${br}">${r.name||''}${extraHtml}</td>
         <td class="ctr" style="${bg}${br}">${r.qty}</td>
         <td class="ctr" style="${bg}${br}">${r.unit||''}</td>
         <td class="num" style="${bg}${br}">${fmt(r.price)}</td>
         <td class="num" style="${bg}${br}">${fmt(r.amount)}</td>
       </tr>`;
-      // แสดง extra ใต้แถวสินค้า (ถ้ามี)
-      if (r.extra1||r.extra2||r.extra3) {
-        const extraStyle = `font-size:9.5px;color:#555;padding:1px 8px 3px 8px;border-bottom:1px solid ${copy.tdBorder};${bg}`;
-        html += `<tr>
-          <td style="${bg}${br}"></td>
-          <td colspan="6" style="${extraStyle}">
-            ${r.extra1?`<span style="margin-right:16px;">▸ ${r.extra1}</span>`:''}
-            ${r.extra2?`<span style="margin-right:16px;">▸ ${r.extra2}</span>`:''}
-            ${r.extra3?`<span>▸ ${r.extra3}</span>`:''}
-          </td>
-        </tr>`;
-      }
     });
     const filled = (d.items||[]).length;
     for (let i = filled; i < 12; i++) {
@@ -2133,6 +2134,7 @@ function buildIV(d) {
       const dn1No = dn1Raw.dn1No || genDNNo(d.invNo, '1');
       html += buildDN1Page({...dn1Raw, dn1No, invNo:d.invNo,
         custName:d.custName, custAddr:d.custAddr, custTax:d.custTax,
+        custContact:d.custContact, custTel:d.custTel, custOffice:d.custOffice,
         sellerNameTh:d.sellerNameTh, sellerAddr:d.sellerAddr,
         sellerTel:d.sellerTel, sellerTax:d.sellerTax, invDate:d.invDate});
     }
@@ -2643,7 +2645,9 @@ function buildDN1Page(d) {
     <div class="doc-meta">
       <div class="doc-cust" style="background:#FFF7ED;border-color:#FED7AA;">
         <div><span class="lbl">นามลูกค้า &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;<strong style="color:#0F2B4E;">${d.custName||''}</strong></div>
-        <div><span class="lbl">เลขประจำตัวผู้เสียภาษี :</span>&nbsp;${d.custTax||''}</div>
+        <div style="display:flex;"><span class="lbl" style="flex-shrink:0;">ที่อยู่ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;<span>${(d.custAddr||'').split('\n').join('<br>')}</span></div>
+        ${d.custContact?'<div><span class="lbl">ผู้ติดต่อ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;คุณ'+d.custContact+(d.custTel?' &emsp;เบอร์โทร '+d.custTel:'')+'</div>':''}
+        <div><span class="lbl">เลขประจำตัวผู้เสียภาษี :</span>&nbsp;${d.custTax||''}${d.custOffice?'&emsp;('+d.custOffice+')':''}</div>
       </div>
       <div class="doc-ref" style="background:#FFF7ED;border-color:#FED7AA;">
         <div><span class="lbl">เลขที่ค้างส่ง</span>&nbsp;:&nbsp;<strong style="color:#B45309;">${d.dn1No}</strong></div>
@@ -2793,6 +2797,10 @@ function setBLFlow(flow) {
 
 // เก็บ DN1 data จากฟอร์ม
 function collectDN1() {
+  // ถ้า table ยังว่าง ให้ refresh ก่อน
+  const tbody = document.getElementById('dn1-body');
+  if (!tbody || !tbody.querySelector('input[type="number"]')) refreshDN1Table();
+
   const rows = [...document.querySelectorAll('#dn1-body tr')];
   const items = [];
   rows.forEach((tr, i) => {
@@ -2802,10 +2810,12 @@ function collectDN1() {
     const total   = parseFloat(inp.dataset.max) || 0;
     const sent1   = parseFloat(inp.value) || 0;
     const backlog = Math.max(0, total - sent1);
-    items.push({ name, total, sent1, backlog, unit: tr.cells[5].textContent.trim() });
+    // cells: 0=#, 1=name, 2=total, 3=sent1-input, 4=backlog, 5=unit
+    const unit = tr.cells[5] ? tr.cells[5].textContent.trim() : '';
+    if (name) items.push({ name, total, sent1, backlog, unit });
   });
   return {
-    dn1No:    '',  // จะ set ตอน save
+    dn1No:    '',
     dueDate:  document.getElementById('f-dn1-duedate')?.value || '',
     remark:   document.getElementById('f-dn1-remark')?.value.trim() || '',
     items,
