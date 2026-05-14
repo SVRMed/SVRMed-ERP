@@ -498,13 +498,13 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
           <div id="qt-list-wrap" style="display:none;margin-bottom:8px;">
             <div id="qt-list" style="display:flex;flex-direction:column;gap:6px;"></div>
           </div>
-          <input class="fi" id="f-invref" placeholder="เลือกลูกค้าก่อน เพื่อดู QT ที่อนุมัติแล้ว" readonly>
-        </div>
-        <div class="form-group form-full">
-          <label class="form-label">เลขที่ PO อ้างอิง
-            <span style="font-size:10px;font-weight:400;color:var(--text3);margin-left:6px;">Purchase Order จากลูกค้า (ถ้ามี)</span>
-          </label>
-          <input class="fi" id="f-poref" placeholder="เช่น PO-2025-0123 (ไม่บังคับ)">
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <input class="fi" id="f-invref" placeholder="เลือกลูกค้าก่อน เพื่อดู QT ที่อนุมัติแล้ว" readonly style="flex:1;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+              <label class="form-label" style="margin:0;font-size:11px;">เลขที่ PO อ้างอิง <span style="font-weight:400;color:var(--text3);">(ถ้ามี)</span></label>
+              <input class="fi" id="f-poref" placeholder="เช่น PO-2025-0123" style="margin:0;">
+            </div>
+          </div>
         </div>
         <!-- รูปแบบส่งมอบ -->
         <div class="form-group form-full">
@@ -572,19 +572,51 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
 </div>
 
 <!-- ████ MODAL: PREVIEW ████ -->
-<div class="modal-overlay hidden" id="m-preview">
-  <div class="modal" style="width:900px;max-height:96vh;">
-    <div class="modal-header">
-      <div class="modal-title">👁 ตัวอย่างใบแจ้งหนี้ (A4)</div>
-      <button class="modal-close" onclick="closeM('m-preview')">✕</button>
+<div class="modal-overlay hidden" id="m-preview" style="align-items:stretch;padding:0;">
+  <div style="width:100%;height:100vh;display:flex;flex-direction:column;background:#404040;">
+
+    <!-- TOP BAR -->
+    <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;
+                background:#1e293b;color:#fff;padding:10px 20px;gap:12px;">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <button class="btn btn-secondary" onclick="closeM('m-preview')"
+                style="padding:6px 14px;font-size:13px;">← กลับ</button>
+        <span style="font-size:14px;font-weight:700;">👁 ตัวอย่างใบกำกับภาษี (A4)</span>
+      </div>
+      <!-- PAGE NAVIGATOR -->
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button onclick="previewPrevPage()" id="prev-page-btn"
+                style="background:#334155;color:#fff;border:none;border-radius:6px;
+                       padding:6px 14px;cursor:pointer;font-size:16px;font-weight:700;">‹</button>
+        <span id="page-indicator" style="font-size:13px;min-width:70px;text-align:center;">หน้า 1 / 4</span>
+        <button onclick="previewNextPage()" id="next-page-btn"
+                style="background:#334155;color:#fff;border:none;border-radius:6px;
+                       padding:6px 14px;cursor:pointer;font-size:16px;font-weight:700;">›</button>
+      </div>
+      <button class="btn btn-primary" onclick="printDoc()" style="padding:7px 20px;font-size:13px;">
+        🖨️ พิมพ์ / PDF (4 หน้า)
+      </button>
     </div>
-    <div class="modal-body" style="background:#e8e8e8;padding:20px;overflow-y:auto;display:flex;justify-content:center;">
-      <div id="preview-doc" style="width:794px;min-height:1123px;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,0.15);"></div>
+
+    <!-- CANVAS AREA — แสดง 1 หน้า A4 พอดีหน้าจอ -->
+    <div id="preview-canvas" style="flex:1;overflow:hidden;display:flex;
+                                    align-items:center;justify-content:center;background:#404040;">
+      <!-- แต่ละ .doc-slide จะถูกสร้างโดย JS -->
+      <div id="preview-doc" style="display:none;"></div>
+      <div id="preview-stage" style="position:relative;">
+        <div id="preview-page-display"
+             style="background:#fff;box-shadow:0 8px 40px rgba(0,0,0,0.5);
+                    transform-origin:top left;overflow:hidden;">
+        </div>
+      </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeM('m-preview')">← กลับแก้ไข</button>
-      <button class="btn btn-primary" onclick="printDoc()">🖨️ พิมพ์/PDF</button>
+
+    <!-- THUMBNAIL STRIP -->
+    <div style="flex-shrink:0;background:#2d2d2d;padding:8px 16px;
+                display:flex;gap:8px;justify-content:center;overflow-x:auto;">
+      <div id="thumb-strip" style="display:flex;gap:8px;"></div>
     </div>
+
   </div>
 </div>
 
@@ -1487,17 +1519,90 @@ function collectData(){
 // ═══════════════════════════════════════
 // PREVIEW
 // ═══════════════════════════════════════
-function openPreview(){
-  const d=collectData();
-  document.getElementById('preview-doc').innerHTML=buildIV(d);
+// ── Preview engine ──────────────────────────────
+let _previewPage = 0;
+let _previewPages = [];
+
+function _initPreview(html) {
+  // เก็บ HTML ดิบไว้ใน hidden div
+  document.getElementById('preview-doc').innerHTML = html;
+
+  // แยก 4 หน้า
+  const docDivs = document.getElementById('preview-doc').querySelectorAll('.doc');
+  _previewPages = [...docDivs].map(d => d.outerHTML);
+  _previewPage  = 0;
+
+  // สร้าง thumbnail strip
+  const strip = document.getElementById('thumb-strip');
+  strip.innerHTML = '';
+  _previewPages.forEach((_, i) => {
+    const btn = document.createElement('div');
+    btn.id = `thumb-${i}`;
+    btn.onclick = () => _showPage(i);
+    btn.style.cssText = `cursor:pointer;border:2px solid transparent;border-radius:4px;
+      background:#fff;padding:2px;opacity:.6;transition:.2s;`;
+    btn.innerHTML = `<div style="font-size:9px;color:#333;text-align:center;padding:4px 8px;">
+      หน้า ${i+1}</div>`;
+    strip.appendChild(btn);
+  });
+
+  _showPage(0);
   document.getElementById('m-preview').classList.remove('hidden');
 }
-function viewIv(id){
-  const ivp=invoices.find(i=>i.id===id);
-  if(!ivp) return;
-  document.getElementById('preview-doc').innerHTML=buildIV(ivp);
-  document.getElementById('m-preview').classList.remove('hidden');
+
+function _showPage(n) {
+  _previewPage = Math.max(0, Math.min(n, _previewPages.length - 1));
+
+  // แสดงเนื้อหาหน้านั้น
+  const display = document.getElementById('preview-page-display');
+  display.innerHTML = _previewPages[_previewPage];
+
+  // คำนวณ scale ให้พอดีพื้นที่
+  const canvas  = document.getElementById('preview-canvas');
+  const cW = canvas.clientWidth  - 40;
+  const cH = canvas.clientHeight - 40;
+  const A4W = 794, A4H = 1123;
+  const scale = Math.min(cW / A4W, cH / A4H, 1);
+
+  display.style.width  = A4W + 'px';
+  display.style.height = A4H + 'px';
+  display.style.transform = `scale(${scale})`;
+
+  // จัด stage ให้ center ตาม scale
+  const stage = document.getElementById('preview-stage');
+  stage.style.width  = Math.round(A4W * scale) + 'px';
+  stage.style.height = Math.round(A4H * scale) + 'px';
+
+  // อัพเดต indicator
+  document.getElementById('page-indicator').textContent =
+    `หน้า ${_previewPage + 1} / ${_previewPages.length}`;
+
+  // อัพเดต thumbnail highlight
+  document.querySelectorAll('#thumb-strip > div').forEach((el, i) => {
+    el.style.borderColor = i === _previewPage ? '#60A5FA' : 'transparent';
+    el.style.opacity     = i === _previewPage ? '1' : '.6';
+  });
+
+  // ปุ่ม prev/next
+  document.getElementById('prev-page-btn').style.opacity =
+    _previewPage === 0 ? '.3' : '1';
+  document.getElementById('next-page-btn').style.opacity =
+    _previewPage === _previewPages.length - 1 ? '.3' : '1';
 }
+
+function previewPrevPage() { _showPage(_previewPage - 1); }
+function previewNextPage() { _showPage(_previewPage + 1); }
+
+function openPreview() {
+  const d = collectData();
+  _initPreview(buildIV(d));
+}
+function viewIv(id) {
+  const ivp = invoices.find(i => i.id === id);
+  if (!ivp) return;
+  _initPreview(buildIV(ivp));
+}
+// ────────────────────────────────────────────────
 
 function buildQT(d){
   let rows=''; let n=1;
@@ -1959,156 +2064,94 @@ function printDoc() {
   if (!docEl || !docEl.innerHTML.trim()) {
     toast('กรุณาดูตัวอย่างก่อนพิมพ์','err'); return;
   }
-  const styles = [...document.querySelectorAll('style,link[rel="stylesheet"]')]
+
+  // ── รวบ style ทั้งหมดจากหน้าหลัก ──
+  const styles = [...document.querySelectorAll('style')]
     .map(el => el.outerHTML).join('\n');
-  const html = `<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width">
-    ${styles}
-    <style>
-      /* ── Screen preview ── */
-      html { background:#666; }
-      body { margin:0; padding:16px 0 32px; background:#666;
-             display:flex; flex-direction:column; align-items:center; gap:0; }
 
-      /* Toolbar (screen only) */
-      .print-toolbar {
-        position:sticky; top:0; z-index:100;
-        width:210mm; max-width:96vw;
-        background:#1e293b; color:#fff;
-        padding:9px 16px; border-radius:0 0 8px 8px;
-        display:flex; align-items:center; justify-content:space-between;
-        font-family:sans-serif; font-size:13px; box-sizing:border-box;
-        box-shadow:0 4px 12px rgba(0,0,0,.4);
-        margin-bottom:8px;
-      }
-      .print-toolbar button {
-        background:#2563EB; color:#fff; border:none;
-        padding:7px 20px; border-radius:6px; cursor:pointer;
-        font-size:13px; font-weight:700; letter-spacing:.01em;
-      }
-      .print-toolbar button:hover { background:#1d4ed8; }
+  // ── แยก 4 หน้าโดยใช้ DOM จริง (ไม่ split string) ──
+  const docDivs = docEl.querySelectorAll('.doc');
+  const wrappedPages = [...docDivs].map((div, i) => {
+    const isLast = i === docDivs.length - 1;
+    const clone = div.cloneNode(true);
+    // ลบ page-break ออกจากหน้าสุดท้าย
+    clone.style.pageBreakAfter = isLast ? 'auto' : 'always';
+    clone.style.breakAfter     = isLast ? 'auto' : 'page';
+    return `<div class="doc-page-wrap">${clone.outerHTML}</div>`;
+  }).join('\n');
 
-      /* Each doc page wrapper (screen) */
-      .doc-page-wrap {
-        width:210mm; max-width:96vw;
-        background:#fff;
-        box-shadow:0 6px 28px rgba(0,0,0,0.35);
-        margin-bottom:12px;
-        box-sizing:border-box;
-      }
+  const html = `<!DOCTYPE html>
+<html lang="th"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+${styles}
+<style>
+  /* ── หน้าจอ preview ── */
+  html { background:#555; }
+  body { margin:0; padding:0 0 32px; background:#555;
+         display:flex; flex-direction:column; align-items:center; }
+  .print-toolbar {
+    position:sticky; top:0; z-index:100;
+    width:210mm; max-width:96vw;
+    background:#1e293b; color:#fff;
+    padding:10px 18px; display:flex; align-items:center;
+    justify-content:space-between; font-family:sans-serif;
+    font-size:13px; box-sizing:border-box;
+    box-shadow:0 4px 12px rgba(0,0,0,.5); margin-bottom:10px;
+  }
+  .print-toolbar span { font-weight:600; }
+  .print-toolbar button {
+    background:#2563EB; color:#fff; border:none;
+    padding:8px 22px; border-radius:6px; cursor:pointer;
+    font-size:13px; font-weight:700;
+  }
+  .doc-page-wrap {
+    width:210mm; max-width:96vw; background:#fff;
+    box-shadow:0 6px 28px rgba(0,0,0,.4);
+    margin-bottom:10px; box-sizing:border-box;
+  }
+  .doc {
+    border:none!important; box-shadow:none!important;
+    width:100%!important; padding:11px 15px!important;
+    margin:0!important; box-sizing:border-box!important;
+    font-size:10px!important;
+  }
 
-      /* doc styles */
-      .doc {
-        border:none!important; box-shadow:none!important;
-        width:100%!important; padding:12px 16px!important;
-        margin:0!important; box-sizing:border-box!important;
-        font-size:10px!important;
-        page-break-after:always;
-        break-after:page;
-      }
-      .doc:last-child { page-break-after:auto; break-after:auto; }
+  /* ── พิมพ์ / PDF ── */
+  @page { size:A4 portrait; margin:8mm 10mm; }
+  @media print {
+    html, body {
+      background:#fff!important;
+      padding:0!important; margin:0!important;
+      display:block!important;
+    }
+    .print-toolbar { display:none!important; }
+    .doc-page-wrap {
+      width:100%!important; max-width:100%!important;
+      box-shadow:none!important; margin:0!important;
+      padding:0!important; background:transparent!important;
+    }
+    .doc {
+      padding:6mm 8mm!important;
+      font-size:9.5px!important;
+      -webkit-print-color-adjust:exact!important;
+      print-color-adjust:exact!important;
+      color-adjust:exact!important;
+    }
+  }
+</style>
+</head><body>
+  <div class="print-toolbar">
+    <span>📄 ใบกำกับภาษี — 4 หน้า A4</span>
+    <button onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF (4 หน้า)</button>
+  </div>
+  ${wrappedPages}
+</body></html>`;
 
-      /* ── Print / PDF ── */
-      @page {
-        size:A4 portrait;
-        margin:8mm 10mm;
-      }
-      @media print {
-        html, body {
-          background:#fff!important;
-          padding:0!important; margin:0!important;
-          display:block!important;
-        }
-        .print-toolbar { display:none!important; }
-        .doc-page-wrap {
-          width:100%!important; max-width:100%!important;
-          box-shadow:none!important; margin:0!important;
-          background:transparent!important;
-        }
-        .doc {
-          padding:0!important;
-          font-size:9.5px!important;
-          /* force colour printing */
-          -webkit-print-color-adjust:exact!important;
-          print-color-adjust:exact!important;
-          color-adjust:exact!important;
-        }
-        /* each .doc = 1 A4 page */
-        .doc { page-break-after:always; break-after:page; }
-        .doc:last-child { page-break-after:auto; break-after:auto; }
-      }
-    </style>
-  </head><body>
-    <div class="print-toolbar">
-      <span>📄 ใบกำกับภาษี/ใบส่งสินค้า — 4 หน้า A4</span>
-      <button onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF (4 หน้า)</button>
-    </div>
-    ${docEl.innerHTML.replace(/<div class="doc"/g, '<div class="doc-page-wrap"><div class="doc"').replace(/<\/div>(\s*)\n(\s*)<div class="doc-page-wrap">/g, '</div></div>\n<div class="doc-page-wrap"><div class="doc"')
-      /* wrap last doc */}
-    <script>
-      // wrap last .doc closing tag
-      document.querySelectorAll('.doc-page-wrap').forEach(w => {
-        // ensure inner .doc is closed before wrapper
-      });
-    <\/script>
-  </body></html>`;
-
-  // Better approach: split pages cleanly
-  const pages = docEl.innerHTML.split(/(?=<div class="doc")/);
-  const wrappedPages = pages.filter(p=>p.trim()).map(p =>
-    `<div class="doc-page-wrap">${p.trim().endsWith('</div>') ? p.trim() : p.trim()+'</div>'}</div>`
-  ).join('\n');
-
-  const html2 = `<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width">
-    ${styles}
-    <style>
-      html { background:#666; }
-      body { margin:0; padding:16px 0 32px; background:#666;
-             display:flex; flex-direction:column; align-items:center; }
-      .print-toolbar {
-        position:sticky; top:0; z-index:100;
-        width:210mm; max-width:96vw; background:#1e293b; color:#fff;
-        padding:9px 16px; border-radius:0 0 8px 8px;
-        display:flex; align-items:center; justify-content:space-between;
-        font-family:sans-serif; font-size:13px; box-sizing:border-box;
-        box-shadow:0 4px 12px rgba(0,0,0,.4); margin-bottom:8px;
-      }
-      .print-toolbar button { background:#2563EB; color:#fff; border:none;
-        padding:7px 20px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:700; }
-      .print-toolbar button:hover { background:#1d4ed8; }
-      .doc-page-wrap {
-        width:210mm; max-width:96vw; background:#fff;
-        box-shadow:0 6px 28px rgba(0,0,0,0.35); margin-bottom:12px; box-sizing:border-box;
-      }
-      .doc {
-        border:none!important; box-shadow:none!important;
-        width:100%!important; padding:11px 15px!important;
-        margin:0!important; box-sizing:border-box!important; font-size:10px!important;
-      }
-      @page { size:A4 portrait; margin:8mm 10mm; }
-      @media print {
-        html,body { background:#fff!important; padding:0!important; margin:0!important; display:block!important; }
-        .print-toolbar { display:none!important; }
-        .doc-page-wrap { width:100%!important; max-width:100%!important; box-shadow:none!important; margin:0!important; background:transparent!important; }
-        .doc {
-          padding:0!important; font-size:9.5px!important;
-          -webkit-print-color-adjust:exact!important;
-          print-color-adjust:exact!important;
-          color-adjust:exact!important;
-          page-break-after:always; break-after:page;
-        }
-        .doc:last-child { page-break-after:auto; break-after:auto; }
-      }
-    </style>
-  </head><body>
-    <div class="print-toolbar">
-      <span>📄 ใบกำกับภาษี/ใบส่งสินค้า — 4 หน้า A4</span>
-      <button onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF (4 หน้า)</button>
-    </div>
-    ${wrappedPages}
-  </body></html>`;
-
-  const w = window.open('','_blank');
-  w.document.write(html2);
+  const w = window.open('', '_blank');
+  if (!w) { toast('กรุณาอนุญาต pop-up ในเบราว์เซอร์','err'); return; }
+  w.document.open();
+  w.document.write(html);
   w.document.close();
   w.focus();
 }
