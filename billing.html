@@ -1670,9 +1670,6 @@ function collectData(){
     dn1Data: (() => {
       const flow = document.querySelector('input[name="bl-delivery-flow"]:checked')?.value;
       if (flow !== 'partial') return null;
-      // ensure DN1 section + table is built before collecting
-      const sec = document.getElementById('dn1-section');
-      if (sec && sec.style.display === 'none') { sec.style.display = ''; refreshDN1Table(); }
       return collectDN1();
     })(),
   };
@@ -2797,27 +2794,44 @@ function setBLFlow(flow) {
 
 // เก็บ DN1 data จากฟอร์ม
 function collectDN1() {
-  // ถ้า table ยังว่าง ให้ refresh ก่อน
   const tbody = document.getElementById('dn1-body');
-  if (!tbody || !tbody.querySelector('input[type="number"]')) refreshDN1Table();
+  const hasRows = tbody && tbody.querySelector('input[type="number"]');
 
-  const rows = [...document.querySelectorAll('#dn1-body tr')];
+  // ถ้า dn1-body ยังไม่ render ให้ดึงจาก items-body โดยตรง
+  if (!hasRows) {
+    const itemRows = [...document.querySelectorAll('#items-body tr')];
+    const items = itemRows.map(tr => {
+      const name = tr.cells[2].querySelector('input').value.trim();
+      const qty  = parseFloat(tr.cells[3].querySelector('input').value) || 0;
+      const unit = tr.cells[4].querySelector('input').value.trim();
+      if (!name) return null;
+      return { name, total: qty, sent1: qty, backlog: 0, unit };
+    }).filter(Boolean);
+    return {
+      dn1No:   '',
+      dueDate: document.getElementById('f-dn1-duedate')?.value || '',
+      remark:  document.getElementById('f-dn1-remark')?.value.trim() || '',
+      items,
+    };
+  }
+
+  // อ่านจาก dn1-body ที่มีค่า user กรอกไว้แล้ว
+  const rows = [...tbody.querySelectorAll('tr')];
   const items = [];
-  rows.forEach((tr, i) => {
+  rows.forEach(tr => {
     const inp = tr.querySelector('input[type="number"]');
     if (!inp) return;
     const name    = tr.cells[1].textContent.trim();
     const total   = parseFloat(inp.dataset.max) || 0;
     const sent1   = parseFloat(inp.value) || 0;
     const backlog = Math.max(0, total - sent1);
-    // cells: 0=#, 1=name, 2=total, 3=sent1-input, 4=backlog, 5=unit
-    const unit = tr.cells[5] ? tr.cells[5].textContent.trim() : '';
+    const unit    = tr.cells[5] ? tr.cells[5].textContent.trim() : '';
     if (name) items.push({ name, total, sent1, backlog, unit });
   });
   return {
-    dn1No:    '',
-    dueDate:  document.getElementById('f-dn1-duedate')?.value || '',
-    remark:   document.getElementById('f-dn1-remark')?.value.trim() || '',
+    dn1No:   '',
+    dueDate: document.getElementById('f-dn1-duedate')?.value || '',
+    remark:  document.getElementById('f-dn1-remark')?.value.trim() || '',
     items,
   };
 }
