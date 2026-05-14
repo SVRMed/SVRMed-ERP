@@ -2691,48 +2691,49 @@ function buildDN1Page(d) {
       </div>
     </div>
 
-    <!-- 2 ตาราง: ส่งครั้งแรก + ค้างส่ง -->
-    <div style="display:flex;gap:12px;margin-top:6px;">
-
-      <!-- ตาราง: ส่งมอบครั้งแรก -->
-      <div style="flex:1;">
-        <div style="font-size:11px;font-weight:700;color:#059669;background:#ECFDF5;
-                    border:1px solid #6EE7B7;border-radius:6px 6px 0 0;padding:5px 10px;">
-          ✅ ส่งมอบครั้งแรก (พร้อมใบกำกับนี้)
-        </div>
-        <table class="doc-t" style="width:100%;">
-          <thead><tr>
-            <th style="width:28px;background:#D1FAE5;border-color:#6EE7B7;">#</th>
-            <th style="width:70px;background:#D1FAE5;border-color:#6EE7B7;">รหัสสินค้า</th>
-            <th style="background:#D1FAE5;border-color:#6EE7B7;">รายการ</th>
-            <th style="width:55px;background:#D1FAE5;border-color:#6EE7B7;">จำนวน</th>
-            <th style="width:50px;background:#D1FAE5;border-color:#6EE7B7;">หน่วย</th>
-          </tr></thead>
-          <tbody>${mkRows(sent1Items,'sent')}</tbody>
-        </table>
-      </div>
-
-      <!-- ตาราง: ค้างส่ง -->
-      <div style="flex:1;">
-        <div style="font-size:11px;font-weight:700;color:#B45309;background:#FEF3C7;
-                    border:1px solid #FCD34D;border-radius:6px 6px 0 0;padding:5px 10px;">
-          ⏳ รายการค้างส่ง (จะส่งภายหลัง)
-        </div>
-        <table class="doc-t" style="width:100%;">
-          <thead><tr>
-            <th style="width:28px;background:#FDE68A;border-color:#FCD34D;">#</th>
-            <th style="width:70px;background:#FDE68A;border-color:#FCD34D;">รหัสสินค้า</th>
-            <th style="background:#FDE68A;border-color:#FCD34D;">รายการ</th>
-            <th style="width:55px;background:#FDE68A;border-color:#FCD34D;">จำนวน</th>
-            <th style="width:50px;background:#FDE68A;border-color:#FCD34D;">หน่วย</th>
-          </tr></thead>
-          <tbody>${mkRows(backlogItems,'back')}</tbody>
-        </table>
-      </div>
-
+    <!-- ตารางรวม: จำนวนสินค้า / จำนวนส่ง / ค้างส่ง -->
+    <div style="margin-top:8px;">
+      <table class="doc-t" style="width:100%;">
+        <thead><tr>
+          <th style="width:28px;background:#FDE68A;border-color:#F59E0B;">ลำดับ</th>
+          <th style="width:80px;background:#FDE68A;border-color:#F59E0B;">รหัสสินค้า</th>
+          <th style="background:#FDE68A;border-color:#F59E0B;">รายการ</th>
+          <th style="width:55px;background:#FDE68A;border-color:#F59E0B;">จำนวนสินค้า</th>
+          <th style="width:60px;background:#FDE68A;border-color:#F59E0B;">จำนวนส่งสินค้า</th>
+          <th style="width:70px;background:#FDE68A;border-color:#F59E0B;color:#92400E;">จำนวนสินค้าคงค้าง</th>
+          <th style="width:45px;background:#FDE68A;border-color:#F59E0B;">หน่วย</th>
+        </tr></thead>
+        <tbody>
+          ${(d.items||[]).map((r,i) => {
+            const code = r.code || getCode(r.name)||'';
+            const backlog = r.backlog ?? 0;
+            const sent1   = r.sent1   ?? r.total ?? 0;
+            const total   = r.total   ?? 0;
+            const bg = i%2===1 ? 'background:#FFF7ED;' : '';
+            const br = 'border-color:#FED7AA;';
+            return `<tr>
+              <td class="ctr" style="${bg}${br}">${i+1}</td>
+              <td style="${bg}${br}">${code}</td>
+              <td style="${bg}${br}">${r.name||''}</td>
+              <td class="ctr" style="${bg}${br}">${total}</td>
+              <td class="ctr" style="${bg}${br}">${sent1}</td>
+              <td class="ctr" style="${bg}${br};font-weight:700;color:#92400E;">${backlog}</td>
+              <td class="ctr" style="${bg}${br}">${r.unit||''}</td>
+            </tr>`;
+          }).join('')}
+          ${Array.from({length: Math.max(0, 8-(d.items||[]).length)}, (_,i) => {
+            const bg = (i+(d.items||[]).length)%2===1 ? 'background:#FFF7ED;' : '';
+            return `<tr style="height:20px;"><td style="${bg}border-color:#FED7AA;"></td><td style="${bg}border-color:#FED7AA;"></td><td style="${bg}border-color:#FED7AA;"></td><td style="${bg}border-color:#FED7AA;"></td><td style="${bg}border-color:#FED7AA;"></td><td style="${bg}border-color:#FED7AA;"></td><td style="${bg}border-color:#FED7AA;"></td></tr>`;
+          }).join('')}
+        </tbody>
+      </table>
     </div>
 
-    ${d.remark?`<div style="font-size:10px;color:#555;margin-top:8px;padding:6px 10px;background:#FFF7ED;border-radius:6px;border:1px solid #FED7AA;">หมายเหตุ : ${d.remark}</div>`:''}
+    <!-- หมายเหตุ -->
+    <div style="margin-top:8px;font-size:10px;color:#444;">
+      <strong>หมายเหตุ :</strong> จำนวนส่งสินค้านี้ส่งมอบพร้อมใบกำกับภาษีฉบับอ้างอิง และ จำนวนสินค้าคงค้าง จะจัดส่งให้ในภายหลัง
+      ${d.remark ? '<br>' + d.remark : ''}
+    </div>
 
     <!-- SIGNATURES -->
     <div class="doc-sigs" style="grid-template-columns:1fr 1fr 1fr;margin-top:16px;">
