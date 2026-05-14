@@ -492,16 +492,22 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
         <div class="form-group"><label class="form-label">วันที่ออกเอกสาร <span class="req">*</span></label><input class="fi" type="date" id="f-invdate" oninput="const cd=currentCreditDays||30;document.getElementById('f-duedate').value=calcDueDate(this.value,cd);"></div>
         <div class="form-group"><label class="form-label">วันที่ครบกำหนดชำระ <span class="ref-badge">คำนวณจากเครดิตลูกค้า</span></label><input class="fi" type="date" id="f-duedate" style="background:#F1F5F9;" readonly></div>
         <div class="form-group form-full">
-          <label class="form-label">อ้างอิงใบเสนอราคา (QT)
-            <span style="font-size:10px;font-weight:400;color:var(--text3);margin-left:6px;">เฉพาะที่ลูกค้าอนุมัติแล้ว</span>
-          </label>
-          <div id="qt-list-wrap" style="display:none;margin-bottom:8px;">
-            <div id="qt-list" style="display:flex;flex-direction:column;gap:6px;"></div>
-          </div>
           <div style="display:flex;gap:10px;align-items:flex-start;">
-            <input class="fi" id="f-invref" placeholder="เลือกลูกค้าก่อน เพื่อดู QT ที่อนุมัติแล้ว" readonly style="flex:1;">
-            <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
-              <label class="form-label" style="margin:0;font-size:11px;">เลขที่ PO อ้างอิง <span style="font-weight:400;color:var(--text3);">(ถ้ามี)</span></label>
+            <!-- QT left -->
+            <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+              <label class="form-label" style="margin:0;">อ้างอิงใบเสนอราคา (QT)
+                <span style="font-size:10px;font-weight:400;color:var(--text3);margin-left:6px;">เฉพาะที่ลูกค้าอนุมัติแล้ว</span>
+              </label>
+              <div id="qt-list-wrap" style="display:none;margin-bottom:4px;">
+                <div id="qt-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+              </div>
+              <input class="fi" id="f-invref" placeholder="เลือกลูกค้าก่อน เพื่อดู QT ที่อนุมัติแล้ว" readonly style="margin:0;">
+            </div>
+            <!-- PO right -->
+            <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+              <label class="form-label" style="margin:0;">เลขที่ PO อ้างอิง
+                <span style="font-size:10px;font-weight:400;color:var(--text3);margin-left:4px;">(ถ้ามี)</span>
+              </label>
               <input class="fi" id="f-poref" placeholder="เช่น PO-2025-0123" style="margin:0;">
             </div>
           </div>
@@ -573,7 +579,7 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
 
 <!-- ████ MODAL: PREVIEW ████ -->
 <div class="modal-overlay hidden" id="m-preview" style="align-items:stretch;padding:0;">
-  <div style="width:100%;height:100vh;display:flex;flex-direction:column;background:#404040;">
+  <div style="width:100%;height:100%;display:flex;flex-direction:column;background:#404040;">
 
     <!-- TOP BAR -->
     <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;
