@@ -1483,7 +1483,11 @@ function openPreview(){
 function viewIv(id){
   const ivp=invoices.find(i=>i.id===id);
   if(!ivp) return;
-  document.getElementById('preview-doc').innerHTML=buildIV(ivp);
+  // render QT ชั่วคราวเพื่อให้ logo img โหลดเข้า DOM ก่อน
+  const previewDoc = document.getElementById('preview-doc');
+  previewDoc.innerHTML = buildQT(ivp);
+  // แล้วค่อย render IV จริง (logo จะถูกดึงจาก DOM ที่เพิ่ง render)
+  previewDoc.innerHTML = buildIV(ivp);
   document.getElementById('m-preview').classList.remove('hidden');
 }
 
@@ -1578,6 +1582,185 @@ function buildQT(d){
 }
 
 
+
+// ═══════════════════════════════════════
+// BUILD IV — ใบกำกับภาษี/ใบส่งสินค้า/ใบแจ้งหนี้
+// ═══════════════════════════════════════
+function buildIV(d) {
+  // ── rows ──
+  let rows = ''; let n = 1;
+  (d.items||[]).forEach(r => {
+    rows += `<tr>
+      <td class="ctr">${n++}</td>
+      <td>${r.code||''}</td>
+      <td>${r.name||''}</td>
+      <td class="ctr">${r.qty}</td>
+      <td class="ctr">${r.unit||''}</td>
+      <td class="num">${fmt(r.price)}</td>
+      <td class="num">${fmt(r.amount)}</td>
+    </tr>`;
+  });
+  const filled = (d.items||[]).length;
+  for (let i = filled; i < 12; i++) rows += `<tr style="height:21px;"><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
+
+  const vr = d.vatRate || 7;
+  const sub = d.subtotal || 0;
+  const disc = d.discount || 0;
+  const excl = d.exclVat || 0;
+  const vat  = d.vat || 0;
+  const total = d.total || 0;
+  const discPct = disc > 0 ? Math.round(disc / sub * 100) : 0;
+
+  // ── static remarks ──
+  const staticRemarks = [
+    '1. กรณีชำระเงินโดยเช็คกรุณาสั่งจ่ายเช็คขีดคร่อมในนาม "บริษัท เอสวีอาร์ เมด จำกัด" เท่านั้น',
+    '2. สินค้าตามรายการข้างต้นแม้ได้ส่งมอบให้แก่ผู้ซื้อแล้วก็ยังคงเป็นทรัพย์สินของผู้ขายจนกว่าผู้ซื้อจะได้ชำระเงินเรียบร้อยแล้ว',
+    '3. บริษัทฯ ขอสงวนสิทธิ์ในการแก้ไขใบกำกับภาษีภายใน 7 วัน นับจากวันที่ระบุในใบกำกับภาษี (ผิด ตก ยกเว้น E. & OE.)',
+  ];
+  const remarkLines = [...staticRemarks];
+  if (d.remark && d.remark.trim()) remarkLines.push(d.remark.trim());
+
+  // ── logo: ดึงจาก img ที่ buildQT render ไว้ หรือ fallback ──
+  const _logoEl = document.querySelector('#preview-doc .doc-logo-img') || document.querySelector('.doc-logo-img');
+  const LOGO_SRC = _logoEl ? _logoEl.src : '';
+
+  return `<div class="doc">
+    <!-- HEADER -->
+    <div class="doc-header">
+      <div class="doc-header-left">
+        <img class="doc-logo-img" src="${LOGO_SRC}" alt="SVR MED" style="width:110px;height:auto;object-fit:contain;">
+        <div class="doc-seller-block">
+          <div class="doc-seller-name-th">${d.sellerNameTh||'บริษัท เอสวีอาร์ เมด จำกัด'}</div>
+          <div class="doc-seller-name-en">${d.sellerNameEn||'SVR MED CO.,LTD.'}</div>
+          <div class="doc-seller-addr">${d.sellerAddr||''}<br>โทร : ${d.sellerTel||''} &nbsp;&nbsp; เลขผู้เสียภาษี ${d.sellerTax||''} (สำนักงานใหญ่)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TITLE -->
+    <div class="doc-tbox" style="font-size:18px;margin:6px 0 2px;">
+      ใบกำกับภาษี/ใบส่งสินค้า/ใบแจ้งหนี้
+      <div style="font-size:11px;font-weight:500;color:#444;margin-top:2px;">Tax Invoice / Delivery Note / Invoice</div>
+    </div>
+
+    <!-- META -->
+    <div class="doc-meta">
+      <div class="doc-cust">
+        <div><span class="lbl">นามลูกค้า &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;<strong style="color:#0F2B4E;">${d.custName||''}</strong></div>
+        <div style="display:flex;"><span class="lbl" style="flex-shrink:0;">ที่อยู่ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;<span>${(d.custAddr||'').replace(/\n/g,'<br>')}</span></div>
+        ${d.custContact?`<div><span class="lbl">ผู้ติดต่อ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;คุณ${d.custContact}${d.custTel?' &emsp;เบอร์โทร '+d.custTel:''}</div>`:''}
+        <div><span class="lbl">เลขประจำตัวผู้เสียภาษี :</span>&nbsp;${d.custTax||''}${d.custOffice?'&emsp;('+d.custOffice+')':''}</div>
+      </div>
+      <div class="doc-ref">
+        <div><span class="lbl">เลขที่</span>&nbsp;:&nbsp;<strong>${d.invNo||''}</strong></div>
+        <div><span class="lbl">วันที่</span>&nbsp;:&nbsp;${thaiDateShort(d.invDate||'')}</div>
+        <div><span class="lbl">อ้างอิง QT</span>&nbsp;:&nbsp;${d.invRef||'—'}</div>
+        <div><span class="lbl">กำหนดชำระ</span>&nbsp;:&nbsp;${thaiDateShort(d.invDueDate||'')}</div>
+      </div>
+    </div>
+
+    <!-- ITEMS TABLE -->
+    <table class="doc-t">
+      <thead><tr>
+        <th style="width:30px;">ลำดับ</th>
+        <th style="width:80px;">รหัสสินค้า</th>
+        <th>รายการ</th>
+        <th style="width:48px;">จำนวน</th>
+        <th style="width:52px;">หน่วย</th>
+        <th style="width:80px;">ราคา/หน่วย</th>
+        <th style="width:84px;">จำนวนเงิน</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+
+    <!-- SUMMARY SECTION (Image 3 style) -->
+    <div style="display:flex;align-items:flex-start;gap:6px;margin-top:6px;">
+
+      <!-- LEFT: baht text box + remarks -->
+      <div style="flex:1;">
+        <!-- baht text -->
+        <div style="border:1px solid #B8CADC;padding:5px 10px;font-size:10.5px;font-weight:600;color:#0F2B4E;background:#F9FBFD;margin-bottom:8px;">
+          ตัวอักษร. &nbsp;&nbsp;&nbsp;&nbsp;(${bahtText(total)})
+        </div>
+        <!-- remarks -->
+        <div style="font-size:9.8px;color:#444;line-height:1.85;">
+          <div style="margin-bottom:2px;">หมายเหตุ :</div>
+          ${remarkLines.map(l=>`<div>${l}</div>`).join('')}
+        </div>
+      </div>
+
+      <!-- RIGHT: summary table (Image 3 style with labels + EN sub-labels) -->
+      <div style="min-width:240px;font-size:10.5px;border:1px solid #B8CADC;">
+        <div style="display:flex;border-bottom:1px solid #B8CADC;">
+          <div style="flex:1;padding:4px 8px;border-right:1px solid #B8CADC;">
+            <div style="font-weight:700;">รวมเงิน</div>
+            <div style="color:#666;font-size:9px;">TOTAL AMOUNT</div>
+          </div>
+          <div style="min-width:90px;padding:4px 8px;text-align:right;font-family:monospace;font-weight:600;">${fmt(sub)}</div>
+        </div>
+        <div style="display:flex;border-bottom:1px solid #B8CADC;">
+          <div style="flex:1;padding:4px 8px;border-right:1px solid #B8CADC;">
+            <div style="font-weight:700;">ส่วนลด &nbsp;<span style="font-weight:400;">${disc>0?discPct+'%':'0%'}</span></div>
+            <div style="color:#666;font-size:9px;">DISCOUNT</div>
+          </div>
+          <div style="min-width:90px;padding:4px 8px;text-align:right;font-family:monospace;font-weight:600;">${disc>0?fmt(disc):'—'}</div>
+        </div>
+        <div style="display:flex;border-bottom:1px solid #B8CADC;">
+          <div style="flex:1;padding:4px 8px;border-right:1px solid #B8CADC;">
+            <div style="font-weight:700;">ยอดรวมก่อนภาษีมูลค่าเพิ่ม</div>
+            <div style="color:#666;font-size:9px;">TOTAL AMOUNT AFTER DISCOUNT</div>
+          </div>
+          <div style="min-width:90px;padding:4px 8px;text-align:right;font-family:monospace;font-weight:600;">${fmt(excl)}</div>
+        </div>
+        <div style="display:flex;border-bottom:1px solid #B8CADC;">
+          <div style="flex:1;padding:4px 8px;border-right:1px solid #B8CADC;">
+            <div style="font-weight:700;">ภาษีมูลค่าเพิ่ม &nbsp;<span style="font-weight:400;">${vr}%</span></div>
+            <div style="color:#666;font-size:9px;">VAT</div>
+          </div>
+          <div style="min-width:90px;padding:4px 8px;text-align:right;font-family:monospace;font-weight:600;">${fmt(vat)}</div>
+        </div>
+        <div style="display:flex;background:#EFF6FF;">
+          <div style="flex:1;padding:5px 8px;border-right:1px solid #B8CADC;">
+            <div style="font-weight:700;font-size:12px;color:#0F2B4E;">ยอดเงินสุทธิ</div>
+            <div style="color:#666;font-size:9px;">GRAND TOTAL</div>
+          </div>
+          <div style="min-width:90px;padding:5px 8px;text-align:right;font-family:monospace;font-weight:700;font-size:12px;color:#0F2B4E;">${fmt(total)}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIGNATURES (Image 2 style: left=ผู้รับสินค้า, center=ผู้ส่งสินค้า, right=บริษัท) -->
+    <div class="doc-sigs" style="grid-template-columns:1fr 1fr 1fr;margin-top:14px;">
+
+      <!-- LEFT: ผู้รับสินค้า -->
+      <div class="doc-sig" style="text-align:left;">
+        <div style="font-size:10px;color:#444;margin-bottom:4px;">ได้รับสินค้าตามรายการข้างบนไว้เรียบร้อยแล้ว</div>
+        <div style="height:52px;"></div>
+        <div style="font-size:10.5px;font-weight:600;color:#333;">ผู้รับสินค้า</div>
+        <div style="font-size:10px;color:#555;">วันที่ &nbsp;................................</div>
+      </div>
+
+      <!-- CENTER: ผู้ส่งสินค้า -->
+      <div class="doc-sig" style="text-align:left;">
+        <div style="height:68px;"></div>
+        <div style="font-size:10.5px;font-weight:600;color:#333;">ผู้ส่งสินค้า</div>
+        <div style="font-size:10px;color:#555;">วันที่ &nbsp;................................</div>
+      </div>
+
+      <!-- RIGHT: บริษัท (same as QT) -->
+      <div class="doc-sig">
+        <div style="font-size:10px;font-weight:700;color:#0F2B4E;margin-bottom:6px;text-align:center;">ในนาม บริษัท เอสวีอาร์ เมด จำกัด</div>
+        <div style="height:60px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;">
+          <img src="${LOGO_SRC}" style="height:48px;width:auto;max-width:90%;object-fit:contain;mix-blend-mode:multiply;">
+        </div>
+        <div class="doc-sigline" style="width:90%;margin:0 auto 4px;"></div>
+        <div class="doc-siglbl">ผู้มีอำนาจลงนาม</div>
+        <div style="font-size:10px;color:#555;">(นางสาวสมถวิล รัตนประทุม)</div>
+        <div class="doc-sigdate">วันที่ &nbsp;................................</div>
+      </div>
+    </div>
+  </div>`;
+}
 
 // ═══════════════════════════════════════
 // RENDER TABLE
