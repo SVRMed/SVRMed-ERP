@@ -489,7 +489,7 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
         <div class="form-group"><label class="form-label">เลขที่เอกสาร (SVR) <span class="req">*</span>
           <span style="font-size:10px;font-weight:400;color:var(--green);margin-left:6px;">✨ ออกให้อัตโนมัติ</span></label>
           <input class="fi" id="f-invno" placeholder="เช่น SVR6905001"></div>
-        <div class="form-group"><label class="form-label">วันที่ออกเอกสาร <span class="req">*</span></label><input class="fi" type="date" id="f-invdate" oninput="const cd=currentCreditDays||30;document.getElementById('f-duedate').value=calcDueDate(this.value,cd);"></div>
+        <div class="form-group"><label class="form-label">วันที่ออกเอกสาร <span class="req">*</span></label><input class="fi" type="date" id="f-invdate" oninput="const cd=(typeof currentCreditDays!=='undefined'?currentCreditDays:30);document.getElementById('f-duedate').value=calcDueDate(this.value,cd);"></div>
         <div class="form-group"><label class="form-label">วันที่ครบกำหนดชำระ <span class="ref-badge">คำนวณจากเครดิตลูกค้า</span></label><input class="fi" type="date" id="f-duedate" style="background:#F1F5F9;" readonly></div>
         <div class="form-group form-full">
           <div style="display:flex;gap:10px;align-items:flex-start;">
@@ -1820,7 +1820,6 @@ function buildIV(d) {
       <div class="doc-ref" style="background:${copy.metaBg};border-color:${copy.metaBorder};">
         <div><span class="lbl">เลขที่</span>&nbsp;:&nbsp;<strong>${d.invNo||''}</strong></div>
         <div><span class="lbl">วันที่</span>&nbsp;:&nbsp;${thaiDateShort(d.invDate||'')}</div>
-        ${d.invRef?`<div><span class="lbl">อ้างอิง QT</span>&nbsp;:&nbsp;${d.invRef}</div>`:''}
         ${d.poRef?`<div><span class="lbl">อ้างอิง PO</span>&nbsp;:&nbsp;<strong>${d.poRef}</strong></div>`:''}
         <div><span class="lbl">กำหนดชำระ</span>&nbsp;:&nbsp;${thaiDateShort(d.invDueDate||'')}</div>
       </div>
