@@ -1507,7 +1507,6 @@ function collectData(){
     invRef:       document.getElementById('f-invref').value.trim(),
     poRef:        document.getElementById('f-poref').value.trim(),
     deliveryFlow: document.querySelector('input[name="bl-delivery-flow"]:checked')?.value||'single',
-    invRef:       document.getElementById('f-invref').value.trim(),
     issuer:       document.getElementById('f-issuer').value.trim(),
     vatRate:vr, discount:disc,
     specialDisc: parseFloat(document.getElementById('f-discount').value)||0,
@@ -1527,8 +1526,10 @@ function _initPreview(html) {
   // เก็บ HTML ดิบไว้ใน hidden div
   document.getElementById('preview-doc').innerHTML = html;
 
-  // แยก 4 หน้า
-  const docDivs = document.getElementById('preview-doc').querySelectorAll('.doc');
+  // แยก 4 หน้าผ่าน DOMParser (ทำงานได้แม้ div จะ hidden)
+  const parser = new DOMParser();
+  const doc = parser.parseFromString('<div>' + html + '</div>', 'text/html');
+  const docDivs = doc.querySelectorAll('.doc');
   _previewPages = [...docDivs].map(d => d.outerHTML);
   _previewPage  = 0;
 
@@ -1551,6 +1552,7 @@ function _initPreview(html) {
 }
 
 function _showPage(n) {
+  if (!_previewPages.length) return;
   _previewPage = Math.max(0, Math.min(n, _previewPages.length - 1));
 
   // แสดงเนื้อหาหน้านั้น
