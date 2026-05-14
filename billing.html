@@ -835,26 +835,24 @@ let allFiltered = [];
 // GOOGLE SHEETS API
 // ═══════════════════════════════════════
 async function gs(params) {
-  // ใช้ POST เมื่อมี data payload หรือ action ที่ข้อมูลอาจใหญ่เกิน URL limit
   const POST_ACTIONS = ['add','update','deleteWhere'];
   if (POST_ACTIONS.includes(params.action)) {
-    // ส่ง data เป็น object ตรงๆ ไม่ต้อง stringify ซ้ำซ้อน
     const body = {...params};
     if (typeof body.data === 'string') {
       try { body.data = JSON.parse(body.data); } catch(e) {}
     }
     const res = await fetch(SCRIPT_URL, {
       method: 'POST',
-      headers: {'Content-Type': 'text/plain'},
+      redirect: 'follow',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
       body: JSON.stringify(body),
     });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    return res.json();
+    const text = await res.text();
+    try { return JSON.parse(text); } catch(e) { throw new Error('Apps Script error: ' + text.substring(0,200)); }
   }
-  // GET สำหรับ action ที่ไม่มี payload ใหญ่
   const res = await fetch(SCRIPT_URL + '?' + new URLSearchParams(params));
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return res.json();
+  const text = await res.text();
+  try { return JSON.parse(text); } catch(e) { throw new Error('Apps Script error: ' + text.substring(0,200)); }
 }
 
 // ═══════════════════════════════════════
@@ -2956,8 +2954,6 @@ async function saveDN2() {
 
   setBusy(true);
   try {
-    console.log('saveDN2 iv.id:', iv.id, 'iv.invNo:', iv.invNo);
-    console.log('DN2JSON size:', JSON.stringify(dn2Save).length, 'bytes');
     await gs({ action:'update', sheet:SH_INV, keyCol:'เลขที่เอกสาร', keyVal:iv.invNo,
       data: JSON.stringify({ 'DN2JSON': JSON.stringify(dn2Save), 'สถานะ': 'completed' }) });
     toast('✅ บันทึกใบส่งสินค้าคงค้างแล้ว','ok');
