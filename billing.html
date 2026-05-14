@@ -2159,6 +2159,7 @@ function buildIV(d) {
     if (dn1Raw) {
       const dn1No = dn1Raw.dn1No || genDNNo(d.invNo, '1');
       html += buildDN1Page({...dn1Raw, dn1No, invNo:d.invNo,
+        invItems: d.items||[],
         custName:d.custName, custAddr:d.custAddr, custTax:d.custTax,
         custContact:d.custContact, custTel:d.custTel, custOffice:d.custOffice,
         sellerNameTh:d.sellerNameTh, sellerAddr:d.sellerAddr,
@@ -2633,18 +2634,25 @@ function buildDN1Page(d) {
   const backlogItems = (d.items||[]).filter(r => r.backlog > 0);
   const sent1Items   = (d.items||[]).filter(r => r.sent1  > 0);
 
+  // lookup code จาก invItems ถ้า dn1 item ไม่มี code
+  const invItems = d.invItems || [];
+  const getCode = (name) => {
+    const r = invItems.find(x => x.name === name);
+    return r ? (r.code||'') : '';
+  };
+
   const mkRows = (arr, cols) => {
     const rows = arr.map((r,i) => `<tr>
       <td class="ctr">${i+1}</td>
+      <td>${r.code || getCode(r.name)||''}</td>
       <td>${r.name||''}</td>
       ${cols==='sent'
         ? `<td class="ctr">${r.sent1}</td>`
         : `<td class="ctr" style="color:#B45309;font-weight:700;">${r.backlog}</td>`}
       <td class="ctr">${r.unit||''}</td>
     </tr>`).join('');
-    // empty rows
     let empty = '';
-    for (let i=arr.length; i<8; i++) empty += `<tr style="height:20px;"><td></td><td></td><td></td><td></td></tr>`;
+    for (let i=arr.length; i<8; i++) empty += `<tr style="height:20px;"><td></td><td></td><td></td><td></td><td></td></tr>`;
     return rows + empty;
   };
 
@@ -2695,6 +2703,7 @@ function buildDN1Page(d) {
         <table class="doc-t" style="width:100%;">
           <thead><tr>
             <th style="width:28px;background:#D1FAE5;border-color:#6EE7B7;">#</th>
+            <th style="width:70px;background:#D1FAE5;border-color:#6EE7B7;">รหัสสินค้า</th>
             <th style="background:#D1FAE5;border-color:#6EE7B7;">รายการ</th>
             <th style="width:55px;background:#D1FAE5;border-color:#6EE7B7;">จำนวน</th>
             <th style="width:50px;background:#D1FAE5;border-color:#6EE7B7;">หน่วย</th>
@@ -2712,6 +2721,7 @@ function buildDN1Page(d) {
         <table class="doc-t" style="width:100%;">
           <thead><tr>
             <th style="width:28px;background:#FDE68A;border-color:#FCD34D;">#</th>
+            <th style="width:70px;background:#FDE68A;border-color:#FCD34D;">รหัสสินค้า</th>
             <th style="background:#FDE68A;border-color:#FCD34D;">รายการ</th>
             <th style="width:55px;background:#FDE68A;border-color:#FCD34D;">จำนวน</th>
             <th style="width:50px;background:#FDE68A;border-color:#FCD34D;">หน่วย</th>
@@ -2831,11 +2841,12 @@ function collectDN1() {
   if (!hasRows) {
     const itemRows = [...document.querySelectorAll('#items-body tr')];
     const items = itemRows.map(tr => {
+      const code = tr.cells[1].querySelector('input').value.trim();
       const name = tr.cells[2].querySelector('input').value.trim();
       const qty  = parseFloat(tr.cells[3].querySelector('input').value) || 0;
       const unit = tr.cells[4].querySelector('input').value.trim();
       if (!name) return null;
-      return { name, total: qty, sent1: qty, backlog: 0, unit };
+      return { code, name, total: qty, sent1: qty, backlog: 0, unit };
     }).filter(Boolean);
     return {
       dn1No:   '',
@@ -2891,7 +2902,11 @@ function openDN2(invId) {
   const tbody = document.getElementById('dn2-body');
   let items = [];
   if (dn1 && dn1.items) {
-    items = dn1.items.filter(r => r.backlog > 0).map(r => ({...r, code: r.code||''}));
+    items = dn1.items.filter(r => r.backlog > 0).map(r => {
+      if (r.code) return {...r};
+      const ivItem = (iv.items||[]).find(x => x.name === r.name);
+      return {...r, code: ivItem?.code||''};
+    });
   } else if (iv.items) {
     items = iv.items.map(r => ({ code: r.code||'', name: r.name, backlog: r.qty, unit: r.unit }));
   }
