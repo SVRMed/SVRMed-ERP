@@ -357,7 +357,7 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
       </div>
       <div style="display:flex;gap:8px;">
         <button class="btn btn-secondary" onclick="loadAll()">🔄 รีเฟรช</button>
-        <button class="btn btn-primary" onclick="openNew()">＋ สร้างเอกสาร SVR</button>
+        <button class="btn btn-primary" onclick="openNew()">＋ สร้างใบกำกับภาษี SVR</button>
       </div>
     </div>
 
@@ -1154,7 +1154,6 @@ async function doSave(status) {
       'วันที่ครบกำหนดชำระ':   d.invDueDate||'',
       'เครดิต (วัน)':          d.invCredit||'30',
       'รูปแบบส่งมอบ':           d.deliveryFlow||'single',
-      'วันที่ครบกำหนดชำระ':  d.invPayDays,
       'อ้างอิง QT':        d.invRef,
       'ผู้ออกเอกสาร':      d.issuer,
       'VAT%':              d.vatRate,
@@ -1216,6 +1215,15 @@ async function doSave(status) {
 
     const msg = status==='sent' ? '📤 บันทึกและส่งเอกสาร SVR แล้ว' : '💾 บันทึกร่างแล้ว';
     toast(msg,'ok');
+
+    // อัปเดตสถานะ QT เป็น invoiced อัตโนมัติ เมื่อบันทึก SVR สำเร็จ
+    if (d.invRef) {
+      try {
+        await gs({action:'update', sheet:'Quotations', keyCol:'เลขที่ QT', keyVal:d.invRef,
+          data: JSON.stringify({'สถานะ':'invoiced'})});
+      } catch(e) { /* silent — ไม่หยุดถ้า QT update ไม่ได้ */ }
+    }
+
     closeM('m-form');
     await loadAll();
   } catch(e) {
