@@ -958,6 +958,7 @@ async function loadAll() {
         invCredit:    col(h,row,'เครดิต'),
         deliveryFlow: col(h,row,'รูปแบบส่งมอบ')||'single',
         dn2Json:      col(h,row,'DN2JSON')||'',
+        dn1Json:      col(h,row,'DN1JSON')||'',
         invRef:       col(h,row,'อ้างอิง QT'),
         poRef:        col(h,row,'เลขที่ PO'),
         issuer:        col(h,row,'ผู้ออกเอกสาร'),
@@ -1336,6 +1337,7 @@ async function doSave(status) {
       
       'ItemsJSON':              JSON.stringify(d.items),
       'DN2JSON':                d.dn2Json||'',
+      'DN1JSON':                d.dn1Data ? JSON.stringify({...d.dn1Data, dn1No: genDNNo(d.invNo,'1')}) : (d.dn1Json||''),
     };
 
     if (editId) {
@@ -1536,7 +1538,30 @@ function openEdit(id) {
   });
   if(!(iv.items||[]).length) { addRow(); addRow(); }
   recalc();
-  
+
+  // restore deliveryFlow UI
+  const flow = iv.deliveryFlow||'single';
+  const flowRadio = document.querySelector(`input[name="bl-delivery-flow"][value="${flow}"]`);
+  if (flowRadio) { flowRadio.checked = true; setBLFlow(flow); }
+  // restore DN1 data ถ้ามี
+  if (flow==='partial' && iv.dn1Json) {
+    try {
+      const dn1 = JSON.parse(iv.dn1Json);
+      if (dn1.dueDate) document.getElementById('f-dn1-duedate').value = dn1.dueDate;
+      if (dn1.remark)  document.getElementById('f-dn1-remark').value  = dn1.remark;
+      // restore sent1 qty ใน DN1 table
+      refreshDN1Table();
+      if (dn1.items) {
+        const dn1Rows = [...document.querySelectorAll('#dn1-body tr')];
+        dn1.items.forEach((item, i) => {
+          if (!dn1Rows[i]) return;
+          const inp = dn1Rows[i].querySelector('input[type="number"]');
+          if (inp) { inp.value = item.sent1; updateDN1Backorder(inp, item.total); }
+        });
+      }
+    } catch(e) {}
+  }
+
   document.getElementById('m-form').classList.remove('hidden');
 }
 
@@ -1642,6 +1667,7 @@ function collectData(){
     specialDisc: parseFloat(document.getElementById('f-discount').value)||0,
     remark:document.getElementById('f-remark').value.trim(),
     subtotal:sub, exclVat:excl, vat, total:after, items, createdAt:todayStr(),
+    dn1Data: (document.querySelector('input[name="bl-delivery-flow"]:checked')?.value==='partial') ? collectDN1() : null,
   };
 }
 
@@ -2081,7 +2107,7 @@ function buildIV(d) {
         <div style="font-size:10px;font-weight:700;color:#0F2B4E;margin-bottom:6px;text-align:center;">ในนาม บริษัท เอสวีอาร์ เมด จำกัด</div>
         <div style="flex:1;"></div>
         <div style="position:relative;width:90%;margin:0 auto;">
-          <img src="${STAMP_SRC}" style="display:block;width:100%;max-height:80px;object-fit:contain;object-position:bottom;mix-blend-mode:multiply;margin-bottom:-6px;">
+          <img src="${STAMP_SRC}" style="display:block;width:100%;max-height:95px;object-fit:contain;object-position:bottom;mix-blend-mode:multiply;margin-bottom:-6px;">
           <div class="doc-sigline" style="width:100%;margin:0 0 4px;"></div>
         </div>
         <div class="doc-siglbl">ผู้มีอำนาจลงนาม</div>
@@ -2092,7 +2118,26 @@ function buildIV(d) {
   </div>`;
 
   // ── assemble 4 copies ──
-  return COPIES.map(copy => buildPage(copy) + buildSharedBody(copy)).join('\n');
+  // 4 หน้าใบกำกับ
+  let html = COPIES.map(copy => buildPage(copy) + buildSharedBody(copy)).join('\n');
+
+  // ถ้าเป็น partial delivery — แนบใบค้างส่ง (DN1)
+  if (d.deliveryFlow === 'partial') {
+    let dn1Raw = null;
+    if (d.dn1Data && (d.dn1Data.items||[]).length > 0) {
+      dn1Raw = d.dn1Data;
+    } else if (d.dn1Json) {
+      try { dn1Raw = JSON.parse(d.dn1Json); } catch(e) {}
+    }
+    if (dn1Raw) {
+      const dn1No = dn1Raw.dn1No || genDNNo(d.invNo, '1');
+      html += buildDN1Page({...dn1Raw, dn1No, invNo:d.invNo,
+        custName:d.custName, custAddr:d.custAddr, custTax:d.custTax,
+        sellerNameTh:d.sellerNameTh, sellerAddr:d.sellerAddr,
+        sellerTel:d.sellerTel, sellerTax:d.sellerTax, invDate:d.invDate});
+    }
+  }
+  return html;
 }
 
 // ═══════════════════════════════════════
@@ -2549,6 +2594,136 @@ function _updateExtraBtn(tr) {
   btn.textContent       = hasData ? '📝✓'    : '📝';
 }
 
+
+// ═══════════════════════════════════════════════════
+// buildDN1Page — ใบค้างส่งสินค้า (แนบท้ายใบกำกับ)
+// ═══════════════════════════════════════════════════
+function buildDN1Page(d) {
+  const LOGO_SRC  = LOGO_B64;
+  const STAMP_SRC = STAMP_B64;
+
+  const backlogItems = (d.items||[]).filter(r => r.backlog > 0);
+  const sent1Items   = (d.items||[]).filter(r => r.sent1  > 0);
+
+  const mkRows = (arr, cols) => {
+    const rows = arr.map((r,i) => `<tr>
+      <td class="ctr">${i+1}</td>
+      <td>${r.name||''}</td>
+      ${cols==='sent'
+        ? `<td class="ctr">${r.sent1}</td>`
+        : `<td class="ctr" style="color:#B45309;font-weight:700;">${r.backlog}</td>`}
+      <td class="ctr">${r.unit||''}</td>
+    </tr>`).join('');
+    // empty rows
+    let empty = '';
+    for (let i=arr.length; i<8; i++) empty += `<tr style="height:20px;"><td></td><td></td><td></td><td></td></tr>`;
+    return rows + empty;
+  };
+
+  return `<div class="doc" style="page-break-after:auto;">
+    <!-- HEADER -->
+    <div class="doc-header" style="position:relative;">
+      <div class="doc-header-left">
+        <img class="doc-logo-img" src="${LOGO_SRC}" style="width:110px;height:auto;object-fit:contain;">
+        <div class="doc-seller-block">
+          <div class="doc-seller-name-th">${d.sellerNameTh||'บริษัท เอสวีอาร์ เมด จำกัด'}</div>
+          <div class="doc-seller-name-en">SVR MED CO.,LTD.</div>
+          <div class="doc-seller-addr">${d.sellerAddr||''}<br>โทร : ${d.sellerTel||''} &nbsp;&nbsp; เลขผู้เสียภาษี ${d.sellerTax||''} (สำนักงานใหญ่)</div>
+        </div>
+      </div>
+      <div style="position:absolute;top:0;right:0;border:2px solid #F59E0B;border-radius:10px;
+                  padding:8px 14px;text-align:center;background:#FEF3C7;min-width:130px;">
+        <div style="font-size:14px;font-weight:800;color:#92400E;">ใบค้างส่งสินค้า</div>
+        <div style="font-size:9px;font-weight:700;color:#B45309;">BACKORDER NOTE</div>
+        <div style="font-size:9px;color:#78350F;margin-top:2px;">(แนบท้ายใบกำกับภาษี)</div>
+      </div>
+    </div>
+
+    <!-- META -->
+    <div class="doc-meta">
+      <div class="doc-cust" style="background:#FFF7ED;border-color:#FED7AA;">
+        <div><span class="lbl">นามลูกค้า &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;<strong style="color:#0F2B4E;">${d.custName||''}</strong></div>
+        <div><span class="lbl">เลขประจำตัวผู้เสียภาษี :</span>&nbsp;${d.custTax||''}</div>
+      </div>
+      <div class="doc-ref" style="background:#FFF7ED;border-color:#FED7AA;">
+        <div><span class="lbl">เลขที่ค้างส่ง</span>&nbsp;:&nbsp;<strong style="color:#B45309;">${d.dn1No}</strong></div>
+        <div><span class="lbl">อ้างอิงใบกำกับ</span>&nbsp;:&nbsp;${d.invNo}</div>
+        <div><span class="lbl">วันที่ออกเอกสาร</span>&nbsp;:&nbsp;${thaiDateShort(d.invDate||'')}</div>
+        ${d.dueDate?`<div><span class="lbl">กำหนดส่งมอบส่วนที่เหลือ</span>&nbsp;:&nbsp;<strong style="color:#B45309;">${thaiDateShort(d.dueDate)}</strong></div>`:''}
+      </div>
+    </div>
+
+    <!-- 2 ตาราง: ส่งครั้งแรก + ค้างส่ง -->
+    <div style="display:flex;gap:12px;margin-top:6px;">
+
+      <!-- ตาราง: ส่งมอบครั้งแรก -->
+      <div style="flex:1;">
+        <div style="font-size:11px;font-weight:700;color:#059669;background:#ECFDF5;
+                    border:1px solid #6EE7B7;border-radius:6px 6px 0 0;padding:5px 10px;">
+          ✅ ส่งมอบครั้งแรก (พร้อมใบกำกับนี้)
+        </div>
+        <table class="doc-t" style="width:100%;">
+          <thead><tr>
+            <th style="width:28px;background:#D1FAE5;border-color:#6EE7B7;">#</th>
+            <th style="background:#D1FAE5;border-color:#6EE7B7;">รายการ</th>
+            <th style="width:55px;background:#D1FAE5;border-color:#6EE7B7;">จำนวน</th>
+            <th style="width:50px;background:#D1FAE5;border-color:#6EE7B7;">หน่วย</th>
+          </tr></thead>
+          <tbody>${mkRows(sent1Items,'sent')}</tbody>
+        </table>
+      </div>
+
+      <!-- ตาราง: ค้างส่ง -->
+      <div style="flex:1;">
+        <div style="font-size:11px;font-weight:700;color:#B45309;background:#FEF3C7;
+                    border:1px solid #FCD34D;border-radius:6px 6px 0 0;padding:5px 10px;">
+          ⏳ รายการค้างส่ง (จะส่งภายหลัง)
+        </div>
+        <table class="doc-t" style="width:100%;">
+          <thead><tr>
+            <th style="width:28px;background:#FDE68A;border-color:#FCD34D;">#</th>
+            <th style="background:#FDE68A;border-color:#FCD34D;">รายการ</th>
+            <th style="width:55px;background:#FDE68A;border-color:#FCD34D;">จำนวน</th>
+            <th style="width:50px;background:#FDE68A;border-color:#FCD34D;">หน่วย</th>
+          </tr></thead>
+          <tbody>${mkRows(backlogItems,'back')}</tbody>
+        </table>
+      </div>
+
+    </div>
+
+    ${d.remark?`<div style="font-size:10px;color:#555;margin-top:8px;padding:6px 10px;background:#FFF7ED;border-radius:6px;border:1px solid #FED7AA;">หมายเหตุ : ${d.remark}</div>`:''}
+
+    <!-- SIGNATURES -->
+    <div class="doc-sigs" style="grid-template-columns:1fr 1fr 1fr;margin-top:16px;">
+      <div class="doc-sig" style="text-align:center;">
+        <div style="font-size:10px;color:#444;margin-bottom:4px;text-align:left;">ได้รับทราบรายการค้างส่งสินค้าข้างต้นแล้ว</div>
+        <div style="flex:1;min-height:40px;"></div>
+        <div style="border-top:1px solid #999;width:85%;margin:24px auto 4px;"></div>
+        <div style="font-size:10.5px;font-weight:700;color:#0F2B4E;text-align:center;">ผู้รับทราบ (ลูกค้า)</div>
+        <div style="font-size:10px;color:#555;margin-top:6px;text-align:center;">วันที่ &nbsp;..................................</div>
+      </div>
+      <div class="doc-sig" style="text-align:center;">
+        <div style="flex:1;min-height:56px;"></div>
+        <div style="border-top:1px solid #999;width:85%;margin:24px auto 4px;"></div>
+        <div style="font-size:10.5px;font-weight:700;color:#0F2B4E;text-align:center;">ผู้แจ้ง</div>
+        <div style="font-size:10px;color:#555;margin-top:6px;text-align:center;">วันที่ &nbsp;..................................</div>
+      </div>
+      <div class="doc-sig">
+        <div style="font-size:10px;font-weight:700;color:#0F2B4E;margin-bottom:6px;text-align:center;">ในนาม บริษัท เอสวีอาร์ เมด จำกัด</div>
+        <div style="flex:1;"></div>
+        <div style="position:relative;width:90%;margin:0 auto;">
+          <img src="${STAMP_SRC}" style="display:block;width:100%;max-height:95px;object-fit:contain;object-position:bottom;mix-blend-mode:multiply;margin-bottom:-6px;">
+          <div class="doc-sigline" style="width:100%;margin:0 0 4px;"></div>
+        </div>
+        <div class="doc-siglbl">ผู้มีอำนาจลงนาม</div>
+        <div style="font-size:10px;color:#555;">(นางสาวสมถวิล รัตนประทุม)</div>
+        <div class="doc-sigdate">วันที่ &nbsp;................................</div>
+      </div>
+    </div>
+  </div>`;
+}
+
 // ═══════════════════════════════════════════════════
 // PARTIAL DELIVERY — DN1 / DN2
 // ═══════════════════════════════════════════════════
@@ -2646,7 +2821,7 @@ function openDN2(invId) {
   if (iv.deliveryFlow !== 'partial') { toast('ใบนี้ไม่ใช่การส่งมอบบางส่วน','err'); return; }
 
   _dn2InvId = invId;
-  const dn1 = iv.dn2Json ? JSON.parse(iv.dn2Json) : null;
+  const dn1 = iv.dn1Json ? JSON.parse(iv.dn1Json) : null;
 
   // info box
   const dn2No = genDNNo(iv.invNo, '2');
@@ -2816,7 +2991,7 @@ function buildDN2(d) {
         <div style="font-size:10px;font-weight:700;color:#0F2B4E;margin-bottom:6px;text-align:center;">ในนาม บริษัท เอสวีอาร์ เมด จำกัด</div>
         <div style="flex:1;"></div>
         <div style="position:relative;width:90%;margin:0 auto;">
-          <img src="${STAMP_SRC}" style="display:block;width:100%;max-height:80px;object-fit:contain;object-position:bottom;mix-blend-mode:multiply;margin-bottom:-6px;">
+          <img src="${STAMP_SRC}" style="display:block;width:100%;max-height:95px;object-fit:contain;object-position:bottom;mix-blend-mode:multiply;margin-bottom:-6px;">
           <div class="doc-sigline" style="width:100%;margin:0 0 4px;"></div>
         </div>
         <div class="doc-siglbl">ผู้มีอำนาจลงนาม</div>
