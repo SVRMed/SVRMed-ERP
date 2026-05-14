@@ -1619,9 +1619,22 @@ function buildIV(d) {
 
   const LOGO_SRC = LOGO_B64;
 
-  return `<div class="doc">
+  // ── 4 copy definitions ──
+  const COPIES = [
+    { label:'ต้นฉบับ', sub:'ORIGINAL', for:'สำหรับ ลูกค้า',
+      bg:'#FEE2E2', border:'#F87171', text:'#991B1B', subtext:'#DC2626' },
+    { label:'สำเนา',   sub:'COPY',     for:'สำหรับ ลูกค้า',
+      bg:'#FFEDD5', border:'#FB923C', text:'#92400E', subtext:'#EA580C' },
+    { label:'สำเนา',   sub:'COPY',     for:'สำหรับ ฝ่ายขาย',
+      bg:'#DCFCE7', border:'#4ADE80', text:'#14532D', subtext:'#16A34A' },
+    { label:'สำเนา',   sub:'COPY',     for:'สำหรับ ฝ่ายบัญชี',
+      bg:'#DBEAFE', border:'#60A5FA', text:'#1E3A8A', subtext:'#2563EB' },
+  ];
+
+  // ── build one page ──
+  const buildPage = (copy) => `<div class="doc" style="page-break-after:always;">
     <!-- HEADER -->
-    <div class="doc-header">
+    <div class="doc-header" style="position:relative;">
       <div class="doc-header-left">
         <img class="doc-logo-img" src="${LOGO_SRC}" alt="SVR MED" style="width:110px;height:auto;object-fit:contain;">
         <div class="doc-seller-block">
@@ -1629,6 +1642,20 @@ function buildIV(d) {
           <div class="doc-seller-name-en">${d.sellerNameEn||'SVR MED CO.,LTD.'}</div>
           <div class="doc-seller-addr">${d.sellerAddr||''}<br>โทร : ${d.sellerTel||''} &nbsp;&nbsp; เลขผู้เสียภาษี ${d.sellerTax||''} (สำนักงานใหญ่)</div>
         </div>
+      </div>
+      <!-- COPY BADGE -->
+      <div style="
+        position:absolute;top:0;right:0;
+        background:${copy.bg};
+        border:2px solid ${copy.border};
+        border-radius:10px;
+        padding:8px 14px;
+        text-align:center;
+        min-width:100px;
+      ">
+        <div style="font-size:15px;font-weight:800;color:${copy.text};line-height:1.2;">${copy.label}</div>
+        <div style="font-size:10px;font-weight:700;color:${copy.subtext};letter-spacing:0.05em;">${copy.sub}</div>
+        <div style="font-size:9px;color:${copy.text};margin-top:4px;font-weight:500;">(${copy.for})</div>
       </div>
     </div>
 
@@ -1653,6 +1680,11 @@ function buildIV(d) {
         <div><span class="lbl">กำหนดชำระ</span>&nbsp;:&nbsp;${thaiDateShort(d.invDueDate||'')}</div>
       </div>
     </div>
+  `; // end buildPage header — continue below
+
+  // ── shared body (table + summary + signatures) ──
+  const STAMP_SRC = `data:image/png;base64,${LOGO_B64.split(',')[1]||''}`;
+  const sharedBody = `
 
     <!-- ITEMS TABLE -->
     <table class="doc-t">
@@ -1756,7 +1788,10 @@ function buildIV(d) {
         <div class="doc-sigdate">วันที่ &nbsp;................................</div>
       </div>
     </div>
-  </div>`;
+  </div>`;  // end sharedBody
+
+  // ── assemble 4 copies ──
+  return COPIES.map(copy => buildPage(copy) + sharedBody).join('\n');
 }
 
 // ═══════════════════════════════════════
