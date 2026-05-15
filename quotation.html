@@ -498,7 +498,7 @@ select.fi-readonly{background-color:#F1F5F9!important;color:var(--text2)!importa
         <div class="form-group"><label class="form-label">เลขที่ใบเสนอราคา <span class="req">*</span>
           <span style="font-size:10px;font-weight:400;color:var(--green);margin-left:6px;">✨ ออกให้อัตโนมัติ</span></label>
           <input class="fi" id="f-qtno" placeholder="เช่น QT6903001"></div>
-        <div class="form-group"><label class="form-label">วันที่ออกเอกสาร <span class="req">*</span></label><input class="fi" type="date" id="f-qtdate"></div>
+        <div class="form-group"><label class="form-label">วันที่ออกเอกสาร</label><input class="fi" type="date" id="f-qtdate"></div>
         <div class="form-group"><label class="form-label">กำหนดยืนราคาภายใน (วัน)</label><input class="fi" type="number" id="f-qtvalid" value="90" min="1"></div>
         <div class="form-group"><label class="form-label">กำหนดส่งสินค้า (วัน)</label><input class="fi" type="number" id="f-qtdeliver" value="30" min="1"></div>
         <div class="form-group"><label class="form-label">ผู้เสนอราคา</label><input class="fi" id="f-issuer" placeholder="เช่น นางสาววิลัยพร พอนิคม"></div>
@@ -1299,7 +1299,7 @@ async function doSave(status) {
   d.status = status;
   if (!d.custName) { toast('กรุณากรอกชื่อลูกค้า','err'); return; }
   if (!d.qtNo)     { toast('กรุณากรอกเลขที่ QT','err'); return; }
-  if (!d.qtDate)   { toast('กรุณาเลือกวันที่','err'); return; }
+  // if (!d.qtDate)   { toast('กรุณาเลือกวันที่','err'); return; }  // ไม่บังคับกรอก
   if (d.items.length===0) { toast('กรุณาเพิ่มรายการสินค้าอย่างน้อย 1 รายการ','err'); return; }
 
   setBusy(true);
