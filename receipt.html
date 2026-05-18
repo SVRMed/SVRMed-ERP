@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ใบเสร็จรับเงิน (RC) · SVRMed ERP</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F0F4F8;--surface:#FFFFFF;--surface2:#F7F9FC;--border:#E2E8F0;--border2:#CBD5E1;
+  --navy:#0F2B4E;--navy2:#1A3F6F;--accent:#2563EB;--accent2:#1D4ED8;
+  --green:#059669;--green-bg:#D1FAE5;--red:#DC2626;--red-bg:#FEE2E2;
+  --amber:#D97706;--amber-bg:#FEF3C7;--teal:#0891B2;--teal-bg:#CFFAFE;
+  --purple:#7C3AED;--purple-bg:#EDE9FE;
+  --text:#0F172A;--text2:#475569;--text3:#94A3B8;
+  --mono:'JetBrains Mono',monospace;--font:'Noto Sans Thai',sans-serif;
+  --shadow:0 1px 3px rgba(0,0,0,0.08);--shadow-md:0 4px 16px rgba(0,0,0,0.10);--shadow-lg:0 8px 32px rgba(0,0,0,0.14);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* TOPBAR */
+.topbar{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);height:56px;padding:0 24px;
+  display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,0.2);position:sticky;top:0;z-index:200;}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand-icon{width:32px;height:32px;background:linear-gradient(135deg,#3B82F6,#1D4ED8);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.brand-name{color:#fff;font-size:15px;font-weight:700;letter-spacing:-0.01em;}
+.brand-sub{color:rgba(255,255,255,0.45);font-size:10px;font-family:var(--mono);}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.topbar-user{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.7);font-size:12px;}
+.avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:12px;}
+.gs-badge{font-size:10px;padding:2px 8px;border-radius:6px;font-weight:700;font-family:var(--mono);}
+.gs-ok{background:var(--green-bg);color:var(--green);}
+.gs-err{background:var(--red-bg);color:var(--red);}
+.gs-loading{background:var(--amber-bg);color:var(--amber);}
+
+/* LAYOUT */
+.layout{display:flex;min-height:calc(100vh - 56px);}
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);padding:16px 0;flex-shrink:0;}
+.nav-section{margin-bottom:4px;}
+.nav-label{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;padding:0 16px 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;font-size:13px;color:var(--text2);cursor:pointer;transition:all .15s;border-left:2px solid transparent;text-decoration:none;}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:#EFF6FF;color:var(--accent);border-left-color:var(--accent);font-weight:600;}
+.nav-item.disabled{opacity:0.4;cursor:not-allowed;pointer-events:none;}
+.nav-item .icon{font-size:15px;width:18px;text-align:center;}
+.nav-badge{margin-left:auto;font-size:9px;padding:1px 6px;border-radius:8px;background:var(--amber-bg);color:var(--amber);font-weight:700;}
+
+/* MAIN */
+.main{flex:1;padding:20px 24px;overflow:auto;}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;}
+.page-title h1{font-size:20px;font-weight:700;color:var(--text);letter-spacing:-0.02em;}
+.page-title p{font-size:12px;color:var(--text3);font-family:var(--mono);margin-top:2px;}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+.stat-v{font-size:22px;font-weight:700;font-family:var(--mono);}
+.stat-l{font-size:11px;color:var(--text3);margin-top:2px;}
+
+/* TOOLBAR */
+.toolbar{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.search-input{flex:1;min-width:200px;height:36px;border:1.5px solid var(--border2);border-radius:8px;padding:0 12px;font-size:13px;font-family:var(--font);outline:none;color:var(--text);}
+.search-input:focus{border-color:var(--accent);}
+.filter-select{height:36px;border:1.5px solid var(--border2);border-radius:8px;padding:0 10px;font-size:13px;font-family:var(--font);color:var(--text);background:var(--surface);outline:none;cursor:pointer;appearance:none;padding-right:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394A3B8' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;}
+
+/* TABLE */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{background:var(--surface2);padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text2);border-bottom:2px solid var(--border);white-space:nowrap;}
+tbody td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:#FAFCFF;}
+.mono{font-family:var(--mono);font-size:12px;}
+
+/* STATUS CHIPS */
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;}
+.chip-draft{background:#F1F5F9;color:var(--text2);}
+.chip-issued{background:var(--teal-bg);color:var(--teal);}
+.chip-paid{background:var(--green-bg);color:var(--green);}
+.chip-cancelled{background:var(--red-bg);color:var(--red);}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;border:none;transition:all .18s;}
+.btn:disabled{opacity:0.55;cursor:not-allowed;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 2px 8px rgba(37,99,235,0.3);}
+.btn-primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 14px rgba(37,99,235,0.4);}
+.btn-secondary{background:var(--surface);color:var(--text2);border:1.5px solid var(--border2);}
+.btn-secondary:hover{background:var(--surface2);}
+.btn-green{background:linear-gradient(135deg,#059669,#047857);color:#fff;box-shadow:0 2px 8px rgba(5,150,105,0.3);}
+.btn-green:hover:not(:disabled){transform:translateY(-1px);}
+.btn-amber{background:linear-gradient(135deg,#D97706,#B45309);color:#fff;}
+.btn-amber:hover:not(:disabled){transform:translateY(-1px);}
+.btn-red{background:var(--red);color:#fff;}
+.btn-sm{padding:4px 9px;font-size:11px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);cursor:pointer;font-family:var(--font);color:var(--text2);font-weight:600;}
+.btn-sm:hover{border-color:var(--accent);color:var(--accent);}
+.btn-sm.danger:hover{border-color:var(--red);color:var(--red);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,27,46,0.6);z-index:1000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.hidden{display:none;}
+.modal{background:var(--surface);border-radius:16px;box-shadow:var(--shadow-lg);width:860px;max-width:96vw;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;}
+.modal-sm{width:480px;}
+.modal-header{padding:17px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-size:15px;font-weight:700;}
+.modal-close{background:var(--surface2);border:none;width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;color:var(--text2);}
+.modal-close:hover{background:var(--red-bg);color:var(--red);}
+.modal-body{padding:18px 22px;overflow-y:auto;flex:1;}
+.modal-footer{padding:13px 22px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
+
+/* FORM */
+.section-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.section-title .stag{font-size:10px;padding:1px 7px;border-radius:5px;text-transform:none;letter-spacing:0;background:var(--teal-bg);color:var(--teal);font-weight:700;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;}
+.form-full{grid-column:1/-1;}
+.form-group{display:flex;flex-direction:column;gap:4px;}
+.form-label{font-size:11px;font-weight:600;color:var(--text2);}
+.req{color:var(--red);}
+.fi,.fs{height:36px;border:1.5px solid var(--border2);border-radius:8px;padding:0 10px;font-size:13px;font-family:var(--font);color:var(--text);background:var(--surface);transition:border-color .15s;outline:none;}
+.fi:focus,.fs:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,0.10);}
+.fi::placeholder{color:var(--text3);}
+.fs{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394A3B8' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;}
+.fta{border:1.5px solid var(--border2);border-radius:8px;padding:7px 10px;font-size:13px;font-family:var(--font);color:var(--text);outline:none;resize:vertical;min-height:56px;transition:border-color .15s;width:100%;}
+.fta:focus{border-color:var(--accent);}
+.divider{border:none;border-top:1px solid var(--border);margin:13px 0;}
+.fi-readonly{background:#F1F5F9!important;color:var(--text2)!important;cursor:default!important;border-color:var(--border)!important;}
+.fi-readonly:focus{border-color:var(--border)!important;box-shadow:none!important;}
+.fta-readonly{background:#F1F5F9!important;color:var(--text2)!important;cursor:default!important;border-color:var(--border)!important;resize:none!important;}
+.fi-blue{background:#CFFAFE!important;color:#0E7490!important;font-weight:600!important;border-color:#67E8F9!important;}
+.ref-badge{font-size:9px;font-weight:600;color:#64748B;background:#E2E8F0;border:1px solid #CBD5E1;border-radius:4px;padding:1px 6px;margin-left:6px;font-family:var(--mono);text-transform:none;letter-spacing:0;vertical-align:middle;}
+
+/* PAYMENT METHOD CARDS */
+.pay-method-wrap{display:flex;gap:10px;flex-wrap:wrap;}
+.pay-card{flex:1;min-width:110px;border:2px solid var(--border2);border-radius:10px;padding:10px 14px;cursor:pointer;transition:all .15s;background:var(--surface);text-align:center;}
+.pay-card:hover{border-color:var(--accent);}
+.pay-card.active{border-color:var(--green);background:var(--green-bg);}
+.pay-card-icon{font-size:22px;display:block;margin-bottom:4px;}
+.pay-card-label{font-size:12px;font-weight:700;color:var(--text2);}
+.pay-card.active .pay-card-label{color:var(--green);}
+
+/* SVR CARD SELECTION */
+.svr-card{border:1.5px solid var(--border2);border-radius:8px;padding:10px 14px;cursor:pointer;transition:all .15s;background:var(--surface);}
+.svr-card:hover{border-color:var(--accent);background:#EFF6FF;}
+.svr-card.selected{border-color:var(--green);background:var(--green-bg);}
+.svr-card-no{font-family:var(--mono);font-weight:700;color:var(--accent);font-size:13px;}
+.svr-card-info{font-size:11px;color:var(--text2);margin-top:3px;}
+.svr-card-amt{font-family:var(--mono);font-size:12px;color:var(--green);font-weight:700;float:right;}
+
+/* EMPTY / TOAST */
+.empty-state{text-align:center;padding:48px 20px;color:var(--text3);}
+.empty-icon{font-size:40px;margin-bottom:10px;}
+.empty-text{font-size:14px;font-weight:600;color:var(--text2);margin-bottom:4px;}
+.toast{position:fixed;top:66px;right:20px;z-index:9999;padding:11px 17px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);min-width:250px;transform:translateX(120%);transition:transform .25s ease;font-family:var(--font);}
+.toast.show{transform:translateX(0);}
+.toast.ok{background:#059669;color:#fff;}
+.toast.err{background:#DC2626;color:#fff;}
+.toast.info{background:var(--navy);color:#fff;}
+
+/* PRINT DOC */
+.doc{background:#fff;width:760px;margin:0 auto;font-family:'Noto Sans Thai',sans-serif;font-size:11.5px;color:#111;padding:28px 32px;border:1px solid #ddd;}
+.doc-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:20px;}
+.doc-logo-img{width:110px;height:auto;object-fit:contain;display:block;flex-shrink:0;}
+.doc-header-left{display:flex;align-items:center;gap:12px;}
+.doc-seller-block{display:flex;flex-direction:column;justify-content:center;}
+.doc-seller-name-th{font-size:12.5px;font-weight:700;color:#0F2B4E;line-height:1.3;}
+.doc-seller-name-en{font-size:11px;font-weight:600;color:#1A3F6F;}
+.doc-seller-addr{font-size:9.5px;color:#555;line-height:1.75;margin-top:3px;}
+.doc-tbox{text-align:center;font-size:20px;font-weight:700;color:#0F2B4E;margin:4px 0 2px;letter-spacing:-0.01em;line-height:1.2;}
+.doc-meta{display:flex;gap:16px;margin-bottom:14px;align-items:stretch;}
+.doc-cust{flex:1;font-size:12px;line-height:1.9;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:10px;padding:12px 16px;}
+.doc-cust .lbl{font-weight:700;min-width:150px;display:inline-block;color:#1e3a5f;}
+.doc-ref{min-width:200px;text-align:left;font-size:12px;line-height:1.9;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:10px;padding:12px 16px;}
+.doc-ref .lbl{font-weight:700;min-width:120px;display:inline-block;color:#1e3a5f;}
+.doc-t{width:100%;border-collapse:collapse;font-size:10.5px;margin-bottom:8px;}
+.doc-t th{background:#C8D6E8;border:1px solid #9DB5CC;padding:5px 7px;font-weight:700;text-align:center;}
+.doc-t td{border:1px solid #B8CADC;padding:4px 7px;vertical-align:top;}
+.doc-t td.num{text-align:right;}
+.doc-t td.ctr{text-align:center;}
+.doc-t tr:nth-child(even) td{background:#F5F8FC;}
+.doc-sbox{width:240px;font-size:10.5px;}
+.doc-srow{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid #E2E8F0;}
+.doc-srow:last-child{border-bottom:none;}
+.doc-srow.tr{font-weight:700;font-size:12.5px;border-top:2px solid #0F2B4E;margin-top:2px;padding-top:4px;}
+.doc-snum{font-family:monospace;font-weight:600;}
+.doc-sigs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:12px;}
+.doc-sig{border:1px solid #ddd;border-radius:4px;padding:8px 12px;font-size:10px;text-align:center;}
+.doc-sigline{border-top:1px solid #999;width:75%;margin:26px auto 4px;}
+.doc-siglbl{font-weight:700;font-size:10.5px;}
+.doc-sigdate{color:#777;font-size:9.5px;margin-top:10px;}
+
+/* RECEIPT SPECIFIC */
+.pay-info-box{background:#F0FDF4;border:1.5px solid #6EE7B7;border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:12px;line-height:2;}
+.pay-info-box .lbl{font-weight:700;color:#065F46;min-width:150px;display:inline-block;}
+.sum-box{background:#D1FAE5;border:1px solid #6EE7B7;border-radius:10px;padding:13px;margin-top:12px;}
+.sum-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;}
+.sum-row.total{font-weight:700;font-size:15px;border-top:2px solid #059669;margin-top:6px;padding-top:10px;color:#065F46;}
+.sum-val{font-family:var(--mono);font-weight:600;}
+
+@media print{
+  body > *:not(#print-area){ display:none!important; }
+  #print-area{ display:block!important; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-icon">🏥</div>
+    <div><div class="brand-name">SVRMed ERP</div><div class="brand-sub">v1.0.0 · Receipt Module</div></div>
+  </div>
+  <div class="topbar-right">
+    <span id="gs-status" class="gs-badge gs-loading">⏳ กำลังเชื่อมต่อ...</span>
+    <div class="topbar-user"><div class="avatar">👤</div><span>Admin</span></div>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="nav-section">
+      <div class="nav-label">หน้าหลัก</div>
+      <a class="nav-item" href="index.html"><span class="icon">🏠</span>Dashboard</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Master Data</div>
+      <a class="nav-item" href="vendors.html"><span class="icon">🏢</span>ผู้จำหน่าย</a>
+      <a class="nav-item" href="products.html"><span class="icon">📦</span>สินค้า</a>
+      <a class="nav-item" href="customers.html"><span class="icon">👥</span>ลูกค้า</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">การขาย</div>
+      <a class="nav-item" href="quotation.html"><span class="icon">📋</span>ใบเสนอราคา (QT)</a>
+      <a class="nav-item" href="billing.html"><span class="icon">📄</span>ใบกำกับภาษี/ใบส่งสินค้า (SVR)</a>
+      <a class="nav-item active"><span class="icon">💵</span>ใบเสร็จรับเงิน (RC)</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">การจัดซื้อ</div>
+      <a class="nav-item disabled"><span class="icon">🛍️</span>ใบสั่งซื้อ (PO)<span class="nav-badge">Soon</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">รายงาน</div>
+      <a class="nav-item disabled"><span class="icon">📈</span>รายงานยอดขาย<span class="nav-badge">Soon</span></a>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- FLOW INDICATOR -->
+    <div style="background:linear-gradient(135deg,#EEF2FF,#F5F3FF);border:1px solid #C7D2FE;border-radius:10px;padding:10px 16px;margin-bottom:14px;">
+      <!-- Flow 1: ส่งครบ -->
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+        <span style="font-size:10px;font-weight:700;color:var(--text3);min-width:130px;">📦 ส่งครบครั้งเดียว:</span>
+        <span style="padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;background:var(--green-bg);color:var(--green);">✅ QT ใบเสนอราคา</span>
+        <span style="color:var(--text3);font-size:13px;">→</span>
+        <span style="padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;background:var(--green-bg);color:var(--green);">✅ SVR ใบกำกับภาษี</span>
+        <span style="color:var(--text3);font-size:13px;">→</span>
+        <span style="padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;background:#E0E7FF;color:#4338CA;outline:2px solid #4338CA;">💵 RC ใบเสร็จรับเงิน</span>
+      </div>
+      <!-- Flow 2: ส่งบางส่วน -->
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;border-top:1px dashed #C7D2FE;padding-top:6px;">
+        <span style="font-size:10px;font-weight:700;color:var(--text3);min-width:130px;">📦 ส่งบางส่วนก่อน:</span>
+        <span style="padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;background:var(--green-bg);color:var(--green);">✅ QT ใบเสนอราคา</span>
+        <span style="color:var(--text3);font-size:13px;">→</span>
+        <span style="padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;background:var(--green-bg);color:var(--green);">✅ SVR ใบกำกับภาษี</span>
+        <span style="color:var(--text3);font-size:13px;">→</span>
+        <span style="padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;background:var(--amber-bg);color:var(--amber);">📋 ใบค้างส่งสินค้า</span>
+        <span style="color:var(--text3);font-size:13px;">→</span>
+        <span style="padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;background:var(--teal-bg);color:var(--teal);">📦 ใบส่งสินค้าคงค้าง</span>
+        <span style="color:var(--text3);font-size:13px;">→</span>
+        <span style="padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;background:#E0E7FF;color:#4338CA;outline:2px solid #4338CA;">💵 RC ใบเสร็จรับเงิน</span>
+      </div>
+    </div>
+
+    <div class="page-header">
+      <div class="page-title">
+        <h1>💵 ใบเสร็จรับเงิน (RC)</h1>
+        <p>ออกใบเสร็จหลังรับชำระ · SVR → <strong>RC</strong> · เชื่อมต่อ Google Sheets</p>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary" onclick="loadAll()">🔄 รีเฟรช</button>
+        <button class="btn btn-primary" onclick="openNew()">＋ ออกใบเสร็จรับเงิน</button>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats">
+      <div class="stat" style="border-top:3px solid var(--teal);"><div class="stat-v" id="st-total">—</div><div class="stat-l">ทั้งหมด</div></div>
+      <div class="stat" style="border-top:3px solid var(--amber);"><div class="stat-v" id="st-issued">—</div><div class="stat-l">ออกแล้ว</div></div>
+      <div class="stat" style="border-top:3px solid var(--green);"><div class="stat-v" id="st-paid">—</div><div class="stat-l">ชำระครบ</div></div>
+      <div class="stat" style="border-top:3px solid var(--red);"><div class="stat-v" id="st-cancelled">—</div><div class="stat-l">ยกเลิก</div></div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <input class="search-input" placeholder="🔍 ค้นหาเลขที่ RC / ชื่อลูกค้า / อ้างอิง SVR..." oninput="filterList(this.value)" id="search-input">
+      <select class="filter-select" id="status-filter" onchange="filterList(document.getElementById('search-input').value)">
+        <option value="">ทุกสถานะ</option>
+        <option value="issued">📋 ออกแล้ว</option>
+        <option value="paid">✅ ชำระครบ</option>
+        <option value="cancelled">❌ ยกเลิก</option>
+      </select>
+      <span id="record-count" style="font-size:12px;color:var(--text3);margin-left:4px;"></span>
+    </div>
+
+    <!-- TABLE -->
+    <div class="card">
+      <div class="table-wrap">
+        <table id="main-table">
+          <thead><tr>
+            <th>เลขที่ RC</th>
+            <th>ลูกค้า</th>
+            <th>วันที่ออก</th>
+            <th>อ้างอิง SVR</th>
+            <th>วิธีชำระ</th>
+            <th style="text-align:right;">ยอดรับชำระ (฿)</th>
+            <th>สถานะ</th>
+            <th style="width:180px;">จัดการ</th>
+          </tr></thead>
+          <tbody id="table-body">
+            <tr><td colspan="8"><div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-text">กำลังโหลดจาก Google Sheets...</div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ████ MODAL: FORM ████ -->
+<div class="modal-overlay hidden" id="m-form">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="m-form-title">💵 ออกใบเสร็จรับเงิน</div>
+      <button class="modal-close" onclick="closeM('m-form')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Hidden seller info -->
+      <div style="display:none;">
+        <input id="f-sth" value="บริษัท เอสวีอาร์ เมด จำกัด">
+        <input id="f-sen" value="SVR MED CO.,LTD.">
+        <input id="f-saddr" value="253/1064 ซอย เคทะร์มเกล้า 64 แขวงคลองสองต้นนุ่น เขตลาดกระบัง กรุงเทพมหานคร 10520">
+        <input id="f-stel" value="082-619-0540 , 085-326-3039">
+        <input id="f-stax" value="0105567242700">
+      </div>
+
+      <!-- เลือก SVR อ้างอิง -->
+      <div class="section-title">📄 เลือกใบกำกับภาษี/ใบส่งสินค้า (SVR) <span class="stag">ที่ต้องการออกใบเสร็จ</span></div>
+      <div id="svr-list-wrap" style="margin-bottom:12px;">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:6px;">ใบกำกับภาษีที่รอรับชำระ (สถานะ sent / invoiced):</div>
+        <div id="svr-list" style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto;"></div>
+      </div>
+      <div class="form-grid" style="margin-bottom:12px;">
+        <div class="form-group form-full">
+          <label class="form-label">อ้างอิงเลขที่ SVR <span class="req">*</span></label>
+          <input class="fi fi-blue" id="f-svr-ref" placeholder="เลือกจากรายการด้านบน หรือกรอกเอง" oninput="onSVRRefChange(this.value)">
+        </div>
+      </div>
+
+      <!-- ข้อมูลลูกค้า (auto-fill) -->
+      <div class="section-title">👥 ข้อมูลลูกค้า <span class="stag">ดึงจาก SVR อัตโนมัติ</span></div>
+      <div class="form-grid">
+        <div class="form-group form-full">
+          <label class="form-label">ชื่อลูกค้า / บริษัท <span class="ref-badge">จาก SVR</span></label>
+          <input class="fi fi-readonly fi-blue" id="f-cname" placeholder="เลือก SVR ก่อน" readonly>
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">ที่อยู่ <span class="ref-badge">จาก SVR</span></label>
+          <textarea class="fta fta-readonly" id="f-caddr" rows="2" readonly></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">เลขผู้เสียภาษี</label>
+          <input class="fi fi-readonly" id="f-ctax" placeholder="—" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">สำนักงาน</label>
+          <input class="fi fi-readonly" id="f-coffice" placeholder="—" readonly>
+        </div>
+      </div>
+      <hr class="divider">
+
+      <!-- ข้อมูลเอกสาร -->
+      <div class="section-title">📋 ข้อมูลใบเสร็จ</div>
+      <div class="form-grid-3">
+        <div class="form-group">
+          <label class="form-label">เลขที่ใบเสร็จ (RC) <span class="req">*</span>
+            <span style="font-size:10px;font-weight:400;color:var(--green);margin-left:6px;">✨ ออกอัตโนมัติ</span>
+          </label>
+          <input class="fi" id="f-rcno" placeholder="เช่น RC6905001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">วันที่ออกใบเสร็จ</label>
+          <input class="fi" type="date" id="f-rcdate">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ผู้รับเงิน</label>
+          <input class="fi" id="f-cashier" placeholder="เช่น นางสาววิลัยพร พอนิคม">
+        </div>
+      </div>
+      <hr class="divider">
+
+      <!-- ยอดเงิน -->
+      <div class="section-title">💰 ยอดเงินที่รับชำระ <span class="stag">ดึงจาก SVR</span></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">ยอดรวม SVR (฿) <span class="ref-badge">จาก SVR</span></label>
+          <input class="fi fi-readonly" id="f-svr-total" value="0.00" readonly style="font-family:var(--mono);font-weight:700;font-size:14px;">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ยอดที่รับชำระจริง (฿) <span class="req">*</span></label>
+          <input class="fi" type="number" id="f-amount" value="0" min="0" step="0.01" oninput="calcChange()" style="font-family:var(--mono);font-weight:700;font-size:14px;">
+        </div>
+        <div class="form-group">
+          <label class="form-label">เงินทอน (฿)</label>
+          <input class="fi fi-readonly" id="f-change" value="0.00" readonly style="font-family:var(--mono);background:#FFF7ED!important;border-color:#FED7AA!important;color:#92400E!important;">
+        </div>
+      </div>
+      <hr class="divider">
+
+      <!-- วิธีชำระเงิน -->
+      <div class="section-title">💳 วิธีชำระเงิน</div>
+      <div class="pay-method-wrap" id="pay-methods">
+        <div class="pay-card active" onclick="selectPay('เงินสด')" id="pay-cash">
+          <span class="pay-card-icon">💵</span>
+          <div class="pay-card-label">เงินสด</div>
+        </div>
+        <div class="pay-card" onclick="selectPay('โอนเงิน')" id="pay-transfer">
+          <span class="pay-card-icon">🏦</span>
+          <div class="pay-card-label">โอนเงิน</div>
+        </div>
+        <div class="pay-card" onclick="selectPay('เช็ค')" id="pay-cheque">
+          <span class="pay-card-icon">📝</span>
+          <div class="pay-card-label">เช็ค</div>
+        </div>
+        <div class="pay-card" onclick="selectPay('บัตรเครดิต')" id="pay-card">
+          <span class="pay-card-icon">💳</span>
+          <div class="pay-card-label">บัตรเครดิต</div>
+        </div>
+        <div class="pay-card" onclick="selectPay('QR Code')" id="pay-qr">
+          <span class="pay-card-icon">📱</span>
+          <div class="pay-card-label">QR Code</div>
+        </div>
+      </div>
+      <input type="hidden" id="f-paymethod" value="เงินสด">
+
+      <!-- รายละเอียดเพิ่มเติมสำหรับโอน/เช็ค -->
+      <div id="transfer-detail" style="display:none;margin-top:10px;">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">ธนาคาร</label>
+            <input class="fi" id="f-bank" placeholder="เช่น กสิกรไทย, ไทยพาณิชย์">
+          </div>
+          <div class="form-group">
+            <label class="form-label">เลขที่อ้างอิง / เช็ค / Transaction</label>
+            <input class="fi" id="f-payref" placeholder="เช่น 20250501-001">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-grid" style="margin-top:12px;">
+        <div class="form-group">
+          <label class="form-label">หมายเหตุ</label>
+          <input class="fi" id="f-remark" placeholder="หมายเหตุท้ายเอกสาร">
+        </div>
+      </div>
+
+      <!-- SUMMARY -->
+      <div class="sum-box">
+        <div class="sum-row"><span>ยอดตาม SVR</span><span class="sum-val" id="s-svr-total">0.00</span></div>
+        <div class="sum-row total"><span>ยอดรับชำระ</span><span class="sum-val" id="s-amount">0.00</span></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeM('m-form')">ยกเลิก</button>
+      <button class="btn btn-green" onclick="openPreview()">👁 ดูตัวอย่าง</button>
+      <button class="btn btn-primary" id="btn-save" onclick="doSave()">💵 ออกใบเสร็จ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ████ MODAL: PREVIEW ████ -->
+<div class="modal-overlay hidden" id="m-preview" style="align-items:stretch;padding:0;">
+  <div style="width:100%;height:100%;display:flex;flex-direction:column;background:#404040;">
+    <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;background:#1e293b;color:#fff;padding:10px 20px;gap:12px;">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <button class="btn btn-secondary" onclick="closeM('m-preview')" style="padding:6px 14px;font-size:13px;">← กลับ</button>
+        <span style="font-size:14px;font-weight:700;">👁 ตัวอย่างใบเสร็จรับเงิน (A4)</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button onclick="previewPrev()" id="prev-btn" style="background:#334155;color:#fff;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:16px;font-weight:700;">‹</button>
+        <span id="page-indicator" style="font-size:13px;min-width:70px;text-align:center;">หน้า 1 / 4</span>
+        <button onclick="previewNext()" id="next-btn" style="background:#334155;color:#fff;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:16px;font-weight:700;">›</button>
+      </div>
+      <button class="btn btn-primary" onclick="printDoc()" style="padding:7px 20px;font-size:13px;">🖨️ พิมพ์/PDF (4 หน้า)</button>
+    </div>
+    <div id="preview-canvas" style="flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#404040;">
+      <div id="preview-doc" style="display:none;"></div>
+      <div id="preview-stage" style="position:relative;">
+        <div id="preview-page-display" style="background:#fff;box-shadow:0 8px 40px rgba(0,0,0,0.5);transform-origin:top left;overflow:hidden;"></div>
+      </div>
+    </div>
+    <div style="flex-shrink:0;background:#2d2d2d;padding:8px 16px;display:flex;gap:8px;justify-content:center;overflow-x:auto;">
+      <div id="thumb-strip" style="display:flex;gap:8px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ████ MODAL: STATUS ████ -->
+<div class="modal-overlay hidden" id="m-status">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <div class="modal-title">⚡ เปลี่ยนสถานะใบเสร็จ</div>
+      <button class="modal-close" onclick="closeM('m-status')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--text3);margin-bottom:4px;">ปรับสถานะใบเสร็จ</p>
+      <p style="font-size:16px;font-weight:700;font-family:var(--mono);color:var(--navy);margin-bottom:14px;" id="status-rc-no"></p>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="btn" onclick="changeStatus('issued')" style="background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal);justify-content:flex-start;">📋 ออกแล้ว / รอยืนยัน</button>
+        <button class="btn btn-green" onclick="changeStatus('paid')" style="justify-content:flex-start;">✅ ชำระครบแล้ว</button>
+        <button class="btn btn-red" onclick="changeStatus('cancelled')" style="justify-content:flex-start;">❌ ยกเลิก</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeM('m-status')">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ████ MODAL: DELETE ████ -->
+<div class="modal-overlay hidden" id="m-del">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <div class="modal-title">🗑️ ยืนยันการลบ</div>
+      <button class="modal-close" onclick="closeM('m-del')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:14px;">ลบใบเสร็จ <strong id="del-preview"></strong>?</p>
+      <p style="font-size:12px;color:var(--red);margin-top:8px;">⚠️ ข้อมูลจะถูกลบออกจาก Google Sheets</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeM('m-del')">ยกเลิก</button>
+      <button class="btn btn-red" id="btn-del-ok" onclick="doDelete()">🗑️ ลบเลย</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2D5_31NsX8GJZW0PORXfhSNScmq1gRZKfXXi--UmqQwpLMyjZqJ2hHXn3qmzE5z0IXQ/exec';
+const SH_RC  = 'Receipts';
+const SH_INV = 'Invoices';
+const LOGO_B64 = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/2wBDAQMDAwQDBAgEBAgQCwkLEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBD/wAARCAH0AfQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD9U6KKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAoooo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48sj47+Bv/BOL4X+Afs+ufFCZfGetLhvs8kZj02BuuBFnM2OmZDgj+AGvri0sbPTrOKx0+0SC3hURxQwoqIigYCgDAAA6AVeGDxSEdiKjG5jicwnz4ibb/BeiHSpQoq0VYfRRRXIaBRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFAH//2Q==';
+const STAMP_B64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH5gQGBRMWL/hyYAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAABdUlEQVR42u2aQU7DMBBFvxMQe5aIHVuwBVfhBhyBc3ABjsANuEIPwAESCxasWCLEghUSq6E0cVqnjdMkY+WneCb/fRk7cSQDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGCVqqpqbds2z/NWSun7PgDAmtZ1XYf7vg9d14UQQgghAAAAAAAAAAAAAAAAAAAAAAAAgLUPUkoppZRSSikVkVJKKaWUUkoppZRSSikVkVJKKaWUUkoppZRSSikVkVJKKaWUUkoppZRSSikVkVJKKaWUUkoppZRSSikVkVJKKaWUUkoppZRSSikVkVJKKaWUUkoppZRSSikVkVJKKaWUUkoppZRSSikVkVJKKaWUUkoppZRSSikVkVJKKaWUUkoppZRSSikVkVJKKaWUUkoppZRSSikVkVJKKaWUUkoppZRSSikVkVJKKaWUUkoppZRSSikVkVJKKaWUUkoppZRSSikVkVJKKaWUUkoppZRSSikVkVJKKaWUUkoppZRSSikVkVJKKaWUUkoppZRSSikVkVJKKaWUUkoppZRSSikV+QabHSrJX3q/NQAAAABJRU5ErkJggg==';
+
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+let receipts  = [];
+let invoices  = [];
+let editId    = null;
+let delId     = null;
+let statusId  = null;
+let currentPayMethod = 'เงินสด';
+
+// ══════════════════════════════════════
+// GOOGLE SHEETS API
+// ══════════════════════════════════════
+async function gs(params) {
+  const POST_ACTIONS = ['add','update','deleteWhere'];
+  if (POST_ACTIONS.includes(params.action)) {
+    const body = {...params};
+    if (typeof body.data === 'string') { try { body.data = JSON.parse(body.data); } catch(e){} }
+    const dataStr = JSON.stringify(body.data||{});
+    if (dataStr.length < 1500) {
+      const url = SCRIPT_URL + '?' + new URLSearchParams({
+        action: body.action, sheet: body.sheet||'',
+        keyCol: body.keyCol||'', keyVal: body.keyVal||'',
+        data: dataStr,
+      });
+      const res = await fetch(url);
+      const text = await res.text();
+      try { return JSON.parse(text); } catch(e) { throw new Error('Error: '+text.substring(0,200)); }
+    }
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify(body),
+    });
+    const text = await res.text();
+    try { return JSON.parse(text); } catch(e) { throw new Error('Error: '+text.substring(0,200)); }
+  }
+  const res = await fetch(SCRIPT_URL + '?' + new URLSearchParams(params));
+  const text = await res.text();
+  try { return JSON.parse(text); } catch(e) { throw new Error('Error: '+text.substring(0,200)); }
+}
+
+// ══════════════════════════════════════
+// LOAD
+// ══════════════════════════════════════
+async function loadAll() {
+  setGS('loading');
+  try {
+    const [rcR, invR] = await Promise.all([
+      gs({action:'get', sheet:SH_RC}).catch(()=>[]),
+      gs({action:'get', sheet:SH_INV}).catch(()=>[]),
+    ]);
+
+    const parse = r => (!Array.isArray(r)||r.length<1) ? {h:[],rows:[]} : {h:r[0],rows:r.slice(1)};
+    const col = (h,row,n) => { const i=h.indexOf(n); return i>=0?(row[i]||''):''; };
+
+    const invParsed = parse(invR);
+    invoices = invParsed.rows.map(row=>{
+      const h = invParsed.h;
+      let items = [];
+      try { const j = col(h,row,'ItemsJSON'); if(j) items = JSON.parse(j); } catch(e){}
+      return {
+        id:          col(h,row,'ID'),
+        invNo:       col(h,row,'เลขที่เอกสาร')||col(h,row,'เลขที่ IV')||col(h,row,'เลขที่ใบกำกับ'),
+        invDate:     col(h,row,'วันที่ออกเอกสาร')||col(h,row,'วันที่'),
+        invDueDate:  col(h,row,'กำหนดชำระ (วัน)'),
+        status:      col(h,row,'สถานะ')||'draft',
+        custName:    col(h,row,'ชื่อลูกค้า'),
+        custAddr:    col(h,row,'ที่อยู่ลูกค้า'),
+        custTax:     col(h,row,'เลขภาษีลูกค้า'),
+        custOffice:  col(h,row,'สำนักงาน'),
+        custContact: col(h,row,'ผู้ติดต่อ'),
+        custTel:     col(h,row,'เบอร์ลูกค้า'),
+        vatRate:     parseFloat(col(h,row,'VAT%'))||7,
+        discount:    parseFloat(col(h,row,'ส่วนลด'))||0,
+        subtotal:    parseFloat(col(h,row,'รวมเงิน'))||0,
+        exclVat:     parseFloat(col(h,row,'ยอดก่อน VAT'))||0,
+        vat:         parseFloat(col(h,row,'VAT'))||0,
+        total:       parseFloat(col(h,row,'ยอดรวมสุทธิ'))||0,
+        sellerNameTh: col(h,row,'ชื่อบริษัท (ไทย)'),
+        sellerNameEn: col(h,row,'ชื่อบริษัท (EN)'),
+        sellerAddr:   col(h,row,'ที่อยู่บริษัท'),
+        sellerTel:    col(h,row,'โทรบริษัท'),
+        sellerTax:    col(h,row,'เลขภาษีบริษัท'),
+        poRef:       col(h,row,'เลขที่ PO'),
+        items,
+      };
+    }).filter(i=>i.invNo);
+
+    const rcParsed = parse(rcR);
+    receipts = rcParsed.rows.map(row=>{
+      const h = rcParsed.h;
+      return {
+        id:         col(h,row,'ID'),
+        rcNo:       col(h,row,'เลขที่ RC'),
+        rcDate:     col(h,row,'วันที่ออกใบเสร็จ'),
+        svrRef:     col(h,row,'อ้างอิง SVR'),
+        custName:   col(h,row,'ชื่อลูกค้า'),
+        custAddr:   col(h,row,'ที่อยู่ลูกค้า'),
+        custTax:    col(h,row,'เลขภาษีลูกค้า'),
+        custOffice: col(h,row,'สำนักงาน'),
+        amount:     parseFloat(col(h,row,'ยอดรับชำระ'))||0,
+        change:     parseFloat(col(h,row,'เงินทอน'))||0,
+        payMethod:  col(h,row,'วิธีชำระ')||'เงินสด',
+        payBank:    col(h,row,'ธนาคาร'),
+        payRef:     col(h,row,'เลขอ้างอิงชำระ'),
+        cashier:    col(h,row,'ผู้รับเงิน'),
+        remark:     col(h,row,'หมายเหตุ'),
+        svrTotal:   parseFloat(col(h,row,'ยอด SVR'))||0,
+        status:     col(h,row,'สถานะ')||'issued',
+        sellerNameTh: col(h,row,'ชื่อบริษัท (ไทย)'),
+        sellerAddr:   col(h,row,'ที่อยู่บริษัท'),
+        sellerTel:    col(h,row,'โทรบริษัท'),
+        sellerTax:    col(h,row,'เลขภาษีบริษัท'),
+        svrItems:   (() => { try { return JSON.parse(col(h,row,'ItemsJSON')||'[]'); } catch(e){ return []; } })(),
+        vatRate:    parseFloat(col(h,row,'VAT%'))||7,
+        exclVat:    parseFloat(col(h,row,'ยอดก่อน VAT'))||0,
+        vat:        parseFloat(col(h,row,'VAT'))||0,
+      };
+    }).filter(r=>r.rcNo);
+
+    setGS('ok');
+    renderStats();
+    renderTable();
+    populateSVRList();
+  } catch(e) {
+    setGS('err');
+    toast('❌ เชื่อมต่อ Google Sheets ไม่ได้: '+e.message,'err');
+    renderTable();
+  }
+}
+
+// ══════════════════════════════════════
+// SVR LIST IN FORM
+// ══════════════════════════════════════
+function populateSVRList() {
+  const eligible = invoices.filter(i => ['sent','invoiced','paid'].includes(i.status));
+  const list = document.getElementById('svr-list');
+  if (!eligible.length) {
+    list.innerHTML = `<div style="font-size:12px;color:var(--text3);padding:8px;">ไม่พบใบกำกับภาษีที่รอรับชำระ</div>`;
+    return;
+  }
+  list.innerHTML = eligible.map(iv => `
+    <label class="svr-card" onclick="selectSVR('${iv.invNo}')">
+      <span class="svr-card-no">${iv.invNo}</span>
+      <span class="svr-card-amt">${fmt(iv.total)} ฿</span>
+      <div class="svr-card-info">${iv.custName} · ${thaiDateShort(iv.invDate)}</div>
+    </label>`).join('');
+}
+
+function selectSVR(invNo) {
+  document.querySelectorAll('.svr-card').forEach(c => c.classList.remove('selected'));
+  const clicked = [...document.querySelectorAll('.svr-card')].find(c => c.querySelector('.svr-card-no')?.textContent === invNo);
+  if (clicked) clicked.classList.add('selected');
+  document.getElementById('f-svr-ref').value = invNo;
+  fillFromSVR(invNo);
+}
+
+function onSVRRefChange(val) {
+  fillFromSVR(val.trim().toUpperCase());
+}
+
+function fillFromSVR(invNo) {
+  const iv = invoices.find(i => i.invNo.toUpperCase() === invNo.toUpperCase());
+  if (!iv) return;
+  document.getElementById('f-cname').value   = iv.custName||'';
+  document.getElementById('f-caddr').value   = iv.custAddr||'';
+  document.getElementById('f-ctax').value    = iv.custTax||'';
+  document.getElementById('f-coffice').value = iv.custOffice||'';
+  document.getElementById('f-svr-total').value = fmt(iv.total);
+  document.getElementById('s-svr-total').textContent  = fmt(iv.total);
+  document.getElementById('f-amount').value  = iv.total;
+  document.getElementById('s-amount').textContent = fmt(iv.total);
+  calcChange();
+}
+
+function calcChange() {
+  const svrTotalStr = document.getElementById('f-svr-total').value.replace(/,/g,'');
+  const svrTotal = parseFloat(svrTotalStr) || 0;
+  const paid = parseFloat(document.getElementById('f-amount').value) || 0;
+  const change = Math.max(0, paid - svrTotal);
+  document.getElementById('f-change').value = fmt(change);
+  document.getElementById('s-amount').textContent = fmt(paid);
+}
+
+// ══════════════════════════════════════
+// PAYMENT METHOD
+// ══════════════════════════════════════
+function selectPay(method) {
+  currentPayMethod = method;
+  document.getElementById('f-paymethod').value = method;
+  document.querySelectorAll('.pay-card').forEach(c => c.classList.remove('active'));
+  const map = {'เงินสด':'pay-cash','โอนเงิน':'pay-transfer','เช็ค':'pay-cheque','บัตรเครดิต':'pay-card','QR Code':'pay-qr'};
+  const el = document.getElementById(map[method]);
+  if (el) el.classList.add('active');
+  const needsDetail = ['โอนเงิน','เช็ค','บัตรเครดิต','QR Code'].includes(method);
+  document.getElementById('transfer-detail').style.display = needsDetail ? '' : 'none';
+}
+
+// ══════════════════════════════════════
+// SAVE
+// ══════════════════════════════════════
+async function doSave() {
+  const svrRef = document.getElementById('f-svr-ref').value.trim();
+  const rcNo   = document.getElementById('f-rcno').value.trim();
+  const amount = parseFloat(document.getElementById('f-amount').value)||0;
+  if (!svrRef) { toast('กรุณาเลือก SVR อ้างอิง','err'); return; }
+  if (!rcNo)   { toast('กรุณากรอกเลขที่ใบเสร็จ','err'); return; }
+  if (!amount) { toast('กรุณากรอกยอดรับชำระ','err'); return; }
+
+  const iv = invoices.find(i => i.invNo.toUpperCase() === svrRef.toUpperCase());
+  const svrTotalStr = document.getElementById('f-svr-total').value.replace(/,/g,'');
+  const svrTotal = parseFloat(svrTotalStr)||0;
+  const change = Math.max(0, amount - svrTotal);
+
+  setBusyBtn(true);
+  try {
+    const hdr = {
+      'ID':               editId||('RC-'+Date.now()),
+      'เลขที่ RC':         rcNo,
+      'วันที่ออกใบเสร็จ': document.getElementById('f-rcdate').value,
+      'อ้างอิง SVR':      svrRef,
+      'ชื่อลูกค้า':       document.getElementById('f-cname').value.trim(),
+      'ที่อยู่ลูกค้า':   document.getElementById('f-caddr').value.trim(),
+      'เลขภาษีลูกค้า':   document.getElementById('f-ctax').value.trim(),
+      'สำนักงาน':         document.getElementById('f-coffice').value.trim(),
+      'ยอด SVR':          svrTotal,
+      'ยอดรับชำระ':        amount,
+      'เงินทอน':           change,
+      'วิธีชำระ':         currentPayMethod,
+      'ธนาคาร':           document.getElementById('f-bank').value.trim(),
+      'เลขอ้างอิงชำระ':  document.getElementById('f-payref').value.trim(),
+      'ผู้รับเงิน':       document.getElementById('f-cashier').value.trim(),
+      'หมายเหตุ':         document.getElementById('f-remark').value.trim(),
+      'สถานะ':             'issued',
+      'ชื่อบริษัท (ไทย)': iv?.sellerNameTh || 'บริษัท เอสวีอาร์ เมด จำกัด',
+      'ที่อยู่บริษัท':    iv?.sellerAddr||'',
+      'โทรบริษัท':        iv?.sellerTel||'',
+      'เลขภาษีบริษัท':   iv?.sellerTax||'',
+      'ItemsJSON':         JSON.stringify(iv?.items||[]),
+      'VAT%':             iv?.vatRate||7,
+      'ยอดก่อน VAT':       iv?.exclVat||0,
+      'VAT':              iv?.vat||0,
+    };
+
+    if (editId) {
+      await gs({action:'update', sheet:SH_RC, keyCol:'ID', keyVal:hdr['ID'], data:JSON.stringify(hdr)});
+    } else {
+      await gs({action:'add', sheet:SH_RC, data:JSON.stringify(hdr)});
+    }
+
+    // อัปเดตสถานะ SVR เป็น paid
+    if (iv) {
+      try {
+        await gs({action:'update', sheet:SH_INV, keyCol:'ID', keyVal:iv.id, data:JSON.stringify({'สถานะ':'paid'})});
+      } catch(e) {}
+    }
+
+    toast('✅ ออกใบเสร็จรับเงินสำเร็จ!','ok');
+    closeM('m-form');
+    await loadAll();
+  } catch(e) {
+    toast('❌ บันทึกไม่สำเร็จ: '+e.message,'err');
+  }
+  setBusyBtn(false);
+}
+
+// ══════════════════════════════════════
+// STATUS
+// ══════════════════════════════════════
+function openStatusModal(id) {
+  statusId = id;
+  const rc = receipts.find(r=>r.id===id);
+  if (!rc) return;
+  document.getElementById('status-rc-no').textContent = rc.rcNo;
+  document.getElementById('m-status').classList.remove('hidden');
+}
+
+async function changeStatus(newStatus) {
+  const rc = receipts.find(r=>r.id===statusId);
+  if (!rc) return;
+  try {
+    await gs({action:'update', sheet:SH_RC, keyCol:'ID', keyVal:rc.id, data:JSON.stringify({'สถานะ':newStatus})});
+    toast('✅ เปลี่ยนสถานะแล้ว','ok');
+    closeM('m-status');
+    await loadAll();
+  } catch(e) {
+    toast('❌ ไม่สำเร็จ: '+e.message,'err');
+  }
+}
+
+// ══════════════════════════════════════
+// DELETE
+// ══════════════════════════════════════
+function confirmDel(id) {
+  const rc = receipts.find(r=>r.id===id);
+  if (!rc) return;
+  delId = id;
+  document.getElementById('del-preview').textContent = `${rc.rcNo} (${rc.custName})`;
+  document.getElementById('m-del').classList.remove('hidden');
+}
+
+async function doDelete() {
+  const rc = receipts.find(r=>r.id===delId);
+  if (!rc) return;
+  const btn = document.getElementById('btn-del-ok');
+  btn.disabled=true; btn.textContent='⏳...';
+  try {
+    await gs({action:'delete', sheet:SH_RC, keyCol:'ID', keyVal:rc.id});
+    toast('🗑️ ลบแล้ว','ok');
+    closeM('m-del');
+    await loadAll();
+  } catch(e) {
+    toast('❌ ลบไม่สำเร็จ: '+e.message,'err');
+  }
+  btn.disabled=false; btn.textContent='🗑️ ลบเลย';
+}
+
+// ══════════════════════════════════════
+// FORM OPEN
+// ══════════════════════════════════════
+function openNew() {
+  editId = null;
+  currentPayMethod = 'เงินสด';
+  document.getElementById('m-form-title').textContent = '💵 ออกใบเสร็จรับเงิน';
+  ['f-cname','f-caddr','f-ctax','f-coffice','f-svr-ref','f-cashier','f-remark','f-bank','f-payref']
+    .forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('f-rcno').value    = genRCNo();
+  document.getElementById('f-rcdate').value  = todayStr();
+  document.getElementById('f-svr-total').value = '0.00';
+  document.getElementById('f-amount').value  = '0';
+  document.getElementById('f-change').value  = '0.00';
+  document.getElementById('s-svr-total').textContent = '0.00';
+  document.getElementById('s-amount').textContent = '0.00';
+  document.getElementById('f-paymethod').value = 'เงินสด';
+  document.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('active'));
+  document.getElementById('pay-cash').classList.add('active');
+  document.getElementById('transfer-detail').style.display = 'none';
+  populateSVRList();
+  document.getElementById('m-form').classList.remove('hidden');
+}
+
+// ══════════════════════════════════════
+// PREVIEW — 4 COPIES
+// ══════════════════════════════════════
+let _previewPages = [];
+let _previewPage  = 0;
+
+function openPreview() {
+  const d = collectData();
+  if (!d.svrRef) { toast('กรุณาระบุ SVR อ้างอิง','err'); return; }
+  _initPreview(buildRC(d));
+}
+
+function viewRc(id) {
+  const rc = receipts.find(r=>r.id===id);
+  if (!rc) return;
+  _initPreview(buildRC({
+    rcNo: rc.rcNo, rcDate: rc.rcDate, svrRef: rc.svrRef,
+    custName: rc.custName, custAddr: rc.custAddr,
+    custTax: rc.custTax, custOffice: rc.custOffice,
+    amount: rc.amount, change: rc.change,
+    payMethod: rc.payMethod, payBank: rc.payBank, payRef: rc.payRef,
+    cashier: rc.cashier, remark: rc.remark,
+    svrTotal: rc.svrTotal, svrItems: rc.svrItems||[],
+    sellerNameTh: rc.sellerNameTh||'บริษัท เอสวีอาร์ เมด จำกัด',
+    sellerAddr: rc.sellerAddr||'', sellerTel: rc.sellerTel||'',
+    sellerTax: rc.sellerTax||'', vatRate: rc.vatRate||7,
+    exclVat: rc.exclVat||0, vat: rc.vat||0,
+  }));
+}
+
+function collectData() {
+  return {
+    rcNo:     document.getElementById('f-rcno').value.trim(),
+    rcDate:   document.getElementById('f-rcdate').value,
+    svrRef:   document.getElementById('f-svr-ref').value.trim(),
+    custName: document.getElementById('f-cname').value.trim(),
+    custAddr: document.getElementById('f-caddr').value.trim(),
+    custTax:  document.getElementById('f-ctax').value.trim(),
+    custOffice:document.getElementById('f-coffice').value.trim(),
+    amount:   parseFloat(document.getElementById('f-amount').value)||0,
+    change:   parseFloat(document.getElementById('f-change').value.replace(/,/g,''))||0,
+    payMethod: currentPayMethod,
+    payBank:  document.getElementById('f-bank').value.trim(),
+    payRef:   document.getElementById('f-payref').value.trim(),
+    cashier:  document.getElementById('f-cashier').value.trim(),
+    remark:   document.getElementById('f-remark').value.trim(),
+    svrTotal: parseFloat((document.getElementById('f-svr-total').value||'').replace(/,/g,''))||0,
+    svrItems: (() => {
+      const svrRef = document.getElementById('f-svr-ref').value.trim();
+      const iv = invoices.find(i=>i.invNo.toUpperCase()===svrRef.toUpperCase());
+      return iv?.items||[];
+    })(),
+    sellerNameTh: document.getElementById('f-sth').value,
+    sellerAddr:   document.getElementById('f-saddr').value,
+    sellerTel:    document.getElementById('f-stel').value,
+    sellerTax:    document.getElementById('f-stax').value,
+    vatRate: (() => {
+      const svrRef = document.getElementById('f-svr-ref').value.trim();
+      const iv = invoices.find(i=>i.invNo.toUpperCase()===svrRef.toUpperCase());
+      return iv?.vatRate||7;
+    })(),
+    exclVat: (() => {
+      const svrRef = document.getElementById('f-svr-ref').value.trim();
+      const iv = invoices.find(i=>i.invNo.toUpperCase()===svrRef.toUpperCase());
+      return iv?.exclVat||0;
+    })(),
+    vat: (() => {
+      const svrRef = document.getElementById('f-svr-ref').value.trim();
+      const iv = invoices.find(i=>i.invNo.toUpperCase()===svrRef.toUpperCase());
+      return iv?.vat||0;
+    })(),
+  };
+}
+
+function _initPreview(html) {
+  document.getElementById('preview-doc').innerHTML = html;
+  const parser = new DOMParser();
+  const doc = parser.parseFromString('<div>'+html+'</div>','text/html');
+  const divs = doc.querySelectorAll('.doc');
+  _previewPages = [...divs].map(d=>d.outerHTML);
+  _previewPage  = 0;
+
+  const strip = document.getElementById('thumb-strip');
+  strip.innerHTML = '';
+  _previewPages.forEach((_,i)=>{
+    const btn = document.createElement('div');
+    btn.id = `thumb-${i}`;
+    btn.onclick = ()=>_showPage(i);
+    btn.style.cssText = 'cursor:pointer;border:2px solid transparent;border-radius:4px;background:#fff;padding:2px;opacity:.6;transition:.2s;';
+    btn.innerHTML = `<div style="font-size:9px;color:#333;text-align:center;padding:4px 8px;">หน้า ${i+1}</div>`;
+    strip.appendChild(btn);
+  });
+  _showPage(0);
+  document.getElementById('m-preview').classList.remove('hidden');
+}
+
+function _showPage(n) {
+  if (!_previewPages.length) return;
+  _previewPage = Math.max(0, Math.min(n, _previewPages.length-1));
+  const display = document.getElementById('preview-page-display');
+  display.innerHTML = _previewPages[_previewPage];
+  const canvas = document.getElementById('preview-canvas');
+  const cW = canvas.clientWidth-40, cH = canvas.clientHeight-40;
+  const A4W = 794, A4H = 1123;
+  const scale = Math.min(cW/A4W, cH/A4H, 1);
+  display.style.width = A4W+'px'; display.style.height = A4H+'px';
+  display.style.transform = `scale(${scale})`;
+  const stage = document.getElementById('preview-stage');
+  stage.style.width  = Math.round(A4W*scale)+'px';
+  stage.style.height = Math.round(A4H*scale)+'px';
+  document.getElementById('page-indicator').textContent = `หน้า ${_previewPage+1} / ${_previewPages.length}`;
+  document.querySelectorAll('#thumb-strip > div').forEach((el,i)=>{
+    el.style.borderColor = i===_previewPage ? '#60A5FA' : 'transparent';
+    el.style.opacity     = i===_previewPage ? '1' : '.6';
+  });
+  document.getElementById('prev-btn').style.opacity = _previewPage===0 ? '.3' : '1';
+  document.getElementById('next-btn').style.opacity = _previewPage===_previewPages.length-1 ? '.3' : '1';
+}
+
+function previewPrev() { _showPage(_previewPage-1); }
+function previewNext() { _showPage(_previewPage+1); }
+
+// ══════════════════════════════════════
+// BUILD RC — 4 COPIES
+// ══════════════════════════════════════
+function buildRC(d) {
+  const COPIES = [
+    {label:'ต้นฉบับ', sub:'ORIGINAL', for:'สำหรับ ลูกค้า',
+     bg:'#FEE2E2', border:'#F87171', text:'#991B1B', subtext:'#DC2626',
+     thBg:'#FECACA', tdBorder:'#FECACA', sumBg:'#FFF5F5', grandBg:'#FEE2E2'},
+    {label:'สำเนา',   sub:'COPY',     for:'สำหรับ ลูกค้า',
+     bg:'#FFEDD5', border:'#FB923C', text:'#92400E', subtext:'#EA580C',
+     thBg:'#FED7AA', tdBorder:'#FED7AA', sumBg:'#FFF7ED', grandBg:'#FFEDD5'},
+    {label:'สำเนา',   sub:'COPY',     for:'สำหรับ ฝ่ายบัญชี',
+     bg:'#DBEAFE', border:'#60A5FA', text:'#1E3A8A', subtext:'#2563EB',
+     thBg:'#BFDBFE', tdBorder:'#BFDBFE', sumBg:'#EFF6FF', grandBg:'#DBEAFE'},
+    {label:'สำเนา',   sub:'COPY',     for:'สำหรับ ฝ่ายขาย',
+     bg:'#DCFCE7', border:'#4ADE80', text:'#14532D', subtext:'#16A34A',
+     thBg:'#BBF7D0', tdBorder:'#BBF7D0', sumBg:'#F0FDF4', grandBg:'#DCFCE7'},
+  ];
+
+  const buildPage = (copy) => {
+    const rows = (d.svrItems||[]).map((r,i) => {
+      const bg = i%2===1 ? `background:#F5F9FF;` : '';
+      return `<tr>
+        <td class="ctr" style="border-color:${copy.tdBorder};${bg}">${i+1}</td>
+        <td style="border-color:${copy.tdBorder};${bg}">${r.code||''}</td>
+        <td style="border-color:${copy.tdBorder};${bg}">${r.name||''}</td>
+        <td class="ctr" style="border-color:${copy.tdBorder};${bg}">${r.qty}</td>
+        <td class="ctr" style="border-color:${copy.tdBorder};${bg}">${r.unit||''}</td>
+        <td class="num" style="border-color:${copy.tdBorder};${bg}">${fmt(r.price)}</td>
+        <td class="num" style="border-color:${copy.tdBorder};${bg}">${fmt(r.amount)}</td>
+      </tr>`;
+    }).join('');
+    let emptyRows = '';
+    const filled = (d.svrItems||[]).length;
+    for (let i=filled; i<10; i++) {
+      const bg = i%2===1 ? `background:#F5F9FF;` : '';
+      emptyRows += `<tr style="height:20px;"><td style="border-color:${copy.tdBorder};${bg}"></td><td style="border-color:${copy.tdBorder};${bg}"></td><td style="border-color:${copy.tdBorder};${bg}"></td><td style="border-color:${copy.tdBorder};${bg}"></td><td style="border-color:${copy.tdBorder};${bg}"></td><td style="border-color:${copy.tdBorder};${bg}"></td><td style="border-color:${copy.tdBorder};${bg}"></td></tr>`;
+    }
+    const payIcon = {เงินสด:'💵',โอนเงิน:'🏦',เช็ค:'📝',บัตรเครดิต:'💳','QR Code':'📱'}[d.payMethod]||'💰';
+
+    return `<div class="doc" style="page-break-after:always;">
+      <!-- HEADER -->
+      <div class="doc-header" style="position:relative;">
+        <div class="doc-header-left">
+          <img class="doc-logo-img" src="${LOGO_B64}" alt="SVR MED" style="width:110px;height:auto;object-fit:contain;">
+          <div class="doc-seller-block">
+            <div class="doc-seller-name-th">${d.sellerNameTh||'บริษัท เอสวีอาร์ เมด จำกัด'}</div>
+            <div class="doc-seller-name-en">SVR MED CO.,LTD.</div>
+            <div class="doc-seller-addr">${d.sellerAddr||''}<br>โทร : ${d.sellerTel||''} &nbsp;&nbsp; เลขผู้เสียภาษี ${d.sellerTax||''} (สำนักงานใหญ่)</div>
+          </div>
+        </div>
+        <!-- COPY BADGE -->
+        <div style="position:absolute;top:0;right:0;background:${copy.bg};border:2px solid ${copy.border};border-radius:10px;padding:8px 14px;text-align:center;min-width:110px;">
+          <div style="font-size:15px;font-weight:800;color:${copy.text};line-height:1.2;">${copy.label}</div>
+          <div style="font-size:10px;font-weight:700;color:${copy.subtext};letter-spacing:0.05em;">${copy.sub}</div>
+          <div style="font-size:9px;color:${copy.text};margin-top:4px;font-weight:500;">(${copy.for})</div>
+        </div>
+      </div>
+
+      <!-- TITLE -->
+      <div class="doc-tbox" style="font-size:18px;margin:6px 0 2px;">
+        ใบเสร็จรับเงิน
+        <div style="font-size:11px;font-weight:500;color:#444;margin-top:2px;">Receipt / Payment Voucher</div>
+      </div>
+
+      <!-- META -->
+      <div class="doc-meta">
+        <div class="doc-cust" style="background:#F0FDF4;border-color:#6EE7B7;">
+          <div><span class="lbl">นามลูกค้า &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;<strong style="color:#0F2B4E;">${d.custName||''}</strong></div>
+          <div style="display:flex;"><span class="lbl" style="flex-shrink:0;">ที่อยู่ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;<span>${(d.custAddr||'').split('\n').join('<br>')}</span></div>
+          <div><span class="lbl">เลขผู้เสียภาษี &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>&nbsp;${d.custTax||''}${d.custOffice?'&emsp;('+d.custOffice+')':''}</div>
+        </div>
+        <div class="doc-ref" style="background:#F0FDF4;border-color:#6EE7B7;">
+          <div><span class="lbl">เลขที่ใบเสร็จ</span>&nbsp;:&nbsp;<strong>${d.rcNo||''}</strong></div>
+          <div><span class="lbl">วันที่</span>&nbsp;:&nbsp;${thaiDateShort(d.rcDate||'')}</div>
+          <div><span class="lbl">อ้างอิง SVR</span>&nbsp;:&nbsp;${d.svrRef||''}</div>
+        </div>
+      </div>
+
+      <!-- ITEMS TABLE -->
+      <table class="doc-t">
+        <thead><tr>
+          <th style="width:30px;background:${copy.thBg};border-color:${copy.border};">ลำดับ</th>
+          <th style="width:80px;background:${copy.thBg};border-color:${copy.border};">รหัสสินค้า</th>
+          <th style="background:${copy.thBg};border-color:${copy.border};">รายการ</th>
+          <th style="width:48px;background:${copy.thBg};border-color:${copy.border};">จำนวน</th>
+          <th style="width:52px;background:${copy.thBg};border-color:${copy.border};">หน่วย</th>
+          <th style="width:80px;background:${copy.thBg};border-color:${copy.border};">ราคา/หน่วย</th>
+          <th style="width:84px;background:${copy.thBg};border-color:${copy.border};">จำนวนเงิน</th>
+        </tr></thead>
+        <tbody>${rows}${emptyRows}</tbody>
+      </table>
+
+      <!-- SUMMARY -->
+      <div style="display:flex;align-items:flex-start;gap:6px;margin-top:6px;">
+        <!-- LEFT: payment checkbox style -->
+        <div style="flex:1;">
+          <!-- Checkbox payment rows — รูปแบบใบเสร็จแบบดั้งเดิม -->
+          <table style="width:100%;font-size:11px;margin-bottom:6px;border-collapse:collapse;">
+            <tr style="height:28px;">
+              <td style="width:36px;padding:2px 4px;">
+                <div style="width:22px;height:22px;border:2px solid #333;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;">
+                  ${d.payMethod==='เงินสด'?'✗':''}
+                </div>
+              </td>
+              <td style="padding:2px 6px;font-size:11.5px;">เงินสด</td>
+              <td style="padding:2px 6px;font-family:monospace;font-weight:600;text-align:right;min-width:100px;">
+                ${d.payMethod==='เงินสด'?fmt(d.amount||0):''}
+              </td>
+              <td style="padding:2px 6px;">บาท</td>
+            </tr>
+            <tr style="height:28px;">
+              <td style="padding:2px 4px;">
+                <div style="width:22px;height:22px;border:2px solid #333;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;">
+                  ${d.payMethod==='โอนเงิน'||d.payMethod==='QR Code'||d.payMethod==='บัตรเครดิต'?'✗':''}
+                </div>
+              </td>
+              <td style="padding:2px 6px;font-size:11.5px;">เงินโอน</td>
+              <td style="padding:2px 6px;font-family:monospace;font-weight:600;text-align:right;min-width:100px;">
+                ${d.payMethod==='โอนเงิน'||d.payMethod==='QR Code'||d.payMethod==='บัตรเครดิต'?fmt(d.amount||0):''}
+              </td>
+              <td style="padding:2px 6px;">บาท</td>
+            </tr>
+            <tr style="height:28px;">
+              <td style="padding:2px 4px;">
+                <div style="width:22px;height:22px;border:2px solid #333;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;">
+                  ${d.payMethod==='เช็ค'?'✗':''}
+                </div>
+              </td>
+              <td colspan="3" style="padding:2px 6px;font-size:11.5px;">เช็คธนาคาร
+                ${d.payMethod==='เช็ค'&&d.payBank?`<span style="margin-left:6px;font-weight:600;">${d.payBank}</span>`:''}
+              </td>
+            </tr>
+            ${d.payMethod==='เช็ค' ? `
+            <tr style="height:24px;">
+              <td></td>
+              <td style="padding:2px 6px;font-size:10.5px;">ลงวันที่</td>
+              <td style="padding:2px 6px;font-size:10.5px;border-bottom:1px solid #999;min-width:100px;">${d.payRef||''}</td>
+              <td style="padding:2px 6px;font-size:10.5px;">จำนวนเงิน</td>
+              <td style="padding:2px 6px;font-family:monospace;font-weight:600;text-align:right;border-bottom:1px solid #999;">${fmt(d.amount||0)}</td>
+              <td style="padding:2px 6px;font-size:10.5px;">บาท</td>
+            </tr>` : ''}
+          </table>
+          <div style="font-size:10px;color:#333;margin-bottom:6px;">
+            กรณีชำระด้วยเช็ค ใบเสร็จฯ นี้จะสมบูรณ์ต่อเมื่อบริษัทฯ ได้รับเงินแล้วเท่านั้น
+          </div>
+          ${d.payBank&&d.payMethod!=='เช็ค'?`<div style="font-size:10.5px;color:#444;margin-bottom:4px;">ธนาคาร: <strong>${d.payBank}</strong>${d.payRef?' &nbsp;เลขอ้างอิง: <strong>'+d.payRef+'</strong>':''}</div>`:''}
+          ${d.remark?`<div style="font-size:10.5px;color:#444;margin-bottom:4px;">หมายเหตุ: ${d.remark}</div>`:''}
+          <div style="border:1px solid #aaa;padding:5px 10px;font-size:10.5px;font-weight:600;color:#0F2B4E;background:#F9FBFD;margin-top:4px;">
+            (${bahtText(d.amount||0)})
+          </div>
+        </div>
+        <!-- RIGHT: summary table -->
+        <div style="min-width:240px;font-size:10.5px;border:1px solid #6EE7B7;">
+          <div style="display:flex;border-bottom:1px solid #6EE7B7;">
+            <div style="flex:1;padding:4px 8px;border-right:1px solid #6EE7B7;">
+              <div style="font-weight:700;">ยอดตามใบกำกับภาษี</div>
+              <div style="color:#666;font-size:9px;">INVOICE TOTAL</div>
+            </div>
+            <div style="min-width:90px;padding:4px 8px;text-align:right;font-family:monospace;font-weight:600;">${fmt(d.svrTotal||0)}</div>
+          </div>
+          <div style="display:flex;border-bottom:1px solid #6EE7B7;">
+            <div style="flex:1;padding:4px 8px;border-right:1px solid #6EE7B7;">
+              <div style="font-weight:700;">ยอดก่อนภาษีมูลค่าเพิ่ม</div>
+              <div style="color:#666;font-size:9px;">EXCL. VAT</div>
+            </div>
+            <div style="min-width:90px;padding:4px 8px;text-align:right;font-family:monospace;font-weight:600;">${fmt(d.exclVat||0)}</div>
+          </div>
+          <div style="display:flex;border-bottom:1px solid #6EE7B7;">
+            <div style="flex:1;padding:4px 8px;border-right:1px solid #6EE7B7;">
+              <div style="font-weight:700;">ภาษีมูลค่าเพิ่ม ${d.vatRate||7}%</div>
+              <div style="color:#666;font-size:9px;">VAT</div>
+            </div>
+            <div style="min-width:90px;padding:4px 8px;text-align:right;font-family:monospace;font-weight:600;">${fmt(d.vat||0)}</div>
+          </div>
+          <div style="display:flex;border-bottom:1px solid #6EE7B7;background:#DCFCE7;">
+            <div style="flex:1;padding:5px 8px;border-right:1px solid #6EE7B7;">
+              <div style="font-weight:700;font-size:12px;color:#065F46;">ยอดรับชำระ</div>
+              <div style="color:#666;font-size:9px;">AMOUNT RECEIVED</div>
+            </div>
+            <div style="min-width:90px;padding:5px 8px;text-align:right;font-family:monospace;font-weight:700;font-size:12px;color:#065F46;">${fmt(d.amount||0)}</div>
+          </div>
+          <div style="display:flex;">
+            <div style="flex:1;padding:4px 8px;border-right:1px solid #6EE7B7;">
+              <div style="font-weight:700;color:#B45309;">เงินทอน</div>
+              <div style="color:#666;font-size:9px;">CHANGE</div>
+            </div>
+            <div style="min-width:90px;padding:4px 8px;text-align:right;font-family:monospace;font-weight:600;color:#B45309;">${fmt(d.change||0)}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIGNATURES -->
+      <div class="doc-sigs" style="margin-top:14px;">
+        <div class="doc-sig" style="text-align:center;">
+          <div style="font-size:10px;color:#444;margin-bottom:4px;text-align:left;">ได้รับเงินตามใบเสร็จนี้ครบถ้วนแล้ว</div>
+          <div style="flex:1;min-height:52px;"></div>
+          <div class="doc-sigline" style="width:85%;margin:28px auto 4px;"></div>
+          <div class="doc-siglbl">ผู้จ่ายเงิน</div>
+          <div class="doc-sigdate">วันที่ &nbsp;..................................</div>
+        </div>
+        <div class="doc-sig" style="text-align:center;">
+          <div style="flex:1;min-height:68px;"></div>
+          <div class="doc-sigline" style="width:85%;margin:28px auto 4px;"></div>
+          <div class="doc-siglbl">ผู้รับเงิน</div>
+          <div style="font-size:10px;color:#555;">(${d.cashier||'ผู้รับเงิน'})</div>
+          <div class="doc-sigdate">วันที่ &nbsp;..................................</div>
+        </div>
+        <div class="doc-sig">
+          <div style="font-size:10px;font-weight:700;color:#0F2B4E;margin-bottom:6px;text-align:center;">ในนาม บริษัท เอสวีอาร์ เมด จำกัด</div>
+          <div style="flex:1;"></div>
+          <div style="position:relative;width:90%;margin:0 auto;">
+            <img src="${STAMP_B64}" style="display:block;width:100%;max-height:95px;object-fit:contain;object-position:bottom;mix-blend-mode:multiply;margin-bottom:-6px;">
+            <div class="doc-sigline" style="width:100%;margin:0 0 4px;"></div>
+          </div>
+          <div class="doc-siglbl">ผู้มีอำนาจลงนาม</div>
+          <div style="font-size:10px;color:#555;">(นางสาวสมถวิล รัตนประทุม)</div>
+          <div class="doc-sigdate">วันที่ &nbsp;................................</div>
+        </div>
+      </div>
+    </div>`;
+  };
+
+  return COPIES.map(copy => buildPage(copy)).join('\n');
+}
+
+// ══════════════════════════════════════
+// PRINT
+// ══════════════════════════════════════
+function printDoc() {
+  const docEl = document.getElementById('preview-doc');
+  if (!docEl || !docEl.innerHTML.trim()) { toast('กรุณาดูตัวอย่างก่อน','err'); return; }
+  const styles = [...document.querySelectorAll('style')].map(el=>el.outerHTML).join('\n');
+  const docDivs = docEl.querySelectorAll('.doc');
+  const wrappedPages = [...docDivs].map((div,i)=>{
+    const isLast = i===docDivs.length-1;
+    const clone = div.cloneNode(true);
+    clone.style.pageBreakAfter = isLast ? 'auto' : 'always';
+    clone.style.breakAfter     = isLast ? 'auto' : 'page';
+    return `<div class="doc-page-wrap">${clone.outerHTML}</div>`;
+  }).join('\n');
+  const html = `<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">${styles}
+  <style>
+    html{background:#555;}
+    body{margin:0;padding:0 0 32px;background:#555;display:flex;flex-direction:column;align-items:center;}
+    .print-toolbar{position:sticky;top:0;z-index:100;width:210mm;max-width:96vw;background:#1e293b;color:#fff;padding:10px 18px;display:flex;align-items:center;justify-content:space-between;font-family:sans-serif;font-size:13px;box-sizing:border-box;box-shadow:0 4px 12px rgba(0,0,0,.5);margin-bottom:10px;}
+    .print-toolbar button{background:#059669;color:#fff;border:none;padding:8px 22px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700;}
+    .doc-page-wrap{width:210mm;max-width:96vw;background:#fff;box-shadow:0 6px 28px rgba(0,0,0,.4);margin-bottom:10px;box-sizing:border-box;}
+    .doc{border:none!important;box-shadow:none!important;width:100%!important;padding:11px 15px!important;margin:0!important;box-sizing:border-box!important;font-size:10px!important;}
+    @page{size:A4 portrait;margin:8mm 10mm;}
+    @media print{html,body{background:#fff!important;padding:0!important;margin:0!important;display:block!important;}.print-toolbar{display:none!important;}.doc-page-wrap{width:100%!important;max-width:100%!important;box-shadow:none!important;margin:0!important;padding:0!important;background:transparent!important;}.doc{padding:6mm 8mm!important;font-size:9.5px!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}}
+  </style></head><body>
+  <div class="print-toolbar">
+    <span>💵 ใบเสร็จรับเงิน — 4 หน้า A4</span>
+    <button onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF (4 หน้า)</button>
+  </div>
+  ${wrappedPages}
+  </body></html>`;
+  const w = window.open('','_blank');
+  if (!w) { toast('กรุณาอนุญาต pop-up','err'); return; }
+  w.document.open(); w.document.write(html); w.document.close(); w.focus();
+}
+
+// ══════════════════════════════════════
+// RENDER TABLE
+// ══════════════════════════════════════
+function renderStats() {
+  document.getElementById('st-total').textContent = receipts.length;
+  document.getElementById('st-issued').textContent = receipts.filter(r=>r.status==='issued').length;
+  document.getElementById('st-paid').textContent = receipts.filter(r=>r.status==='paid').length;
+  document.getElementById('st-cancelled').textContent = receipts.filter(r=>r.status==='cancelled').length;
+}
+
+const STATUS_CHIP = {
+  issued:    '<span class="chip chip-issued">📋 ออกแล้ว</span>',
+  paid:      '<span class="chip chip-paid">✅ ชำระครบ</span>',
+  cancelled: '<span class="chip chip-cancelled">❌ ยกเลิก</span>',
+};
+
+function filterList(q) {
+  const status = document.getElementById('status-filter').value;
+  let list = receipts;
+  if (q) { const s=q.toLowerCase(); list=list.filter(r=>(r.rcNo||'').toLowerCase().includes(s)||(r.custName||'').toLowerCase().includes(s)||(r.svrRef||'').toLowerCase().includes(s)); }
+  if (status) list = list.filter(r=>r.status===status);
+  renderTableRows(list);
+}
+
+function renderTable() { filterList(document.getElementById('search-input').value); }
+
+function renderTableRows(list) {
+  const tbody = document.getElementById('table-body');
+  document.getElementById('record-count').textContent = list.length+' รายการ';
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">💵</div><div class="empty-text">ยังไม่มีใบเสร็จรับเงิน</div></div></td></tr>`;
+    return;
+  }
+  const payIcon = m => ({เงินสด:'💵',โอนเงิน:'🏦',เช็ค:'📝',บัตรเครดิต:'💳','QR Code':'📱'}[m]||'💰');
+  tbody.innerHTML = list.map(rc => `<tr>
+    <td class="mono" style="font-weight:700;">${rc.rcNo}</td>
+    <td><div style="font-weight:600;">${rc.custName}</div></td>
+    <td class="mono">${thaiDateShort(rc.rcDate)}</td>
+    <td class="mono" style="color:var(--purple);">${rc.svrRef||'—'}</td>
+    <td>${payIcon(rc.payMethod)} ${rc.payMethod||'—'}</td>
+    <td class="mono" style="text-align:right;font-weight:700;">${fmt(rc.amount)}</td>
+    <td>${STATUS_CHIP[rc.status||'issued']||''}</td>
+    <td><div style="display:flex;gap:4px;flex-wrap:wrap;">
+      <button class="btn-sm" onclick="viewRc('${rc.id}')" title="ดูตัวอย่าง">👁</button>
+      <button class="btn-sm" onclick="openStatusModal('${rc.id}')" title="เปลี่ยนสถานะ">⚡</button>
+      <button class="btn-sm danger" onclick="confirmDel('${rc.id}')" title="ลบ">🗑</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+// ══════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════
+function closeM(id) { document.getElementById(id).classList.add('hidden'); }
+function setGS(s) {
+  const el = document.getElementById('gs-status');
+  if(s==='ok'){el.className='gs-badge gs-ok';el.textContent='✅ Google Sheets';}
+  else if(s==='err'){el.className='gs-badge gs-err';el.textContent='❌ เชื่อมต่อไม่ได้';}
+  else{el.className='gs-badge gs-loading';el.textContent='⏳ กำลังเชื่อมต่อ...';}
+}
+function setBusyBtn(on) {
+  const btn = document.getElementById('btn-save');
+  if (!btn) return;
+  btn.disabled = on;
+  btn.textContent = on ? '⏳ กำลังบันทึก...' : '💵 ออกใบเสร็จ';
+}
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+function genRCNo() {
+  const d = new Date();
+  const buddhistYear = d.getFullYear()+543;
+  const seq = String(receipts.length+1).padStart(3,'0');
+  return `RC${String(buddhistYear).slice(-2)}${String(d.getMonth()+1).padStart(2,'0')}${seq}`;
+}
+function thaiDateShort(d) {
+  if(!d) return '';
+  const dt = new Date(d);
+  if(isNaN(dt)) return d;
+  return dt.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+function fmt(n) { return (parseFloat(n)||0).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function bahtText(amount){
+  const ones=['','หนึ่ง','สอง','สาม','สี่','ห้า','หก','เจ็ด','แปด','เก้า'];
+  function rg(n,p){
+    if(n===0)return'';
+    if(n<10)return(n===1&&p)?'เอ็ด':ones[n];
+    if(n<100){const t=Math.floor(n/10),o=n%10;return(t===1?'สิบ':t===2?'ยี่สิบ':ones[t]+'สิบ')+(o?rg(o,true):'');}
+    if(n<1000)return ones[Math.floor(n/100)]+'ร้อย'+rg(n%100,true);
+    if(n<10000)return ones[Math.floor(n/1000)]+'พัน'+rg(n%1000,true);
+    if(n<100000)return ones[Math.floor(n/10000)]+'หมื่น'+rg(n%10000,true);
+    if(n<1000000)return ones[Math.floor(n/100000)]+'แสน'+rg(n%100000,true);
+    return rg(Math.floor(n/1000000))+'ล้าน'+rg(n%1000000,true);
+  }
+  function ra(n){return n===0?'ศูนย์':rg(n,false);}
+  const tot=Math.round(amount*100),b=Math.floor(tot/100),s=tot%100;
+  return ra(b)+'บาท'+(s?rg(s,true)+'สตางค์':'ถ้วน');
+}
+function toast(msg,type='info'){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast ${type} show`;setTimeout(()=>el.classList.remove('show'),3400);}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('f-rcdate').value = todayStr();
+  loadAll();
+});
+</script>
+</body>
+</html>
