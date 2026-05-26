@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>สต็อกสินค้า · SVRMed ERP</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F0F4F8;--surface:#FFFFFF;--surface2:#F7F9FC;--border:#E2E8F0;--border2:#CBD5E1;
+  --navy:#0F2B4E;--navy2:#1A3F6F;--accent:#2563EB;--accent2:#1D4ED8;
+  --green:#059669;--green-bg:#D1FAE5;--red:#DC2626;--red-bg:#FEE2E2;
+  --amber:#D97706;--amber-bg:#FEF3C7;--teal:#0891B2;--teal-bg:#CFFAFE;
+  --purple:#7C3AED;--purple-bg:#EDE9FE;
+  --text:#0F172A;--text2:#475569;--text3:#94A3B8;
+  --mono:'JetBrains Mono',monospace;--font:'Noto Sans Thai',sans-serif;
+  --shadow:0 1px 3px rgba(0,0,0,0.08);--shadow-md:0 4px 16px rgba(0,0,0,0.10);--shadow-lg:0 8px 32px rgba(0,0,0,0.14);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;}
+.topbar{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);height:56px;padding:0 24px;
+  display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,0.2);position:sticky;top:0;z-index:200;}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand-icon{width:32px;height:32px;background:linear-gradient(135deg,#3B82F6,#1D4ED8);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.brand-name{color:#fff;font-size:15px;font-weight:700;letter-spacing:-0.01em;}
+.brand-sub{color:rgba(255,255,255,0.45);font-size:10px;font-family:var(--mono);}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.topbar-user{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.7);font-size:12px;}
+.avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:12px;}
+.gs-badge{font-size:10px;padding:2px 8px;border-radius:6px;font-weight:700;font-family:var(--mono);}
+.gs-ok{background:var(--green-bg);color:var(--green);}
+.gs-err{background:var(--red-bg);color:var(--red);}
+.gs-loading{background:var(--amber-bg);color:var(--amber);}
+.layout{display:flex;min-height:calc(100vh - 56px);}
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);padding:16px 0;flex-shrink:0;}
+.nav-label{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;padding:0 16px 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;font-size:13px;color:var(--text2);cursor:pointer;transition:all .15s;border-left:2px solid transparent;text-decoration:none;}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:#EFF6FF;color:var(--accent);border-left-color:var(--accent);font-weight:600;}
+.nav-item .icon{font-size:15px;width:18px;text-align:center;}
+.main{flex:1;padding:24px 28px;max-width:1200px;}
+.page-header{margin-bottom:20px;}
+.page-header h1{font-size:22px;font-weight:700;color:var(--navy);}
+.page-header p{font-size:13px;color:var(--text3);margin-top:4px;}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow);}
+.stat-v{font-size:26px;font-weight:700;font-family:var(--mono);}
+.stat-l{font-size:11px;color:var(--text3);margin-top:4px;}
+
+/* TABS */
+.tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid var(--border);}
+.tab{padding:10px 18px;font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;}
+.tab:hover{color:var(--text2);}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* TABLE */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);overflow:hidden;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:10px 14px;font-weight:600;font-size:11px;color:var(--text3);background:var(--surface2);text-transform:uppercase;border-bottom:1px solid var(--border);}
+td{padding:10px 14px;border-bottom:1px solid #F1F5F9;}
+tr:hover td{background:#FAFBFC;}
+.mono{font-family:var(--mono);font-size:12px;}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-group{display:flex;flex-direction:column;gap:4px;}
+.form-label{font-size:12px;font-weight:600;color:var(--text2);}
+.fi{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--font);transition:border .2s;}
+.fi:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,0.1);}
+.fs{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--font);background:var(--surface);}
+.req{color:var(--red);}
+
+/* BUTTONS */
+.btn{padding:8px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--font);}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent2);}
+.btn-green{background:var(--green);color:#fff;}
+.btn-green:hover{background:#047857;}
+.btn-red{background:var(--red);color:#fff;}
+.btn-red:hover{background:#B91C1C;}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2);}
+.btn-outline:hover{background:var(--surface2);}
+
+/* CHIPS */
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.chip-ok{background:var(--green-bg);color:var(--green);}
+.chip-low{background:var(--amber-bg);color:var(--amber);}
+.chip-out{background:var(--red-bg);color:var(--red);}
+.chip-active{background:var(--green-bg);color:var(--green);}
+.chip-expired{background:var(--red-bg);color:var(--red);}
+.chip-depleted{background:var(--surface2);color:var(--text3);}
+.chip-in{background:var(--green-bg);color:var(--green);}
+.chip-out2{background:var(--red-bg);color:var(--red);}
+.chip-adj{background:var(--amber-bg);color:var(--amber);}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;align-items:center;justify-content:center;}
+.modal-bg.show{display:flex;}
+.modal{background:var(--surface);border-radius:16px;width:600px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);padding:24px;}
+.modal-title{font-size:17px;font-weight:700;color:var(--navy);margin-bottom:16px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;z-index:999;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+
+/* SEARCH */
+.search-bar{display:flex;gap:8px;margin-bottom:14px;}
+.search-bar input{flex:1;}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-icon">📦</div>
+    <div><div class="brand-name">SVRMed ERP</div><div class="brand-sub">v1.0.0 · Stock Module</div></div>
+  </div>
+  <div class="topbar-right">
+    <span class="gs-badge gs-loading" id="gs-status">⏳ connecting...</span>
+    <div class="topbar-user"><div class="avatar">👤</div><span>Admin</span></div>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+      <div class="nav-label">หน้าหลัก</div>
+      <a class="nav-item" href="index.html"><span class="icon">🏠</span>Dashboard</a>
+
+      <div class="nav-label">MASTER DATA</div>
+      <a class="nav-item" href="vendors.html"><span class="icon">🏢</span>ผู้จำหน่าย (Vendor)</a>
+      <a class="nav-item" href="products.html"><span class="icon">🧪</span>สินค้า (Product)</a>
+      <a class="nav-item" href="customers.html"><span class="icon">👥</span>ลูกค้า (Customer)</a>
+
+      <div class="nav-label">การจัดซื้อ</div>
+      <a class="nav-item" href="po.html"><span class="icon">🛒</span>ใบสั่งซื้อ (PO)</a>
+
+      <div class="nav-label">การขาย</div>
+      <a class="nav-item" href="quotation.html"><span class="icon">📋</span>ใบเสนอราคา (QT)</a>
+      <a class="nav-item" href="so.html"><span class="icon">🛒</span>ออเดอร์ (SO)</a>
+      <a class="nav-item" href="billing.html"><span class="icon">📄</span>ใบกำกับภาษี/ใบส่งสินค้า (SVR)</a>
+      <a class="nav-item" href="receipt.html"><span class="icon">💵</span>ใบเสร็จรับเงิน (RC)</a>
+
+      <div class="nav-label">คลังสินค้า</div>
+      <a class="nav-item active" href="stock.html"><span class="icon">📦</span>สต็อกสินค้า</a>
+
+      <div class="nav-label">รายงาน</div>
+      <a class="nav-item" href="report.html"><span class="icon">📊</span>P&L Report</a>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="page-header">
+      <h1>📦 สต็อกสินค้า (Inventory)</h1>
+      <p>ติดตามสต็อก · รับเข้า · เบิกจ่าย · แจ้งเตือนสินค้าใกล้หมด</p>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats">
+      <div class="stat-card"><div class="stat-v" id="stat-total" style="color:var(--accent);">—</div><div class="stat-l">รายการสินค้าทั้งหมด</div></div>
+      <div class="stat-card"><div class="stat-v" id="stat-ok" style="color:var(--green);">—</div><div class="stat-l">สต็อกปกติ</div></div>
+      <div class="stat-card"><div class="stat-v" id="stat-low" style="color:var(--amber);">—</div><div class="stat-l">ใกล้หมด (Low)</div></div>
+      <div class="stat-card"><div class="stat-v" id="stat-out" style="color:var(--red);">—</div><div class="stat-l">หมด (Out of Stock)</div></div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('balance')">📊 ยอดคงเหลือ</div>
+      <div class="tab" onclick="switchTab('transactions')">📋 ประวัติเคลื่อนไหว</div>
+      <div class="tab" onclick="switchTab('lots')">🏷️ Lot / Exp Tracking</div>
+    </div>
+
+    <!-- TAB 1: BALANCE -->
+    <div class="tab-panel active" id="panel-balance">
+      <div class="search-bar">
+        <input class="fi" id="bal-search" placeholder="🔍 ค้นหารหัส / ชื่อสินค้า..." oninput="renderBalance()">
+        <select class="fs" id="bal-filter" style="width:160px;" onchange="renderBalance()">
+          <option value="">ทุกสถานะ</option>
+          <option value="OK">✅ ปกติ</option>
+          <option value="LOW">⚠️ ใกล้หมด</option>
+          <option value="OUT">❌ หมด</option>
+        </select>
+        <button class="btn btn-green" onclick="openStockIn()">📥 รับเข้า</button>
+        <button class="btn btn-red" onclick="openStockOut()">📤 เบิกออก</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr>
+            <th>รหัสสินค้า</th><th>ชื่อสินค้า</th><th style="text-align:right;">คงเหลือ</th>
+            <th>หน่วย</th><th style="text-align:right;">Reorder Point</th><th>สถานะ</th><th>อัปเดต</th>
+          </tr></thead>
+          <tbody id="bal-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 2: TRANSACTIONS -->
+    <div class="tab-panel" id="panel-transactions">
+      <div class="search-bar">
+        <input class="fi" id="txn-search" placeholder="🔍 ค้นหารหัส / ชื่อ / เลขที่อ้างอิง..." oninput="renderTxn()">
+        <select class="fs" id="txn-filter" style="width:160px;" onchange="renderTxn()">
+          <option value="">ทุกประเภท</option>
+          <option value="IN">📥 รับเข้า</option>
+          <option value="OUT">📤 เบิกออก</option>
+          <option value="ADJUST_IN">🔄 ปรับเข้า</option>
+          <option value="ADJUST_OUT">🔄 ปรับออก</option>
+        </select>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr>
+            <th>วันที่</th><th>ประเภท</th><th>อ้างอิง</th><th>รหัสสินค้า</th>
+            <th>ชื่อสินค้า</th><th>Lot</th><th style="text-align:right;">จำนวน</th><th>หน่วย</th><th>หมายเหตุ</th>
+          </tr></thead>
+          <tbody id="txn-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: LOTS -->
+    <div class="tab-panel" id="panel-lots">
+      <div class="search-bar">
+        <input class="fi" id="lot-search" placeholder="🔍 ค้นหารหัส / Lot No. ..." oninput="renderLots()">
+        <select class="fs" id="lot-filter" style="width:160px;" onchange="renderLots()">
+          <option value="">ทุกสถานะ</option>
+          <option value="ACTIVE">🟢 Active</option>
+          <option value="EXPIRED">🔴 Expired</option>
+          <option value="DEPLETED">⚪ Depleted</option>
+        </select>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr>
+            <th>รหัสสินค้า</th><th>Lot No.</th><th>Exp Date</th>
+            <th style="text-align:right;">คงเหลือ</th><th>หน่วย</th><th>PO อ้างอิง</th><th>สถานะ</th>
+          </tr></thead>
+          <tbody id="lot-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: STOCK IN -->
+<div class="modal-bg" id="modal-in">
+  <div class="modal">
+    <div class="modal-title">📥 รับสินค้าเข้าสต็อก</div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">ประเภท</label>
+        <select class="fs" id="in-type">
+          <option value="IN">📥 รับจาก PO</option>
+          <option value="ADJUST_IN">🔄 ปรับเข้า (Manual / คืน)</option>
+        </select></div>
+      <div class="form-group"><label class="form-label">อ้างอิงเอกสาร</label>
+        <input class="fi" id="in-ref" placeholder="เช่น PO6905001"></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">รหัสสินค้า <span class="req">*</span></label>
+        <input class="fi" id="in-code" placeholder="พิมพ์เพื่อค้นหา..." oninput="searchProduct(this,'in')"></div>
+      <div class="form-group"><label class="form-label">ชื่อสินค้า</label>
+        <input class="fi" id="in-name" readonly></div>
+    </div>
+    <div id="in-prod-drop" style="position:relative;"></div>
+    <div class="form-grid-3">
+      <div class="form-group"><label class="form-label">จำนวน <span class="req">*</span></label>
+        <input class="fi" type="number" id="in-qty" min="1" value="1"></div>
+      <div class="form-group"><label class="form-label">หน่วย</label>
+        <input class="fi" id="in-unit" readonly></div>
+      <div class="form-group"><label class="form-label">วันที่</label>
+        <input class="fi" type="date" id="in-date"></div>
+    </div>
+    <div class="form-grid-3">
+      <div class="form-group"><label class="form-label">Lot No.</label>
+        <input class="fi" id="in-lot" placeholder="เลข Lot (ถ้ามี)"></div>
+      <div class="form-group"><label class="form-label">Exp Date</label>
+        <input class="fi" type="date" id="in-exp"></div>
+      <div class="form-group"><label class="form-label">หมายเหตุ</label>
+        <input class="fi" id="in-note" placeholder="รายละเอียดเพิ่มเติม"></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+      <button class="btn btn-outline" onclick="closeModal('modal-in')">ยกเลิก</button>
+      <button class="btn btn-green" id="btn-save-in" onclick="saveStockIn()">📥 บันทึกรับเข้า</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: STOCK OUT -->
+<div class="modal-bg" id="modal-out">
+  <div class="modal">
+    <div class="modal-title">📤 เบิกสินค้าออกจากสต็อก</div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">ประเภท</label>
+        <select class="fs" id="out-type">
+          <option value="OUT">📤 เบิกจาก SVR</option>
+          <option value="ADJUST_OUT">🔄 ปรับออก (เสียหาย / ตัดออก)</option>
+        </select></div>
+      <div class="form-group"><label class="form-label">อ้างอิงเอกสาร</label>
+        <input class="fi" id="out-ref" placeholder="เช่น SVR6905001"></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">รหัสสินค้า <span class="req">*</span></label>
+        <input class="fi" id="out-code" placeholder="พิมพ์เพื่อค้นหา..." oninput="searchProduct(this,'out')"></div>
+      <div class="form-group"><label class="form-label">ชื่อสินค้า</label>
+        <input class="fi" id="out-name" readonly></div>
+    </div>
+    <div id="out-prod-drop" style="position:relative;"></div>
+    <div class="form-grid-3">
+      <div class="form-group"><label class="form-label">จำนวน <span class="req">*</span></label>
+        <input class="fi" type="number" id="out-qty" min="1" value="1"></div>
+      <div class="form-group"><label class="form-label">หน่วย</label>
+        <input class="fi" id="out-unit" readonly></div>
+      <div class="form-group"><label class="form-label">วันที่</label>
+        <input class="fi" type="date" id="out-date"></div>
+    </div>
+    <div class="form-grid-3">
+      <div class="form-group"><label class="form-label">Lot No.</label>
+        <input class="fi" id="out-lot" placeholder="ระบุ Lot ที่ต้องการเบิก"></div>
+      <div class="form-group"><label class="form-label">Exp Date</label>
+        <input class="fi" type="date" id="out-exp"></div>
+      <div class="form-group"><label class="form-label">หมายเหตุ</label>
+        <input class="fi" id="out-note" placeholder="รายละเอียดเพิ่มเติม"></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+      <button class="btn btn-outline" onclick="closeModal('modal-out')">ยกเลิก</button>
+      <button class="btn btn-red" id="btn-save-out" onclick="saveStockOut()">📤 บันทึกเบิกออก</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2D5_31NsX8GJZW0PORXfhSNScmq1gRZKfXXi--UmqQwpLMyjZqJ2hHXn3qmzE5z0IXQ/exec';
+const SH_TXN  = 'StockTransactions';
+const SH_BAL  = 'StockBalance';
+const SH_LOTS = 'StockLots';
+const SH_PROD = 'Products';
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let balances = [];
+let transactions = [];
+let lots = [];
+let products = [];
+
+// ═══════════════════════════════════════
+// GOOGLE SHEETS API
+// ═══════════════════════════════════════
+async function gs(params, timeoutMs=25000) {
+  const fetchWithTimeout = (url, opts) => {
+    const ctrl = new AbortController();
+    const tid = setTimeout(()=>ctrl.abort(), timeoutMs);
+    return fetch(url, {...(opts||{}), signal: ctrl.signal}).finally(()=>clearTimeout(tid));
+  };
+  const POST_ACTIONS = ['add','update','deleteWhere'];
+  if (POST_ACTIONS.includes(params.action)) {
+    const body = {...params};
+    if (typeof body.data === 'string') {
+      try { body.data = JSON.parse(body.data); } catch(e) {}
+    }
+    const res = await fetchWithTimeout(SCRIPT_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain'},
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  }
+  const res = await fetchWithTimeout(SCRIPT_URL + '?' + new URLSearchParams(params));
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+// ═══════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════
+function col(hdr, row, name) {
+  const i = hdr.indexOf(name);
+  return i >= 0 ? (row[i]||'') : '';
+}
+function fmt(n) { return Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function todayStr() { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function thaiDateShort(s) {
+  if (!s) return '';
+  const d = new Date(s);
+  if (isNaN(d)) return s;
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()+543}`;
+}
+function toast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = type==='err'?'var(--red)':type==='warn'?'var(--amber)':'var(--green)';
+  t.style.color = '#fff';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+// ═══════════════════════════════════════
+// LOAD DATA
+// ═══════════════════════════════════════
+async function loadAll() {
+  const badge = document.getElementById('gs-status');
+  badge.className = 'gs-badge gs-loading'; badge.textContent = '⏳ loading...';
+  try {
+    const [balR, txnR, lotR, prodR] = await Promise.all([
+      gs({action:'get', sheet:SH_BAL}).catch(()=>[]),
+      gs({action:'get', sheet:SH_TXN}).catch(()=>[]),
+      gs({action:'get', sheet:SH_LOTS}).catch(()=>[]),
+      gs({action:'get', sheet:SH_PROD}).catch(()=>[]),
+    ]);
+
+    // Parse balances
+    if (balR.length > 1) {
+      const h = balR[0];
+      balances = balR.slice(1).map(row => ({
+        code:     col(h,row,'รหัสสินค้า'),
+        name:     col(h,row,'ชื่อสินค้า'),
+        qty:      parseFloat(col(h,row,'คงเหลือ'))||0,
+        unit:     col(h,row,'หน่วย'),
+        reorder:  parseFloat(col(h,row,'Reorder Point'))||0,
+        status:   col(h,row,'สถานะ'),
+        updated:  col(h,row,'อัปเดตล่าสุด'),
+      })).filter(b=>b.code);
+    }
+
+    // Parse transactions
+    if (txnR.length > 1) {
+      const h = txnR[0];
+      transactions = txnR.slice(1).map(row => ({
+        id:    col(h,row,'ID'),
+        date:  col(h,row,'วันที่'),
+        type:  col(h,row,'ประเภท'),
+        ref:   col(h,row,'อ้างอิงเอกสาร'),
+        code:  col(h,row,'รหัสสินค้า'),
+        name:  col(h,row,'ชื่อสินค้า'),
+        lot:   col(h,row,'Lot No.'),
+        exp:   col(h,row,'Exp Date'),
+        qty:   parseFloat(col(h,row,'จำนวน'))||0,
+        unit:  col(h,row,'หน่วย'),
+        note:  col(h,row,'หมายเหตุ'),
+        user:  col(h,row,'ผู้ทำรายการ'),
+      })).filter(t=>t.id);
+    }
+
+    // Parse lots
+    if (lotR.length > 1) {
+      const h = lotR[0];
+      lots = lotR.slice(1).map(row => ({
+        code:   col(h,row,'รหัสสินค้า'),
+        lot:    col(h,row,'Lot No.'),
+        exp:    col(h,row,'Exp Date'),
+        qty:    parseFloat(col(h,row,'คงเหลือ'))||0,
+        unit:   col(h,row,'หน่วย'),
+        poRef:  col(h,row,'PO อ้างอิง'),
+        status: col(h,row,'สถานะ'),
+      })).filter(l=>l.code);
+    }
+
+    // Parse products
+    if (prodR.length > 1) {
+      const h = prodR[0];
+      products = prodR.slice(1).map(row => ({
+        code: col(h,row,'รหัสสินค้า'),
+        name: col(h,row,'ชื่อสินค้า'),
+        unit: col(h,row,'หน่วย'),
+      })).filter(p=>p.code);
+    }
+
+    badge.className = 'gs-badge gs-ok'; badge.textContent = '✅ connected';
+    renderStats();
+    renderBalance();
+    renderTxn();
+    renderLots();
+  } catch(e) {
+    badge.className = 'gs-badge gs-err'; badge.textContent = '❌ error';
+    console.error(e);
+  }
+}
+
+// ═══════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════
+function renderStats() {
+  document.getElementById('stat-total').textContent = balances.length;
+  document.getElementById('stat-ok').textContent = balances.filter(b=>b.status==='OK').length;
+  document.getElementById('stat-low').textContent = balances.filter(b=>b.status==='LOW').length;
+  document.getElementById('stat-out').textContent = balances.filter(b=>b.status==='OUT'||b.qty<=0).length;
+}
+
+function renderBalance() {
+  const q = (document.getElementById('bal-search').value||'').toLowerCase();
+  const sf = document.getElementById('bal-filter').value;
+  let list = balances;
+  if (q) list = list.filter(b=>(b.code+b.name).toLowerCase().includes(q));
+  if (sf) list = list.filter(b=>b.status===sf);
+
+  const STATUS_CHIP = {
+    OK:  '<span class="chip chip-ok">✅ ปกติ</span>',
+    LOW: '<span class="chip chip-low">⚠️ ใกล้หมด</span>',
+    OUT: '<span class="chip chip-out">❌ หมด</span>',
+  };
+
+  document.getElementById('bal-body').innerHTML = list.length ? list.map(b => `<tr>
+    <td class="mono">${b.code}</td>
+    <td>${b.name}</td>
+    <td class="mono" style="text-align:right;font-weight:700;color:${b.qty<=0?'var(--red)':b.qty<=b.reorder?'var(--amber)':'var(--green)'};">${b.qty}</td>
+    <td>${b.unit}</td>
+    <td class="mono" style="text-align:right;">${b.reorder||'—'}</td>
+    <td>${STATUS_CHIP[b.status]||b.status}</td>
+    <td style="font-size:11px;color:var(--text3);">${thaiDateShort(b.updated)}</td>
+  </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text3);">ยังไม่มีข้อมูลสต็อก — กดปุ่ม "📥 รับเข้า" เพื่อเริ่มต้น</td></tr>';
+}
+
+function renderTxn() {
+  const q = (document.getElementById('txn-search').value||'').toLowerCase();
+  const tf = document.getElementById('txn-filter').value;
+  let list = [...transactions].reverse();
+  if (q) list = list.filter(t=>(t.code+t.name+t.ref+t.lot).toLowerCase().includes(q));
+  if (tf) list = list.filter(t=>t.type===tf);
+
+  const TYPE_CHIP = {
+    IN:         '<span class="chip chip-in">📥 รับเข้า</span>',
+    OUT:        '<span class="chip chip-out2">📤 เบิกออก</span>',
+    ADJUST_IN:  '<span class="chip chip-adj">🔄 ปรับเข้า</span>',
+    ADJUST_OUT: '<span class="chip chip-adj">🔄 ปรับออก</span>',
+  };
+
+  document.getElementById('txn-body').innerHTML = list.length ? list.map(t => `<tr>
+    <td class="mono" style="font-size:12px;">${thaiDateShort(t.date)}</td>
+    <td>${TYPE_CHIP[t.type]||t.type}</td>
+    <td class="mono" style="font-size:12px;">${t.ref||'—'}</td>
+    <td class="mono">${t.code}</td>
+    <td>${t.name}</td>
+    <td class="mono" style="font-size:11px;">${t.lot||'—'}</td>
+    <td class="mono" style="text-align:right;font-weight:700;color:${t.qty>0?'var(--green)':'var(--red)'};">${t.qty>0?'+':''}${t.qty}</td>
+    <td>${t.unit}</td>
+    <td style="font-size:11px;color:var(--text3);">${t.note||''}</td>
+  </tr>`).join('') : '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--text3);">ยังไม่มีรายการเคลื่อนไหว</td></tr>';
+}
+
+function renderLots() {
+  const q = (document.getElementById('lot-search').value||'').toLowerCase();
+  const lf = document.getElementById('lot-filter').value;
+  let list = lots;
+  if (q) list = list.filter(l=>(l.code+l.lot).toLowerCase().includes(q));
+  if (lf) list = list.filter(l=>l.status===lf);
+
+  const LOT_CHIP = {
+    ACTIVE:   '<span class="chip chip-active">🟢 Active</span>',
+    EXPIRED:  '<span class="chip chip-expired">🔴 Expired</span>',
+    DEPLETED: '<span class="chip chip-depleted">⚪ Depleted</span>',
+  };
+
+  document.getElementById('lot-body').innerHTML = list.length ? list.map(l => `<tr>
+    <td class="mono">${l.code}</td>
+    <td class="mono">${l.lot||'—'}</td>
+    <td class="mono" style="font-size:12px;">${thaiDateShort(l.exp)}</td>
+    <td class="mono" style="text-align:right;font-weight:700;">${l.qty}</td>
+    <td>${l.unit}</td>
+    <td class="mono" style="font-size:12px;">${l.poRef||'—'}</td>
+    <td>${LOT_CHIP[l.status]||l.status}</td>
+  </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text3);">ยังไม่มีข้อมูล Lot</td></tr>';
+}
+
+// ═══════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+}
+
+// ═══════════════════════════════════════
+// PRODUCT SEARCH (for modals)
+// ═══════════════════════════════════════
+function searchProduct(input, prefix) {
+  const q = input.value.toLowerCase();
+  const drop = document.getElementById(prefix+'-prod-drop');
+  if (!q || q.length < 1) { drop.innerHTML = ''; return; }
+  const hits = products.filter(p=>(p.code+p.name).toLowerCase().includes(q)).slice(0,8);
+  if (!hits.length) { drop.innerHTML = ''; return; }
+  drop.innerHTML = `<div style="position:absolute;top:0;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-md);z-index:10;max-height:200px;overflow-y:auto;">
+    ${hits.map(p=>`<div style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid #F1F5F9;" onclick="selectProduct('${prefix}','${p.code}','${p.name.replace(/'/g,"\\'")}','${p.unit}')">
+      <span style="font-family:var(--mono);font-size:12px;color:var(--accent);">${p.code}</span>
+      <span style="margin-left:8px;">${p.name}</span>
+    </div>`).join('')}
+  </div>`;
+}
+
+function selectProduct(prefix, code, name, unit) {
+  document.getElementById(prefix+'-code').value = code;
+  document.getElementById(prefix+'-name').value = name;
+  document.getElementById(prefix+'-unit').value = unit;
+  document.getElementById(prefix+'-prod-drop').innerHTML = '';
+}
+
+// ═══════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════
+function openStockIn() {
+  document.getElementById('in-type').value = 'IN';
+  document.getElementById('in-ref').value = '';
+  document.getElementById('in-code').value = '';
+  document.getElementById('in-name').value = '';
+  document.getElementById('in-unit').value = '';
+  document.getElementById('in-qty').value = '1';
+  document.getElementById('in-date').value = todayStr();
+  document.getElementById('in-lot').value = '';
+  document.getElementById('in-exp').value = '';
+  document.getElementById('in-note').value = '';
+  document.getElementById('modal-in').classList.add('show');
+}
+
+function openStockOut() {
+  document.getElementById('out-type').value = 'OUT';
+  document.getElementById('out-ref').value = '';
+  document.getElementById('out-code').value = '';
+  document.getElementById('out-name').value = '';
+  document.getElementById('out-unit').value = '';
+  document.getElementById('out-qty').value = '1';
+  document.getElementById('out-date').value = todayStr();
+  document.getElementById('out-lot').value = '';
+  document.getElementById('out-exp').value = '';
+  document.getElementById('out-note').value = '';
+  document.getElementById('modal-out').classList.add('show');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+// ═══════════════════════════════════════
+// SAVE STOCK IN
+// ═══════════════════════════════════════
+async function saveStockIn() {
+  const code = document.getElementById('in-code').value.trim();
+  const name = document.getElementById('in-name').value.trim();
+  const qty  = parseInt(document.getElementById('in-qty').value)||0;
+  const unit = document.getElementById('in-unit').value.trim();
+  const type = document.getElementById('in-type').value;
+  const ref  = document.getElementById('in-ref').value.trim();
+  const date = document.getElementById('in-date').value || todayStr();
+  const lot  = document.getElementById('in-lot').value.trim();
+  const exp  = document.getElementById('in-exp').value;
+  const note = document.getElementById('in-note').value.trim();
+
+  if (!code) { toast('กรุณาเลือกสินค้า','err'); return; }
+  if (qty <= 0) { toast('จำนวนต้องมากกว่า 0','err'); return; }
+
+  const btn = document.getElementById('btn-save-in');
+  btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...';
+
+  try {
+    // 1. Save transaction
+    const txnId = 'STX-' + Date.now();
+    await gs({action:'add', sheet:SH_TXN, data:JSON.stringify({
+      'ID': txnId, 'วันที่': date, 'ประเภท': type,
+      'อ้างอิงเอกสาร': ref, 'รหัสสินค้า': code, 'ชื่อสินค้า': name,
+      'Lot No.': lot, 'Exp Date': exp, 'จำนวน': qty,
+      'หน่วย': unit, 'หมายเหตุ': note, 'ผู้ทำรายการ': 'Admin',
+    })});
+
+    // 2. Update balance
+    const existing = balances.find(b=>b.code===code);
+    const newQty = (existing?.qty||0) + qty;
+    const status = newQty <= 0 ? 'OUT' : newQty <= (existing?.reorder||5) ? 'LOW' : 'OK';
+
+    if (existing) {
+      await gs({action:'update', sheet:SH_BAL, keyCol:'รหัสสินค้า', keyVal:code, data:JSON.stringify({
+        'คงเหลือ': newQty, 'สถานะ': status, 'อัปเดตล่าสุด': date,
+      })});
+    } else {
+      await gs({action:'add', sheet:SH_BAL, data:JSON.stringify({
+        'รหัสสินค้า': code, 'ชื่อสินค้า': name, 'คงเหลือ': newQty,
+        'หน่วย': unit, 'Reorder Point': 5, 'สถานะ': status, 'อัปเดตล่าสุด': date,
+      })});
+    }
+
+    // 3. Update lots (if lot provided)
+    if (lot) {
+      const existingLot = lots.find(l=>l.code===code && l.lot===lot);
+      if (existingLot) {
+        await gs({action:'update', sheet:SH_LOTS, keyCol:'Lot No.', keyVal:lot, data:JSON.stringify({
+          'คงเหลือ': (existingLot.qty||0) + qty, 'สถานะ': 'ACTIVE',
+        })});
+      } else {
+        await gs({action:'add', sheet:SH_LOTS, data:JSON.stringify({
+          'รหัสสินค้า': code, 'Lot No.': lot, 'Exp Date': exp,
+          'คงเหลือ': qty, 'หน่วย': unit, 'PO อ้างอิง': ref, 'สถานะ': 'ACTIVE',
+        })});
+      }
+    }
+
+    toast(`📥 รับเข้า ${code} จำนวน ${qty} ${unit} สำเร็จ`);
+    closeModal('modal-in');
+    await loadAll();
+  } catch(e) {
+    toast('เกิดข้อผิดพลาด: '+e.message, 'err');
+    console.error(e);
+  } finally {
+    btn.disabled = false; btn.textContent = '📥 บันทึกรับเข้า';
+  }
+}
+
+// ═══════════════════════════════════════
+// SAVE STOCK OUT
+// ═══════════════════════════════════════
+async function saveStockOut() {
+  const code = document.getElementById('out-code').value.trim();
+  const name = document.getElementById('out-name').value.trim();
+  const qty  = parseInt(document.getElementById('out-qty').value)||0;
+  const unit = document.getElementById('out-unit').value.trim();
+  const type = document.getElementById('out-type').value;
+  const ref  = document.getElementById('out-ref').value.trim();
+  const date = document.getElementById('out-date').value || todayStr();
+  const lot  = document.getElementById('out-lot').value.trim();
+  const exp  = document.getElementById('out-exp').value;
+  const note = document.getElementById('out-note').value.trim();
+
+  if (!code) { toast('กรุณาเลือกสินค้า','err'); return; }
+  if (qty <= 0) { toast('จำนวนต้องมากกว่า 0','err'); return; }
+
+  // Check stock
+  const existing = balances.find(b=>b.code===code);
+  if (!existing || existing.qty < qty) {
+    toast(`สต็อกไม่พอ! คงเหลือ ${existing?.qty||0} ${unit}`, 'err');
+    return;
+  }
+
+  const btn = document.getElementById('btn-save-out');
+  btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...';
+
+  try {
+    // 1. Save transaction (negative qty)
+    const txnId = 'STX-' + Date.now();
+    await gs({action:'add', sheet:SH_TXN, data:JSON.stringify({
+      'ID': txnId, 'วันที่': date, 'ประเภท': type,
+      'อ้างอิงเอกสาร': ref, 'รหัสสินค้า': code, 'ชื่อสินค้า': name,
+      'Lot No.': lot, 'Exp Date': exp, 'จำนวน': -qty,
+      'หน่วย': unit, 'หมายเหตุ': note, 'ผู้ทำรายการ': 'Admin',
+    })});
+
+    // 2. Update balance
+    const newQty = existing.qty - qty;
+    const status = newQty <= 0 ? 'OUT' : newQty <= (existing.reorder||5) ? 'LOW' : 'OK';
+    await gs({action:'update', sheet:SH_BAL, keyCol:'รหัสสินค้า', keyVal:code, data:JSON.stringify({
+      'คงเหลือ': newQty, 'สถานะ': status, 'อัปเดตล่าสุด': date,
+    })});
+
+    // 3. Update lots (if lot provided)
+    if (lot) {
+      const existingLot = lots.find(l=>l.code===code && l.lot===lot);
+      if (existingLot) {
+        const lotQty = (existingLot.qty||0) - qty;
+        await gs({action:'update', sheet:SH_LOTS, keyCol:'Lot No.', keyVal:lot, data:JSON.stringify({
+          'คงเหลือ': lotQty, 'สถานะ': lotQty <= 0 ? 'DEPLETED' : 'ACTIVE',
+        })});
+      }
+    }
+
+    toast(`📤 เบิก ${code} จำนวน ${qty} ${unit} สำเร็จ`);
+    closeModal('modal-out');
+    await loadAll();
+  } catch(e) {
+    toast('เกิดข้อผิดพลาด: '+e.message, 'err');
+    console.error(e);
+  } finally {
+    btn.disabled = false; btn.textContent = '📤 บันทึกเบิกออก';
+  }
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', loadAll);
+</script>
+</body>
+</html>
